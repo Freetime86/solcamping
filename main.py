@@ -1,6 +1,6 @@
 from urllib.request import urlopen
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -20,9 +20,9 @@ py.FAILSAFE = False
 
 def main():
     sel_month = '6'
-    sel_date = '7'
-    sel_site = 'E'
-    sel_site_num = ''
+    sel_date_list = ['6', '7']
+    sel_site_list = ['A', 'B']
+    sel_num_list = []
 
     driver = webdriver.Chrome()
     wait = WebDriverWait(driver, 10)
@@ -62,32 +62,35 @@ def main():
         index = 0
 
         for date in date_list:
-            if date.text == sel_date:
-                date_area = site_list[index]
-                site = date_area.find_elements(By.CSS_SELECTOR, "li")
-                if sel_site == "A" and site[0].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                    site[0].find_element(By.CSS_SELECTOR, "button").click()
-                    is_enable = True
-                elif sel_site == "B" and site[1].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                    site[1].find_element(By.CSS_SELECTOR, "button").click()
-                    is_enable = True
-                elif sel_site == "C" and site[2].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                    site[2].find_element(By.CSS_SELECTOR, "button").click()
-                    is_enable = True
-                elif sel_site == "D" and site[3].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                    site[3].find_element(By.CSS_SELECTOR, "button").click()
-                    is_enable = True
-                elif sel_site == "E" and site[4].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                    site[4].find_element(By.CSS_SELECTOR, "button").click()
-                    is_enable = True
+            for sel_date in sel_date_list:
+                if date.text == sel_date:
+                    date_area = site_list[index]
+                    site = date_area.find_elements(By.CSS_SELECTOR, "li")
+                    for sel_site in sel_site_list:
+                        if sel_site == "A" and site[0].find_element(By.CSS_SELECTOR, "button").is_enabled():
+                            site[0].find_element(By.CSS_SELECTOR, "button").click()
+                            is_enable = True
+                        elif sel_site == "B" and site[1].find_element(By.CSS_SELECTOR, "button").is_enabled():
+                            site[1].find_element(By.CSS_SELECTOR, "button").click()
+                            is_enable = True
+                        elif sel_site == "C" and site[2].find_element(By.CSS_SELECTOR, "button").is_enabled():
+                            site[2].find_element(By.CSS_SELECTOR, "button").click()
+                            is_enable = True
+                        elif sel_site == "D" and site[3].find_element(By.CSS_SELECTOR, "button").is_enabled():
+                            site[3].find_element(By.CSS_SELECTOR, "button").click()
+                            is_enable = True
+                        elif sel_site == "E" and site[4].find_element(By.CSS_SELECTOR, "button").is_enabled():
+                            site[4].find_element(By.CSS_SELECTOR, "button").click()
+                            is_enable = True
 
-                if is_enable:
-                    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "button.areacode")))
-                    select_area(sel_site_num, wait, driver)
-                    captcha(wait, driver)
+                        if is_enable:
+                            print(sel_site + ' ZONE 선택완료')
+                            wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "button.areacode")))
+                            select_area(sel_num_list, wait, driver)
+                            captcha(wait, driver)
 
-                    while True:
-                        playsound('done.mp3')
+                            while True:
+                                playsound('done.mp3')
 
             index = index + 1
         print('page refresh')
@@ -102,13 +105,13 @@ def captcha(wait, driver):
     image = Image.open('captcha.png')
     image.save('captcha.png')
 
-    #target_image = cv2.imread('captcha.png', cv2.IMREAD_GRAYSCALE)
+    # target_image = cv2.imread('captcha.png', cv2.IMREAD_GRAYSCALE)
     target_image = target_image = cv2.imread('captcha.png')
     index = 0
     color = 'b'
     cpatcha_code = '00000'
     while index < 10:
-        check_count1 = 0 # 최소 3개 이상 찍혀야 인정하자
+        check_count1 = 0  # 최소 3개 이상 찍혀야 인정하자
         check_count2 = 0  # 최소 3개 이상 찍혀야 인정하자
         check_count3 = 0  # 최소 3개 이상 찍혀야 인정하자
         check_count4 = 0  # 최소 3개 이상 찍혀야 인정하자
@@ -118,7 +121,7 @@ def captcha(wait, driver):
         check_flag3 = False
         check_flag4 = False
         check_flag5 = False
-        max_count = 2
+        max_count = 2   # 정교함 밑에 쓰레드홀드랑 연관
 
         last_template = ''
         color_loop = 0  # 5개의 색깔별 숫자
@@ -138,15 +141,15 @@ def captcha(wait, driver):
             # 이미지 로드
             img = cv2.imread(template_name)
             # 색상 제거
-            #img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
             # 타겟 이미지에서 탬플릿 매칭
             result = cv2.matchTemplate(img, target_image, cv2.TM_CCOEFF_NORMED)
-            threshold = 0.70
+            threshold = 0.71    # 절때 건들이지 말것 정확도
             loc = np.where(result >= threshold)
             for pt in zip(*loc[::-1]):
                 x = pt[0]
-                if 0 < x < 32 and not check_flag1:
+                if 0 < x < 31 and not check_flag1:
                     check_count1 = check_count1 + 1
                     if last_template != template_name:
                         check_count1 = 0
@@ -155,7 +158,7 @@ def captcha(wait, driver):
                         cpatcha_code = str(index) + cpatcha_code[1:5]
                         check_flag1 = True
                     last_template = template_name
-                elif 32 < x < 62 and not check_flag2:
+                elif 31 < x < 61 and not check_flag2:
                     check_count2 = check_count2 + 1
                     if last_template != template_name:
                         check_count1 = 0
@@ -164,7 +167,7 @@ def captcha(wait, driver):
                         cpatcha_code = cpatcha_code[0:1] + str(index) + cpatcha_code[2:5]
                         check_flag2 = True
                     last_template = template_name
-                elif 62 < x < 92 and not check_flag3:
+                elif 61 < x < 91 and not check_flag3:
                     check_count3 = check_count3 + 1
                     if last_template != template_name:
                         check_count1 = 0
@@ -173,7 +176,7 @@ def captcha(wait, driver):
                         cpatcha_code = cpatcha_code[0:2] + str(index) + cpatcha_code[3:5]
                         check_flag3 = True
                     last_template = template_name
-                elif 92 < x < 122 and not check_flag4:
+                elif 91 < x < 121 and not check_flag4:
                     check_count4 = check_count4 + 1
                     if last_template != template_name:
                         check_count1 = 0
@@ -182,7 +185,7 @@ def captcha(wait, driver):
                         cpatcha_code = cpatcha_code[0:3] + str(index) + cpatcha_code[4:5]
                         check_flag4 = True
                     last_template = template_name
-                elif 122 < x < 153 and not check_flag5:
+                elif 121 < x < 151 and not check_flag5:
                     if last_template != template_name:
                         check_count1 = 0
                     check_count5 = check_count5 + 1
@@ -201,21 +204,29 @@ def captcha(wait, driver):
     pass
 
 
-def select_area(sel_site_num, wait, driver):
+def select_area(sel_num_list, wait, driver):
     area_list = driver.find_elements(By.CSS_SELECTOR, "button.on")
     area_found = False
     for area in area_list:
-        if (area.find_element(By.CSS_SELECTOR, "span").text == sel_site_num) or sel_site_num == '' and not area_found:
-            area.click()
-            wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "select.select30")))
-            selector = driver.find_elements(By.CSS_SELECTOR, "select.select30")[0]
-            selector.click()
-            area_found_flag = True
-            py.press('down')
-            py.press('enter')
-            py.click((30, 500), button='left')
-            #py.press('end')
-            area_found = True
+        if len(sel_num_list) > 0:
+            for sel_site_num in sel_num_list:
+                if (area.find_element(By.CSS_SELECTOR, "span").text == sel_site_num) and not area_found:
+                    print('사이트 선택 : ' + str(area.find_element(By.CSS_SELECTOR, "span").text))
+                    area.click()
+                    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "select.select30")))
+                    selector = Select(driver.find_elements(By.CSS_SELECTOR, "select.select30")[0])
+                    selector.select_by_index(4)
+                    area_found = True
+
+                    break
+        else:
+            if not area_found:
+                print('사이트 선택 : ' + str(area.find_element(By.CSS_SELECTOR, "span").text))
+                area.click()
+                wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "select.select30")))
+                selector = Select(driver.find_elements(By.CSS_SELECTOR, "select.select30")[0])
+                selector.select_by_index(4)
+                area_found = True
 
     if not area_found:
         exit('THERE IS NO AREA ENABLE')
