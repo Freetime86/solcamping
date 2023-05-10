@@ -9,7 +9,6 @@ import numpy as np
 from PIL import Image
 import cv2
 from playsound import playsound
-
 from datetime import datetime
 from bs4 import BeautifulSoup
 import time
@@ -25,7 +24,7 @@ def main():
     sel_num_list = []
 
     driver = webdriver.Chrome()
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 300)
     url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation"
     driver.get(url)
     driver.maximize_window()
@@ -93,12 +92,12 @@ def main():
                                 playsound('done.mp3')
 
             index = index + 1
-        print('page refresh')
+        #print('page refresh')
         driver.refresh()
 
 
 def captcha(wait, driver):
-    print('captcha start')
+    print(str(datetime.now().strftime("%X")) + ' captcha start')
     wait.until(EC.visibility_of_element_located((By.ID, "CAPTCHA_CODE")))
     driver.find_element(By.ID, 'CAPTCHA_CODE').screenshot('captcha.png')
     # 이미지 로드
@@ -199,7 +198,7 @@ def captcha(wait, driver):
         index = index + 1
     wait.until(EC.visibility_of_element_located((By.ID, "CAPTCHA_TEXT"))).send_keys(cpatcha_code)
     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "button.bluish"))).click()
-    print('color code : ' + cpatcha_code)
+    print(str(datetime.now().strftime("%X")) + ' color code : ' + cpatcha_code)
 
     pass
 
@@ -211,7 +210,7 @@ def select_area(sel_num_list, wait, driver):
         if len(sel_num_list) > 0:
             for sel_site_num in sel_num_list:
                 if (area.find_element(By.CSS_SELECTOR, "span").text == sel_site_num) and not area_found:
-                    print('사이트 선택 : ' + str(area.find_element(By.CSS_SELECTOR, "span").text))
+                    print(str(datetime.now().strftime("%X")) + ' 사이트 선택 : ' + str(area.find_element(By.CSS_SELECTOR, "span").text))
                     area.click()
                     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "select.select30")))
                     selector = Select(driver.find_elements(By.CSS_SELECTOR, "select.select30")[0])
@@ -221,7 +220,7 @@ def select_area(sel_num_list, wait, driver):
                     break
         else:
             if not area_found:
-                print('사이트 선택 : ' + str(area.find_element(By.CSS_SELECTOR, "span").text))
+                print(str(datetime.now().strftime("%X")) + ' 사이트 선택 : ' + str(area.find_element(By.CSS_SELECTOR, "span").text))
                 area.click()
                 wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "select.select30")))
                 selector = Select(driver.find_elements(By.CSS_SELECTOR, "select.select30")[0])
@@ -229,7 +228,7 @@ def select_area(sel_num_list, wait, driver):
                 area_found = True
 
     if not area_found:
-        exit('THERE IS NO AREA ENABLE')
+        exit(str(datetime.now().strftime("%X")) + ' THERE IS NO AREA ENABLE')
 
 
 main()
