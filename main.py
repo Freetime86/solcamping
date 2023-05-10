@@ -1,3 +1,4 @@
+from logging import exception
 from urllib.request import urlopen
 from selenium import webdriver
 from selenium.webdriver.support.select import Select
@@ -10,7 +11,7 @@ from PIL import Image
 import cv2
 from playsound import playsound
 from datetime import datetime
-from bs4 import BeautifulSoup
+from selenium.common.exceptions import NoSuchElementException
 import time
 
 # 시스템 설정
@@ -20,9 +21,9 @@ global try_cnt
 def main():
     try_cnt = 1
     while True:
-        sel_month = '6'
-        sel_date_list = ['7']
-        sel_site_list = ['B']
+        sel_month = '06'
+        sel_date_list = ['08']
+        sel_site_list = ['A']
         sel_num_list = []
 
         driver = webdriver.Chrome()
@@ -33,67 +34,58 @@ def main():
 
         # 캘린더 위치 찾기
         calander_month = driver.find_element(By.ID, "Doc_Page_Title").text
+
+        # 이용수칙 팝업 찾기
+        pop_btn_list = []
+        check_box = driver.find_elements(By.NAME, 'today_dpnone')
+        if len(check_box) > 0:
+            check_box[0].click()
+        pop_btn_list = driver.find_elements(By.CSS_SELECTOR, "button.btn-dark")
+        if len(pop_btn_list) > 0:
+            pop_btn_list[0].click()
+
         curr_month = calander_month[6:8]
-        if sel_month > curr_month:
+        if int(sel_month) > int(curr_month):
             btn_list = driver.find_elements(By.CSS_SELECTOR, "button.btn-trans")
             for button in btn_list:
                 if button.text == '다음달':
-
-                    # 이용수칙 팝업 찾기
-                    pop_btn_list = []
-                    check_box = driver.find_elements(By.NAME, 'today_dpnone')
-                    if len(check_box) > 0:
-                        check_box[0].click()
-                    pop_btn_list = driver.find_elements(By.CSS_SELECTOR, "button.btn-dark")
-                    if len(pop_btn_list) > 0:
-                        pop_btn_list[0].click()
                     button.click()
+
 
         # 날짜 찾기
         is_enable = False
         while not is_enable:
 
             wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "span.fs11pt")))
-            date_list = driver.find_elements(By.CSS_SELECTOR, "span.fs11pt")
-            site_list = driver.find_elements(By.CSS_SELECTOR, "ul.mt5")
+            date_frame = datetime.now().strftime("%Y") + "-" + sel_month + "-"
 
-            index = 0
+            for date in sel_date_list:
+                for sel_site in sel_site_list:
+                    button_value = "//button[@value='" + sel_site + ":" + date_frame + date + "']"
+                    print(button_value)
 
-            for date in date_list:
-                for sel_date in sel_date_list:
-                    if date.text == sel_date:
-                        date_area = site_list[index]
-                        site = date_area.find_elements(By.CSS_SELECTOR, "li")
-                        for sel_site in sel_site_list:
-                            if sel_site == "A" and site[0].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                                site[0].find_element(By.CSS_SELECTOR, "button").click()
-                                is_enable = True
-                            elif sel_site == "B" and site[1].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                                site[1].find_element(By.CSS_SELECTOR, "button").click()
-                                is_enable = True
-                            elif sel_site == "C" and site[2].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                                site[2].find_element(By.CSS_SELECTOR, "button").click()
-                                is_enable = True
-                            elif sel_site == "D" and site[3].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                                site[3].find_element(By.CSS_SELECTOR, "button").click()
-                                is_enable = True
-                            elif sel_site == "E" and site[4].find_element(By.CSS_SELECTOR, "button").is_enabled():
-                                site[4].find_element(By.CSS_SELECTOR, "button").click()
-                                is_enable = True
+                    is_exception = False
+                    try:
+                        button = driver.find_element(By.XPATH, button_value)
+                    except NoSuchElementException:
+                        is_exception = True
+                        print("가능한 사이트가 없습니다.")
 
+                    if not is_exception:
+                        if button.is_enabled():
+                            button.click()
+                            is_enable = True
                             if is_enable:
                                 print(sel_site + ' ZONE 선택완료')
                                 wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "button.areacode")))
                                 select_area(sel_num_list, wait, driver)
                                 captcha(wait, driver)
-                                #try_cnt = try_cnt + 1
-                                #print('시도횟수 : ' + str(try_cnt))
-                                #driver.close()
-                                #main()
+                                # try_cnt = try_cnt + 1
+                                # print('시도횟수 : ' + str(try_cnt))
+                                # driver.close()
+                                # main()
                                 while True:
                                     playsound('done.mp3')
-
-                index = index + 1
             print('page refresh')
             driver.refresh()
 
