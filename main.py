@@ -22,8 +22,8 @@ def main():
     try_cnt = 1
     while True:
         sel_month = '06'
-        sel_date_list = ['08']
-        sel_site_list = ['A']
+        sel_date_list = ['03', '04', '05', '06', '10']
+        sel_site_list = ['E']
         sel_num_list = []
 
         driver = webdriver.Chrome()
@@ -62,21 +62,20 @@ def main():
             for date in sel_date_list:
                 for sel_site in sel_site_list:
                     button_value = "//button[@value='" + sel_site + ":" + date_frame + date + "']"
-                    print(button_value)
 
                     is_exception = False
                     try:
                         button = driver.find_element(By.XPATH, button_value)
                     except NoSuchElementException:
                         is_exception = True
-                        print("가능한 사이트가 없습니다.")
+                        print(date_frame + date + " : 가능한 " + sel_site + " 사이트가 없습니다.")
 
                     if not is_exception:
                         if button.is_enabled():
                             button.click()
                             is_enable = True
                             if is_enable:
-                                print(sel_site + ' ZONE 선택완료')
+                                print(date_frame + date + " 일자 : " + sel_site + ' ZONE 선택완료')
                                 wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "button.areacode")))
                                 select_area(sel_num_list, wait, driver)
                                 captcha(wait, driver)
@@ -86,12 +85,10 @@ def main():
                                 # main()
                                 while True:
                                     playsound('done.mp3')
-            print('page refresh')
             driver.refresh()
 
 
 def captcha(wait, driver):
-    print(str(datetime.now().strftime("%X")) + ' captcha start')
     wait.until(EC.visibility_of_element_located((By.ID, "CAPTCHA_CODE")))
     driver.find_element(By.ID, 'CAPTCHA_CODE').screenshot('captcha.png')
     # 이미지 로드
