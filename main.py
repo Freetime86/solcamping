@@ -146,7 +146,7 @@ def captcha(wait, driver):
             loc = np.where(result >= threshold)
             for pt in zip(*loc[::-1]):
                 x = pt[0]
-                if 0 < x < 33 and not check_flag1:
+                if 0 < x < 32 and not check_flag1:
                     check_count1 = check_count1 + 1
                     if last_template != template_name:
                         check_count1 = 0
@@ -155,7 +155,7 @@ def captcha(wait, driver):
                         cpatcha_code = str(index) + cpatcha_code[1:5]
                         check_flag1 = True
                     last_template = template_name
-                elif 33 < x < 63 and not check_flag2:
+                elif 32 < x < 62 and not check_flag2:
                     check_count2 = check_count2 + 1
                     if last_template != template_name:
                         check_count1 = 0
@@ -164,7 +164,7 @@ def captcha(wait, driver):
                         cpatcha_code = cpatcha_code[0:1] + str(index) + cpatcha_code[2:5]
                         check_flag2 = True
                     last_template = template_name
-                elif 63 < x < 93 and not check_flag3:
+                elif 62 < x < 92 and not check_flag3:
                     check_count3 = check_count3 + 1
                     if last_template != template_name:
                         check_count1 = 0
@@ -173,7 +173,7 @@ def captcha(wait, driver):
                         cpatcha_code = cpatcha_code[0:2] + str(index) + cpatcha_code[3:5]
                         check_flag3 = True
                     last_template = template_name
-                elif 93 < x < 122 and not check_flag4:
+                elif 92 < x < 122 and not check_flag4:
                     check_count4 = check_count4 + 1
                     if last_template != template_name:
                         check_count1 = 0
