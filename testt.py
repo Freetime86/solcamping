@@ -333,4 +333,4 @@ for i in range(machine):
     name = "thread {}".format(i)
     t = Worker(name)  # sub thread 생성
     t.start()
-    time.sleep(3)
+    time.sleep(1)
