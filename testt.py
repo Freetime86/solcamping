@@ -19,7 +19,7 @@ global try_cnt
 
 def main():
     sel_month = '06'
-    sel_date_list = ['11']
+    sel_date_list = ['10', '11']
     sel_site_list = ['E']
     sel_num_list = []
 
@@ -30,119 +30,135 @@ def main():
     d_site_cnt = 9  # 168~177
     e_site_cnt = 7  # 121~130
 
-    #target_index = 1  # A 사이트 시작 index
-    #target_index = 148  # A 사이트 시작 index
-    #target_index = 42  # B 사이트 시작 index
-    #target_index = 83  # C 사이트 시작 index
-    #target_index = 168  # D 사이트 시작 index
-    target_index = 123  # E 사이트 시작 index
-    loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
-    site_index = 0              # 사이트 인텍스 계산 값
-    start_index = target_index
+    target_index_a = 1  # A 사이트 시작 index
+    target_index_a_1 = 148  # A 사이트 시작 index
+    target_index_b = 42  # B 사이트 시작 index
+    target_index_c = 83  # C 사이트 시작 index
+    target_index_d = 168  # D 사이트 시작 index
+    target_index_e = 123  # E 사이트 시작 index
 
-    date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
-    param_date = datetime.now().strftime("%Y") + sel_month
+    #site_index = 0              # 사이트 인텍스 계산 값
+
+    form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
+    #param_date = datetime.now().strftime("%Y") + sel_month
 
     while True:
         # 크롤링
-        html = urlopen("https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid"
-                       "=camping_reservation&step=Areas&sdate=" + param_date)
-        bsObject = BeautifulSoup(html, "html.parser")
-        btn_list = bsObject.find_all('button')
-        available_btn_list = []
-        for btn in btn_list:
-            value = btn.get('value')
-            if value is not None:
-                available_btn_list.append(btn)
-
-        target_btn = ''
-        target_zone = ''
-        for site in sel_site_list:
-            btn_value = site + ':' + date
-        for day in sel_date_list:
-            btn_value = btn_value + day
-            target_date = date + day
-            for avail_btn in available_btn_list:
-                if btn_value == avail_btn.get('value'):
-                    target_btn = btn_value
-                    target_zone = site
-                    print(target_btn)
-                    break
+        #html = urlopen("https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid"
+        #               "=camping_reservation&step=Areas&sdate=" + param_date)
+        #bsObject = BeautifulSoup(html, "html.parser")
+        #btn_list = bsObject.find_all('button')
+        #available_btn_list = []
+        #for btn in btn_list:
+        #    value = btn.get('value')
+        #    if value is not None:
+        #        available_btn_list.append(btn)
+#
+        #target_btn = ''
+        #target_zone = ''
+        #for site in sel_site_list:
+        #    btn_value = site + ':' + date
+        #for day in sel_date_list:
+        #    btn_value = btn_value + day
+        #    target_date = date + day
+        #    for avail_btn in available_btn_list:
+        #        if btn_value == avail_btn.get('value'):
+        #            target_btn = btn_value
+        #            target_zone = site
+        #            print(target_btn)
+        #            break
                     
-        if target_btn != '':
-            if site_index < loop_site_cnt:
-                url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
-                data = {
-                    'actFile': 'tracking',
-                    'actMode': 'Areain',
-                    'actZone': target_zone,
-                    'actDate': target_date
-                }  # 요청할 데이터
-                response = web_request_no_cookie(method_name='POST', url=url, dict_data=data)
+        #if target_btn != 'D':
+        for date in sel_date_list:
+            for site in sel_site_list:
+                target_date = form_date + str(date)
+                if site == 'A':
+                    loop_site_cnt = a_site_cnt  # 사이트 순환 돌릴 꺼
+                    start_index = target_index_a
+                elif site == 'B':
+                    loop_site_cnt = b_site_cnt  # 사이트 순환 돌릴 꺼
+                    start_index = target_index_b
+                elif site == 'C':
+                    loop_site_cnt = c_site_cnt  # 사이트 순환 돌릴 꺼
+                    start_index = target_index_c
+                elif site == 'D':
+                    loop_site_cnt = d_site_cnt  # 사이트 순환 돌릴 꺼
+                    start_index = target_index_d
+                elif site == 'E':
+                    loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
+                    start_index = target_index_e
+                for site_index in range(loop_site_cnt):
+                    url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
+                    data = {
+                        'actFile': 'tracking',
+                        'actMode': 'Areain',
+                        'actZone': site,
+                        'actDate': target_date
+                    }  # 요청할 데이터
+                    response = web_request_no_cookie(method_name='POST', url=url, dict_data=data)
 
-                if response.get('status_code') == 200:
-                    dict_data = json.loads(response.get('text')).get('data')
+                    if response.get('status_code') == 200:
+                        dict_data = json.loads(response.get('text')).get('data')
 
-                room_key = str('appRoom[') + str(start_index) + str("]")
-                cookie = response.get('cookies')
-                dict_meta = captcha(cookie)
-                url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
-                data = {
-                    'step': dict_data.get('step'),
-                    'conn': dict_data.get('conn'),
-                    'resArea': dict_data.get('Area'),
-                    'resCheckin': dict_data.get('Checkin'),
-                    'resPeriod': '1',
-                    'actFile': 'reservation',
-                    'actMode': 'Entryin',
-                    room_key: '1',
-                    'CAPTCHA_TEXT': dict_meta.get('captcha')
-                }
-                response = web_request(method_name='POST', url=url, dict_data=data, cookies=cookie)
-                if response.get('status_code') != 200:
-                    print('네트워크 전송에 실패하였습니다.')
-                else:
-                    result_txt = json.loads(response.get('text'))
-                    print(result_txt)
-                    if result_txt == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
-                        return
-                    if result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.':
-                        return
-                    dict_data = json.loads(response.get('text')).get('data')
-
-                if dict_data:
+                    room_key = str('appRoom[') + str(start_index) + str("]")
+                    print('예약중 : ' + site + ' ' + target_date + ' ' + room_key)
+                    cookie = response.get('cookies')
+                    dict_meta = captcha(cookie)
                     url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
                     data = {
-                        'appName': '박상민',  # 이름
-                        'appMobile_1': '010',  # 변수
-                        'appMobile_2': '2486',  # 변수
-                        'appMobile_3': '3038',  # 변수
-                        'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
-                        'appEmail_id': 'psm0705',  # 변수
-                        'appEmail_dom': 'gmail.com',  # 변수
-                        'startArea_1': '경기도',
-                        'startArea_2': '남양주시',
-                        'arrivalDate': '14',  # 도착 시간 14시 고정
-                        'discountType': '0',  # 할인 정보 없음 고정
-                        'step': 'Confirm',  # 승인 플래그
+                        'step': dict_data.get('step'),
                         'conn': dict_data.get('conn'),
                         'resArea': dict_data.get('Area'),
                         'resCheckin': dict_data.get('Checkin'),
                         'resPeriod': '1',
-                        'resRoom': dict_data.get('Room'),
                         'actFile': 'reservation',
-                        'actMode': 'Request'
+                        'actMode': 'Entryin',
+                        room_key: '1',
+                        'CAPTCHA_TEXT': dict_meta.get('captcha')
                     }
                     response = web_request(method_name='POST', url=url, dict_data=data, cookies=cookie)
-                    if response.get('status_code') == 200:
-                        exit(str(datetime.now().strftime("%X")) + "예약 완료 : ")
-                start_index = start_index + 1
-                site_index = site_index + 1
-            else:
-                site_index = 0
-                start_index = target_index
-        else:
-            print(str(datetime.now().strftime("%X")) + target_btn + " 지정일 예약 가능 정보 수신 불가")
+                    if response.get('status_code') != 200:
+                        print('네트워크 전송에 실패하였습니다.')
+                    else:
+                        result_txt = json.loads(response.get('text'))
+                        print(result_txt)
+                        if result_txt == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
+                            return
+                        if result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.':
+                            return
+                        if result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.':
+                            exit('자동입력문자 : ' + dict_meta.get('captcha'))
+                        dict_data = json.loads(response.get('text')).get('data')
+
+                    if dict_data:
+                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
+                        data = {
+                            'appName': '박상민',  # 이름
+                            'appMobile_1': '010',  # 변수
+                            'appMobile_2': '2486',  # 변수
+                            'appMobile_3': '3038',  # 변수
+                            'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
+                            'appEmail_id': 'psm0705',  # 변수
+                            'appEmail_dom': 'gmail.com',  # 변수
+                            'startArea_1': '경기도',
+                            'startArea_2': '남양주시',
+                            'arrivalDate': '14',  # 도착 시간 14시 고정
+                            'discountType': '0',  # 할인 정보 없음 고정
+                            'step': 'Confirm',  # 승인 플래그
+                            'conn': dict_data.get('conn'),
+                            'resArea': dict_data.get('Area'),
+                            'resCheckin': dict_data.get('Checkin'),
+                            'resPeriod': '1',
+                            'resRoom': dict_data.get('Room'),
+                            'actFile': 'reservation',
+                            'actMode': 'Request'
+                        }
+                        response = web_request(method_name='POST', url=url, dict_data=data, cookies=cookie)
+                        if response.get('status_code') == 200:
+                            exit(str(datetime.now().strftime("%X")) + "예약 완료 : ")
+                    start_index = start_index + 1
+        #else:
+            #print(str(datetime.now().strftime("%X")) + target_btn + " 지정일 예약 가능 정보 수신 불가")
 
 
 def captcha(cookie):
@@ -172,7 +188,7 @@ def captcha(cookie):
         check_flag5 = False
         max_count = 3  # 정교함 밑에 쓰레드홀드랑 연관
 
-        last_template = ''
+        last_index = 0
         color_loop = 0  # 5개의 색깔별 숫자
 
         while color_loop < 5:
@@ -194,59 +210,60 @@ def captcha(cookie):
 
             # 타겟 이미지에서 탬플릿 매칭
             result = cv2.matchTemplate(img, target_image, cv2.TM_CCOEFF_NORMED)
-            threshold = 0.629  # 절때 건들이지 말것 정확도  맨앞 노란8잡기위함
+            threshold = 0.63  # 절때 건들이지 말것 정확도  맨앞 노란8잡기위함
             loc = np.where(result >= threshold)
             for pt in zip(*loc[::-1]):
                 x = pt[0]
                 if 1 < x < 10 and not check_flag1:
                     check_count1 = check_count1 + 1
-                    if last_template != template_name:
-                        check_count1 = 0
+                    print(str(x) + ' ' + template_name)
+                    if last_index != index:
+                        check_count1 = 1
                     if check_count1 >= max_count:
                         print(template_name + ' : 첫번째' + str(x))
                         cpatcha_code = str(index) + cpatcha_code[1:5]
                         check_flag1 = True
-                    last_template = template_name
+                    last_index = index
                 elif 30 < x < 40 and not check_flag2:
                     check_count2 = check_count2 + 1
-                    if last_template != template_name:
-                        check_count1 = 0
+                    if last_index != index:
+                        check_count2 = 1
                     if check_count2 >= max_count:
-                        print(template_name + ' : 두번째' + str(x))
+                        #print(template_name + ' : 두번째' + str(x))
                         cpatcha_code = cpatcha_code[0:1] + str(index) + cpatcha_code[2:5]
                         check_flag2 = True
-                    last_template = template_name
+                    last_index = index
                 elif 60 < x < 70 and not check_flag3:
                     check_count3 = check_count3 + 1
-                    if last_template != template_name:
-                        check_count1 = 0
+                    if last_index != index:
+                        check_count3 = 1
                     if check_count3 >= max_count:
-                        print(template_name + ' : 세번째' + str(x))
+                        #print(template_name + ' : 세번째' + str(x))
                         cpatcha_code = cpatcha_code[0:2] + str(index) + cpatcha_code[3:5]
                         check_flag3 = True
-                    last_template = template_name
+                    last_index = index
                 elif 90 < x < 100 and not check_flag4:
                     check_count4 = check_count4 + 1
-                    if last_template != template_name:
-                        check_count1 = 0
+                    if last_index != index:
+                        check_count4 = 1
                     if check_count4 >= max_count:
-                        print(template_name + ' : 네번째' + str(x))
+                        #print(template_name + ' : 네번째' + str(x))
                         cpatcha_code = cpatcha_code[0:3] + str(index) + cpatcha_code[4:5]
                         check_flag4 = True
-                    last_template = template_name
+                    last_index = index
                 elif 120 < x < 130 and not check_flag5:
-                    if last_template != template_name:
-                        check_count1 = 0
+                    if last_index != index:
+                        check_count5 = 1
                     check_count5 = check_count5 + 1
                     if check_count5 >= max_count:
-                        print(template_name + ' : 다섯번째' + str(x))
+                        #print(template_name + ' : 다섯번째' + str(x))
                         cpatcha_code = cpatcha_code[0:4] + str(index) + cpatcha_code[5:5]
                         check_flag5 = True
-                    last_template = template_name
+                    last_index = index
             color_loop = color_loop + 1
 
         index = index + 1
-    print(str(datetime.now().strftime("%X")) + ' color code : ' + cpatcha_code)
+    #print(str(datetime.now().strftime("%X")) + ' color code : ' + cpatcha_code)
     dict_meta = {'status_code': response.status_code, 'cookies': cookie, 'captcha': cpatcha_code}
     return dict_meta
 
