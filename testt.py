@@ -216,11 +216,11 @@ def captcha(cookie):
                 x = pt[0]
                 if 1 < x < 10 and not check_flag1:
                     check_count1 = check_count1 + 1
-                    print(str(x) + ' ' + template_name)
+                    #print(str(x) + ' ' + template_name)
                     if last_index != index:
                         check_count1 = 1
                     if check_count1 >= max_count:
-                        print(template_name + ' : 첫번째' + str(x))
+                        #print(template_name + ' : 첫번째' + str(x))
                         cpatcha_code = str(index) + cpatcha_code[1:5]
                         check_flag1 = True
                     last_index = index
