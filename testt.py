@@ -330,7 +330,8 @@ def web_request_no_cookie(method_name, url, dict_data, is_urlencoded=True):
 
 
 for i in range(machine):
-    name = "thread {}".format(i)
+    nametag = i + 1
+    name = "MACHINE{}".format(nametag)
     t = Worker(name)  # sub thread 생성
     t.start()
     time.sleep(1)
