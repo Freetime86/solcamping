@@ -21,22 +21,19 @@ global try_cnt
 def main():
     try_cnt = 1
     while True:
-        sel_month = '06'
+        sel_month = '05'
         sel_date_list = ['03', '04', '05', '06', '10']
         sel_site_list = ['E']
         sel_num_list = []
 
         driver = webdriver.Chrome()
         wait = WebDriverWait(driver, 300)
-        url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation"
+        date_frame = datetime.now().strftime("%Y") + sel_month
+        url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=" + date_frame + "&step=Areas"
         driver.get(url)
-        driver.maximize_window()
-
-        # 캘린더 위치 찾기
-        calander_month = driver.find_element(By.ID, "Doc_Page_Title").text
+        #driver.maximize_window()
 
         # 이용수칙 팝업 찾기
-        pop_btn_list = []
         check_box = driver.find_elements(By.NAME, 'today_dpnone')
         if len(check_box) > 0:
             check_box[0].click()
@@ -44,12 +41,6 @@ def main():
         if len(pop_btn_list) > 0:
             pop_btn_list[0].click()
 
-        curr_month = calander_month[6:8]
-        if int(sel_month) > int(curr_month):
-            btn_list = driver.find_elements(By.CSS_SELECTOR, "button.btn-trans")
-            for button in btn_list:
-                if button.text == '다음달':
-                    button.click()
 
 
         # 날짜 찾기
