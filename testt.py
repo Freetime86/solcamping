@@ -11,15 +11,26 @@ import cv2
 import requests
 import time
 import json
+import threading
 
 # 시스템 설정
 py.FAILSAFE = False
 global try_cnt
 
+machine = 10    # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 
-def main():
+class Worker(threading.Thread):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name  # thread 이름 지정
+
+    def run(self):
+        threading.Thread(target=main(name))
+        print('Thread ' + name + ' 시작')
+
+def main(thread_name):
     sel_month = '06'
-    sel_date_list = ['10', '11']
+    sel_date_list = ['10']
     sel_site_list = ['E']
     sel_num_list = []
 
@@ -37,38 +48,13 @@ def main():
     target_index_d = 168  # D 사이트 시작 index
     target_index_e = 123  # E 사이트 시작 index
 
-    #site_index = 0              # 사이트 인텍스 계산 값
+    # site_index = 0              # 사이트 인텍스 계산 값
 
     form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
-    #param_date = datetime.now().strftime("%Y") + sel_month
+    # param_date = datetime.now().strftime("%Y") + sel_month
 
     while True:
-        # 크롤링
-        #html = urlopen("https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid"
-        #               "=camping_reservation&step=Areas&sdate=" + param_date)
-        #bsObject = BeautifulSoup(html, "html.parser")
-        #btn_list = bsObject.find_all('button')
-        #available_btn_list = []
-        #for btn in btn_list:
-        #    value = btn.get('value')
-        #    if value is not None:
-        #        available_btn_list.append(btn)
-#
-        #target_btn = ''
-        #target_zone = ''
-        #for site in sel_site_list:
-        #    btn_value = site + ':' + date
-        #for day in sel_date_list:
-        #    btn_value = btn_value + day
-        #    target_date = date + day
-        #    for avail_btn in available_btn_list:
-        #        if btn_value == avail_btn.get('value'):
-        #            target_btn = btn_value
-        #            target_zone = site
-        #            print(target_btn)
-        #            break
-                    
-        #if target_btn != 'D':
+        # if target_btn != 'D':
         for date in sel_date_list:
             for site in sel_site_list:
                 target_date = form_date + str(date)
@@ -101,9 +87,9 @@ def main():
                         dict_data = json.loads(response.get('text')).get('data')
 
                     room_key = str('appRoom[') + str(start_index) + str("]")
-                    print('예약중 : ' + site + ' ' + target_date + ' ' + room_key)
+                    print(str(thread_name) + ' ::: 예약중 : ' + site + ' ' + target_date + ' ' + room_key)
                     cookie = response.get('cookies')
-                    dict_meta = captcha(cookie)
+                    dict_meta = captcha(cookie, thread_name)
                     url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
                     data = {
                         'step': dict_data.get('step'),
@@ -157,21 +143,20 @@ def main():
                         if response.get('status_code') == 200:
                             exit(str(datetime.now().strftime("%X")) + "예약 완료 : ")
                     start_index = start_index + 1
-        #else:
-            #print(str(datetime.now().strftime("%X")) + target_btn + " 지정일 예약 가능 정보 수신 불가")
+        # else:
+        # print(str(datetime.now().strftime("%X")) + target_btn + " 지정일 예약 가능 정보 수신 불가")
 
-
-def captcha(cookie):
+def captcha(cookie, thread_name):
     # 이미지 로드
     millisec = int(time.time() * 1000)
     url = "https://camping.gtdc.or.kr/DZ_reservation/CAPTCHA/code_numbers.png?v=" + str(millisec)
     response = requests.post(url=url, cookies=cookie)
     if response.status_code == 200:
-        with open("captcha.png", 'wb') as f:
+        with open("captcha" + str(thread_name) + ".png", 'wb') as f:
             f.write(response.content)
-    image = Image.open('captcha.png')
-    image.save('captcha.png')
-    target_image = cv2.imread('captcha.png')
+    image = Image.open('captcha' + str(thread_name) + '.png')
+    image.save('captcha' + str(thread_name) + '.png')
+    target_image = cv2.imread('captcha' + str(thread_name) + '.png')
     index = 0
     color = 'b'
     cpatcha_code = '00000'
@@ -216,11 +201,11 @@ def captcha(cookie):
                 x = pt[0]
                 if 1 < x < 10 and not check_flag1:
                     check_count1 = check_count1 + 1
-                    #print(str(x) + ' ' + template_name)
+                    # print(str(x) + ' ' + template_name)
                     if last_index != index:
                         check_count1 = 1
                     if check_count1 >= max_count:
-                        #print(template_name + ' : 첫번째' + str(x))
+                        # print(template_name + ' : 첫번째' + str(x))
                         cpatcha_code = str(index) + cpatcha_code[1:5]
                         check_flag1 = True
                     last_index = index
@@ -229,7 +214,7 @@ def captcha(cookie):
                     if last_index != index:
                         check_count2 = 1
                     if check_count2 >= max_count:
-                        #print(template_name + ' : 두번째' + str(x))
+                        # print(template_name + ' : 두번째' + str(x))
                         cpatcha_code = cpatcha_code[0:1] + str(index) + cpatcha_code[2:5]
                         check_flag2 = True
                     last_index = index
@@ -238,7 +223,7 @@ def captcha(cookie):
                     if last_index != index:
                         check_count3 = 1
                     if check_count3 >= max_count:
-                        #print(template_name + ' : 세번째' + str(x))
+                        # print(template_name + ' : 세번째' + str(x))
                         cpatcha_code = cpatcha_code[0:2] + str(index) + cpatcha_code[3:5]
                         check_flag3 = True
                     last_index = index
@@ -247,7 +232,7 @@ def captcha(cookie):
                     if last_index != index:
                         check_count4 = 1
                     if check_count4 >= max_count:
-                        #print(template_name + ' : 네번째' + str(x))
+                        # print(template_name + ' : 네번째' + str(x))
                         cpatcha_code = cpatcha_code[0:3] + str(index) + cpatcha_code[4:5]
                         check_flag4 = True
                     last_index = index
@@ -256,17 +241,16 @@ def captcha(cookie):
                         check_count5 = 1
                     check_count5 = check_count5 + 1
                     if check_count5 >= max_count:
-                        #print(template_name + ' : 다섯번째' + str(x))
+                        # print(template_name + ' : 다섯번째' + str(x))
                         cpatcha_code = cpatcha_code[0:4] + str(index) + cpatcha_code[5:5]
                         check_flag5 = True
                     last_index = index
             color_loop = color_loop + 1
 
         index = index + 1
-    #print(str(datetime.now().strftime("%X")) + ' color code : ' + cpatcha_code)
+    # print(str(datetime.now().strftime("%X")) + ' color code : ' + cpatcha_code)
     dict_meta = {'status_code': response.status_code, 'cookies': cookie, 'captcha': cpatcha_code}
     return dict_meta
-
 
 def select_area(sel_num_list, wait, driver):
     area_list = driver.find_elements(By.CSS_SELECTOR, "button.on")
@@ -297,7 +281,6 @@ def select_area(sel_num_list, wait, driver):
     if not area_found:
         exit(str(datetime.now().strftime("%X")) + ' THERE IS NO AREA ENABLE')
 
-
 def web_request(method_name, url, dict_data, cookies, is_urlencoded=True):
     """Web GET or POST request를 호출 후 그 결과를 dict형으로 반환 """
     method_name = method_name.upper()  # 메소드이름을 대문자로 바꾼다
@@ -311,7 +294,8 @@ def web_request(method_name, url, dict_data, cookies, is_urlencoded=True):
             response = requests.post(url=url, data=dict_data,
                                      headers={'Content-Type': 'application/x-www-form-urlencoded'}, cookies=cookies)
         else:
-            response = requests.post(url=url, data=json.dumps(dict_data), headers={'Content-Type': 'application/json'},
+            response = requests.post(url=url, data=json.dumps(dict_data),
+                                     headers={'Content-Type': 'application/json'},
                                      cookies=cookies)
 
     dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
@@ -320,7 +304,6 @@ def web_request(method_name, url, dict_data, cookies, is_urlencoded=True):
         return {**dict_meta, **response.json()}
     else:  # 문자열 형태인 경우
         return {**dict_meta, **{'text': response.text}}
-
 
 def web_request_no_cookie(method_name, url, dict_data, is_urlencoded=True):
     """Web GET or POST request를 호출 후 그 결과를 dict형으로 반환 """
@@ -335,7 +318,8 @@ def web_request_no_cookie(method_name, url, dict_data, is_urlencoded=True):
             response = requests.post(url=url, data=dict_data,
                                      headers={'Content-Type': 'application/x-www-form-urlencoded'})
         else:
-            response = requests.post(url=url, data=json.dumps(dict_data), headers={'Content-Type': 'application/json'})
+            response = requests.post(url=url, data=json.dumps(dict_data),
+                                     headers={'Content-Type': 'application/json'})
 
     dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
                  'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
@@ -345,4 +329,8 @@ def web_request_no_cookie(method_name, url, dict_data, is_urlencoded=True):
         return {**dict_meta, **{'text': response.text}}
 
 
-main()
+for i in range(machine):
+    name = "thread {}".format(i)
+    t = Worker(name)  # sub thread 생성
+    t.start()
+    time.sleep(3)
