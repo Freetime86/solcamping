@@ -84,7 +84,6 @@ def main():
                     dict_data = json.loads(response.get('text')).get('data')
 
                 room_key = str('appRoom[') + str(start_index) + str("]")
-                print(room_key)
                 cookie = response.get('cookies')
                 dict_meta = captcha(cookie)
                 url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
@@ -136,14 +135,14 @@ def main():
                     }
                     response = web_request(method_name='POST', url=url, dict_data=data, cookies=cookie)
                     if response.get('status_code') == 200:
-                        exit("예약 완료 : ")
+                        exit(str(datetime.now().strftime("%X")) + "예약 완료 : ")
                 start_index = start_index + 1
                 site_index = site_index + 1
             else:
                 site_index = 0
                 start_index = target_index
         else:
-            print("지정일 예약 가능 정보 수신 불가")
+            print(str(datetime.now().strftime("%X")) + target_btn + " 지정일 예약 가능 정보 수신 불가")
 
 
 def captcha(cookie):
