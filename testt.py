@@ -17,7 +17,9 @@ import threading
 py.FAILSAFE = False
 global try_cnt
 
-machine = 10    # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
+machine = 10     # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
+time_cut = 1    # 머신 시작 간격
+
 
 class Worker(threading.Thread):
     def __init__(self, name):
@@ -26,11 +28,11 @@ class Worker(threading.Thread):
 
     def run(self):
         threading.Thread(target=main(name))
-        print('Thread ' + name + ' 시작')
+
 
 def main(thread_name):
     sel_month = '06'
-    sel_date_list = ['10']
+    sel_date_list = ['13']
     sel_site_list = ['E']
     sel_num_list = []
 
@@ -39,14 +41,14 @@ def main(thread_name):
     b_site_cnt = 41  # 42~82
     c_site_cnt = 25  # 83~107
     d_site_cnt = 9  # 168~177
-    e_site_cnt = 7  # 121~130
+    e_site_cnt = 10  # 121~130
 
     target_index_a = 1  # A 사이트 시작 index
     target_index_a_1 = 148  # A 사이트 시작 index
     target_index_b = 42  # B 사이트 시작 index
     target_index_c = 83  # C 사이트 시작 index
     target_index_d = 168  # D 사이트 시작 index
-    target_index_e = 123  # E 사이트 시작 index
+    target_index_e = 121  # E 사이트 시작 index
 
     # site_index = 0              # 사이트 인텍스 계산 값
 
@@ -87,7 +89,7 @@ def main(thread_name):
                         dict_data = json.loads(response.get('text')).get('data')
 
                     room_key = str('appRoom[') + str(start_index) + str("]")
-                    print(str(thread_name) + ' ::: 예약중 : ' + site + ' ' + target_date + ' ' + room_key)
+                    machine_id_txt = str(thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + ' -> '
                     cookie = response.get('cookies')
                     dict_meta = captcha(cookie, thread_name)
                     url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
@@ -104,16 +106,13 @@ def main(thread_name):
                     }
                     response = web_request(method_name='POST', url=url, dict_data=data, cookies=cookie)
                     if response.get('status_code') != 200:
-                        print('네트워크 전송에 실패하였습니다.')
+                        print(machine_id_txt + '네트워크 전송에 실패하였습니다.')
                     else:
                         result_txt = json.loads(response.get('text'))
-                        print(result_txt)
-                        if result_txt == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
-                            return
-                        if result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.':
-                            return
-                        if result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.':
-                            exit('자동입력문자 : ' + dict_meta.get('captcha'))
+                        if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
+                                or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
+                                or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.':
+                            print(machine_id_txt + result_txt.get('ERROR'))
                         dict_data = json.loads(response.get('text')).get('data')
 
                     if dict_data:
@@ -141,7 +140,8 @@ def main(thread_name):
                         }
                         response = web_request(method_name='POST', url=url, dict_data=data, cookies=cookie)
                         if response.get('status_code') == 200:
-                            exit(str(datetime.now().strftime("%X")) + "예약 완료 : ")
+                            print(machine_id_txt + str(datetime.now().strftime("%X")) + "예약 완료")
+                            exit()
                     start_index = start_index + 1
         # else:
         # print(str(datetime.now().strftime("%X")) + target_btn + " 지정일 예약 가능 정보 수신 불가")
@@ -248,7 +248,7 @@ def captcha(cookie, thread_name):
             color_loop = color_loop + 1
 
         index = index + 1
-    # print(str(datetime.now().strftime("%X")) + ' color code : ' + cpatcha_code)
+    #print(str(datetime.now().strftime("%X")) + ' color code : ' + cpatcha_code)
     dict_meta = {'status_code': response.status_code, 'cookies': cookie, 'captcha': cpatcha_code}
     return dict_meta
 
@@ -334,4 +334,4 @@ for i in range(machine):
     name = "MACHINE{}".format(nametag)
     t = Worker(name)  # sub thread 생성
     t.start()
-    time.sleep(1)
+    time.sleep(time_cut)
