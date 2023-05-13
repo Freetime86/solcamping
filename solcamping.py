@@ -18,7 +18,9 @@ py.FAILSAFE = False
 global try_cnt
 
 machine = 10     # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
-time_cut = 10    # 머신 시작 간격
+time_cut = 1    # 머신 시작 간격
+period = 1      # 연박 수
+delay = 0       # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 
 
 class Worker(threading.Thread):
@@ -34,7 +36,6 @@ def main(thread_name):
     sel_month_list = ['06']
     sel_date_list = ['0602', '0603', '0604', '0605', '0606', '0609', '0610', '0611']
     sel_site_list = ['E']
-    period = 1      # 연박 수
     sel_num_list = []
 
     # 고정 값
@@ -51,8 +52,11 @@ def main(thread_name):
     target_index_d = 168  # D 사이트 시작 index
     target_index_e = 121  # E 사이트 시작 index
 
-    # site_index = 0              # 사이트 인텍스 계산 값
+    first_message = False
     while True:
+        if not first_message:
+            print('WORKING... : ' + str(thread_name) + ' 예약 중')
+            first_message = True
         for sel_month in sel_month_list:
             form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
             # param_date = datetime.now().strftime("%Y") + sel_month
@@ -67,18 +71,24 @@ def main(thread_name):
                         if site == 'A':
                             loop_site_cnt = a_site_cnt  # 사이트 순환 돌릴 꺼
                             start_index = target_index_a
+                            fix_room_num = 100
+                            fix_room_num_1 = -6
                         elif site == 'B':
                             loop_site_cnt = b_site_cnt  # 사이트 순환 돌릴 꺼
                             start_index = target_index_b
+                            fix_room_num = 159
                         elif site == 'C':
                             loop_site_cnt = c_site_cnt  # 사이트 순환 돌릴 꺼
                             start_index = target_index_c
+                            fix_room_num = 218
                         elif site == 'D':
                             loop_site_cnt = d_site_cnt  # 사이트 순환 돌릴 꺼
                             start_index = target_index_d
+                            fix_room_num = 533  # D 예외 참조 : SITE ROOM : 709 APPROOM : 552
                         elif site == 'E':
                             loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
                             start_index = target_index_e
+                            fix_room_num = 380
                         for site_index in range(loop_site_cnt):
                             url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
                             data = {
@@ -94,6 +104,7 @@ def main(thread_name):
 
                             room_key = str('appRoom[') + str(start_index) + str("]")
                             machine_id_txt = str(thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + ' -> '
+                            room_num = str(site + str(int(start_index) + fix_room_num))
                             cookie = response.get('cookies')
                             dict_meta = captcha(cookie, thread_name)
                             url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
@@ -112,11 +123,11 @@ def main(thread_name):
                             if response.get('status_code') != 200:
                                 print(machine_id_txt + '네트워크 전송에 실패하였습니다.')
                             else:
-                                result_txt = json.loads(response.get('text'))
-                                if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
-                                        or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
-                                        or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.':
-                                    print(machine_id_txt + result_txt.get('ERROR'))
+                                #result_txt = json.loads(response.get('text'))
+                                #if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
+                                #        or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
+                                #        or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.':
+                                #    print(machine_id_txt + result_txt.get('ERROR'))
                                 dict_data = json.loads(response.get('text')).get('data')
 
                             if dict_data:
@@ -144,11 +155,10 @@ def main(thread_name):
                                 }
                                 response = web_request(method_name='POST', url=url, dict_data=data, cookies=cookie)
                                 if response.get('status_code') == 200:
-                                    print(machine_id_txt + str(datetime.now().strftime("%X")) + "예약 완료")
+                                    print(str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
                                     exit()
                             start_index = start_index + 1
-            # else:
-            # print(str(datetime.now().strftime("%X")) + target_btn + " 지정일 예약 가능 정보 수신 불가")
+        time.sleep(delay)
 
 def captcha(cookie, thread_name):
     # 이미지 로드
