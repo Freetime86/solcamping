@@ -21,21 +21,29 @@ machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박
 time_cut = 1  # 머신 시작 간격
 period = 3  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
-room_list = ['503', '506', '509']  # 사이트 번호 지정
+room_list = ['505', '508']  # 사이트 번호 지정
 sel_month_list = ['06']
 sel_date_list = ['0615']
 sel_site_list = ['E']
 
-user_name = '조수윤'
-user_phone = '01021535418'
-email = 'jsy3032'
+user_name = '김형민'
+user_phone = '01091251464'
+email = 'nannipriest'
+
 
 # 가명예약
 # user_name = '김성민'
 # user_phone = '01065325434'
 # email = 'ksmfriend81'
 
-stop = False
+
+class Worker(threading.Thread):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name  # thread 이름 지정
+
+    def run(self):
+        threading.Thread(target=main(name))
 
 
 class Worker(threading.Thread):
@@ -180,8 +188,8 @@ def main(thread_name):
                                                         'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
                                                         'appEmail_id': email,  # 변수
                                                         'appEmail_dom': 'gmail.com',  # 변수
-                                                        'startArea_1': '서울특별시',
-                                                        'startArea_2': '은평',
+                                                        'startArea_1': '경기도',
+                                                        'startArea_2': '동탄',
                                                         'arrivalDate': '14',  # 도착 시간 14시 고정
                                                         'discountType': '0',  # 할인 정보 없음 고정
                                                         'step': 'Confirm',  # 승인 플래그

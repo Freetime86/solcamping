@@ -21,7 +21,7 @@ global try_cnt
 def main():
     try_cnt = 1
     while True:
-        sel_month = '06'
+        sel_month = '05'
         sel_date_list = ['30']
         sel_site_list = ['E']
         sel_num_list = []
