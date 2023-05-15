@@ -116,84 +116,85 @@ def main(thread_name):
                             # 선택된 사이트가 있으면 그 사이트만 looping
                             for room in room_list:
                                 for site_index in range(loop_site_cnt):
+                                    sel_num = 0
                                     if int(room) > 0:
                                         sel_num = int(room) - fix_room_num
-                                        if start_index == sel_num or sel_num == 0:
-                                            url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
-                                            data = {
-                                                'actFile': 'tracking',
-                                                'actMode': 'Areain',
-                                                'actZone': site,
-                                                'actDate': target_date
-                                            }  # 요청할 데이터
-                                            response = request_step1(method_name='POST', url=url, dict_data=data)
-                                            if response.get('status_code') == 200:
-                                                dict_data = json.loads(response.get('text')).get('data')
-                                            cookie = response.get('cookies')
-                                            room_key = str('appRoom[') + str(start_index) + str("]")
-                                            machine_id_txt = str(
-                                                thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + ' -> '
-                                            room_num = str(site + str(int(start_index) + fix_room_num))
-                                            #
-                                            dict_meta = captcha(cookie, thread_name)
+                                    if start_index == sel_num or sel_num == 0:
+                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
+                                        data = {
+                                            'actFile': 'tracking',
+                                            'actMode': 'Areain',
+                                            'actZone': site,
+                                            'actDate': target_date
+                                        }  # 요청할 데이터
+                                        response = request_step1(method_name='POST', url=url, dict_data=data)
+                                        if response.get('status_code') == 200:
+                                            dict_data = json.loads(response.get('text')).get('data')
+                                        cookie = response.get('cookies')
+                                        room_key = str('appRoom[') + str(start_index) + str("]")
+                                        machine_id_txt = str(
+                                            thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + ' -> '
+                                        room_num = str(site + str(int(start_index) + fix_room_num))
+                                        #
+                                        dict_meta = captcha(cookie, thread_name)
+                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
+                                        data = {
+                                            'step': dict_data.get('step'),
+                                            'conn': dict_data.get('conn'),
+                                            'resArea': dict_data.get('Area'),
+                                            'resCheckin': dict_data.get('Checkin'),
+                                            'resPeriod': str(period),
+                                            'actFile': 'reservation',
+                                            'actMode': 'Entryin',
+                                            room_key: '1',
+                                            'CAPTCHA_TEXT': dict_meta.get('captcha')
+                                        }
+                                        response = request_step2(method_name='POST', url=url, dict_data=data, cookies=cookie)
+                                        reservation_access = True
+                                        if response.get('status_code') != 200:
+                                            print(machine_id_txt + '네트워크 전송에 실패하였습니다.')
+                                            reservation_access = False
+                                        else:
+                                            result_txt = json.loads(response.get('text'))
+                                            if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
+                                                    or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
+                                                    or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.':
+                                                print(machine_id_txt + result_txt.get('ERROR'))
+                                                reservation_access = False
+                                            dict_data = json.loads(response.get('text')).get('data')
+                                        if reservation_access:
                                             url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
                                             data = {
-                                                'step': dict_data.get('step'),
+                                                'appName': user_name,  # 이름
+                                                'appMobile_1': user_phone1,  # 변수
+                                                'appMobile_2': user_phone2,  # 변수
+                                                'appMobile_3': user_phone3,  # 변수
+                                                'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
+                                                'appEmail_id': email,  # 변수
+                                                'appEmail_dom': 'gmail.com',  # 변수
+                                                'startArea_1': '서울특별시',
+                                                'startArea_2': '마포',
+                                                'arrivalDate': '14',  # 도착 시간 14시 고정
+                                                'discountType': '0',  # 할인 정보 없음 고정
+                                                'step': 'Confirm',  # 승인 플래그
                                                 'conn': dict_data.get('conn'),
                                                 'resArea': dict_data.get('Area'),
                                                 'resCheckin': dict_data.get('Checkin'),
                                                 'resPeriod': str(period),
+                                                'resRoom': dict_data.get('Room'),
                                                 'actFile': 'reservation',
-                                                'actMode': 'Entryin',
-                                                room_key: '1',
-                                                'CAPTCHA_TEXT': dict_meta.get('captcha')
+                                                'actMode': 'Request'
                                             }
-                                            response = request_step2(method_name='POST', url=url, dict_data=data, cookies=cookie)
-                                            reservation_access = True
-                                            if response.get('status_code') != 200:
-                                                print(machine_id_txt + '네트워크 전송에 실패하였습니다.')
-                                                reservation_access = False
-                                            else:
-                                                result_txt = json.loads(response.get('text'))
-                                                if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
-                                                        or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
-                                                        or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.':
-                                                    print(machine_id_txt + result_txt.get('ERROR'))
-                                                    reservation_access = False
-                                                dict_data = json.loads(response.get('text')).get('data')
-                                            if reservation_access:
-                                                url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
-                                                data = {
-                                                    'appName': user_name,  # 이름
-                                                    'appMobile_1': user_phone1,  # 변수
-                                                    'appMobile_2': user_phone2,  # 변수
-                                                    'appMobile_3': user_phone3,  # 변수
-                                                    'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
-                                                    'appEmail_id': email,  # 변수
-                                                    'appEmail_dom': 'gmail.com',  # 변수
-                                                    'startArea_1': '서울특별시',
-                                                    'startArea_2': '마포',
-                                                    'arrivalDate': '14',  # 도착 시간 14시 고정
-                                                    'discountType': '0',  # 할인 정보 없음 고정
-                                                    'step': 'Confirm',  # 승인 플래그
-                                                    'conn': dict_data.get('conn'),
-                                                    'resArea': dict_data.get('Area'),
-                                                    'resCheckin': dict_data.get('Checkin'),
-                                                    'resPeriod': str(period),
-                                                    'resRoom': dict_data.get('Room'),
-                                                    'actFile': 'reservation',
-                                                    'actMode': 'Request'
-                                                }
-                                                response = request_step3(method_name='POST', url=url, dict_data=data,
-                                                                         cookies=cookie)
-                                                if response.get('status_code') == 200:
-                                                    stop = True
-                                                    print(str(thread_name) + ' : ' + str(
-                                                        datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
-                                                    exit()
-                                            start_index = start_index + 1
-                                        else:
-                                            start_index = start_index + 1
+                                            response = request_step3(method_name='POST', url=url, dict_data=data,
+                                                                     cookies=cookie)
+                                            if response.get('status_code') == 200:
+                                                stop = True
+                                                print(str(thread_name) + ' : ' + str(
+                                                    datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
+                                                exit()
+                                        start_index = start_index + 1
+                                    else:
+                                        start_index = start_index + 1
         time.sleep(delay)
 
 
