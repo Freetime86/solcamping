@@ -135,7 +135,7 @@ def main(thread_name):
                                         machine_id_txt = str(
                                             thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + ' -> '
                                         room_num = str(site + str(int(start_index) + fix_room_num))
-                                        #
+
                                         dict_meta = captcha(cookie, thread_name)
                                         url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
                                         data = {
