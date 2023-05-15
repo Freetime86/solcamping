@@ -354,7 +354,7 @@ def request_step1(method_name, url, dict_data, is_urlencoded=True):
                                          'Content-Length': '177',
                                          'Content-Type': 'application/x-www-form-urlencoded',
                                          'Host': 'camping.gtdc.or.kr',
-                                         'Origin': 'https//camping.gtdc.or.kr',
+                                         'Origin': 'https://camping.gtdc.or.kr',
                                          'Referer': 'https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=' + param_date,
                                          'Sec-Ch-Ua': '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24"',
                                          'Sec-Ch-Ua-Mobile': '?0',
