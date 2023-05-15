@@ -174,7 +174,7 @@ def main(thread_name):
                                                 'appEmail_dom': 'naver.com',  # 변수
                                                 'startArea_1': '경기도',
                                                 'startArea_2': '하남',
-                                                'arrivalDate': '14',  # 도착 시간 14시 고정
+                                                'arrivalDate': '15',  # 도착 시간 14시 고정
                                                 'discountType': '0',  # 할인 정보 없음 고정
                                                 'step': 'Confirm',  # 승인 플래그
                                                 'conn': dict_data.get('conn'),
