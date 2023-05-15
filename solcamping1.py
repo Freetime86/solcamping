@@ -19,11 +19,11 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 1  # 머신 시작 간격
-period = 3  # 연박 수
+period = 2  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 room_list = ['504', '507', '510']  # 사이트 번호 지정
 sel_month_list = ['06']
-sel_date_list = ['0615']
+sel_date_list = ['0616']
 sel_site_list = ['E']
 
 user_name = '권혁인'
@@ -82,7 +82,7 @@ def main(thread_name):
                 month = date[0:2]
                 day = date[2:4]
                 if sel_month == month:
-                    date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 10:00:00'
+                    date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:59'
                     date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:05'
 
                     date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
