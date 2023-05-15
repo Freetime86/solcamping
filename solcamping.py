@@ -21,7 +21,7 @@ machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박
 time_cut = 1  # 머신 시작 간격
 period = 2  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
-room_list = ['503', '506', '509']  # 사이트 번호 지정
+room_list = ['503', '504', '505', '506', '507', '508', '509', '510', '502', '501']  # 사이트 번호 지정
 sel_month_list = ['06']
 sel_date_list = ['0616']
 sel_site_list = ['E']
@@ -78,7 +78,6 @@ def main(thread_name):
             form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
             param_date = str(datetime.now().strftime("%Y") + sel_month)
 
-            # if target_btn != 'D':
             for date in sel_date_list:
                 month = date[0:2]
                 day = date[2:4]
@@ -90,32 +89,33 @@ def main(thread_name):
                     date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
                     now = datetime.now()
                     if date_dt_begin < now < date_dt_end:
+                        # 선택된 사이트가 있으면 그 사이트만 looping
                         for site in sel_site_list:
-                            target_date = form_date + str(day)
-                            if site == 'A':
-                                loop_site_cnt = a_site_cnt  # 사이트 순환 돌릴 꺼
-                                start_index = target_index_a
-                                fix_room_num = 100
-                                fix_room_num_1 = -6
-                            elif site == 'B':
-                                loop_site_cnt = b_site_cnt  # 사이트 순환 돌릴 꺼
-                                start_index = target_index_b
-                                fix_room_num = 159
-                            elif site == 'C':
-                                loop_site_cnt = c_site_cnt  # 사이트 순환 돌릴 꺼
-                                start_index = target_index_c
-                                fix_room_num = 218
-                            elif site == 'D':
-                                loop_site_cnt = d_site_cnt  # 사이트 순환 돌릴 꺼
-                                start_index = target_index_d
-                                fix_room_num = 533  # D 예외 참조 : SITE ROOM : 709 APPROOM : 552
-                            elif site == 'E':
-                                loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
-                                start_index = target_index_e
-                                fix_room_num = 380
-
-                            # 선택된 사이트가 있으면 그 사이트만 looping
+                            # 탐색 zone 순서
                             for room in room_list:
+                                target_date = form_date + str(day)
+                                if site == 'A':
+                                    loop_site_cnt = a_site_cnt  # 사이트 순환 돌릴 꺼
+                                    start_index = target_index_a
+                                    fix_room_num = 100
+                                    fix_room_num_1 = -6
+                                elif site == 'B':
+                                    loop_site_cnt = b_site_cnt  # 사이트 순환 돌릴 꺼
+                                    start_index = target_index_b
+                                    fix_room_num = 159
+                                elif site == 'C':
+                                    loop_site_cnt = c_site_cnt  # 사이트 순환 돌릴 꺼
+                                    start_index = target_index_c
+                                    fix_room_num = 218
+                                elif site == 'D':
+                                    loop_site_cnt = d_site_cnt  # 사이트 순환 돌릴 꺼
+                                    start_index = target_index_d
+                                    fix_room_num = 533  # D 예외 참조 : SITE ROOM : 709 APPROOM : 552
+                                elif site == 'E':
+                                    loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
+                                    start_index = target_index_e
+                                    fix_room_num = 380
+
                                 for site_index in range(loop_site_cnt):
                                     sel_num = 0
                                     if int(room) > 0:
@@ -193,9 +193,7 @@ def main(thread_name):
                                                 print(str(thread_name) + ' : ' + str(
                                                     datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
                                                 exit()
-                                        start_index = start_index + 1
-                                    else:
-                                        start_index = start_index + 1
+                                    start_index = start_index + 1
         time.sleep(delay)
 
 
