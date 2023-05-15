@@ -83,7 +83,7 @@ def main(thread_name):
                 month = date[0:2]
                 day = date[2:4]
                 if sel_month == month:
-                    date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:58'
+                    date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:59'
                     date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:10'
 
                     date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
