@@ -17,12 +17,13 @@ import time
 # 시스템 설정
 py.FAILSAFE = False
 global try_cnt
+delay = 5 # 모니터링 용 매크로 돌릴땐 빠른 0추천
 
 def main():
     try_cnt = 1
     while True:
         sel_month = '06'
-        sel_date_list = ['30']
+        sel_date_list = ['16']
         sel_site_list = ['E']
         sel_num_list = []
 
@@ -48,7 +49,9 @@ def main():
         while not is_enable:
 
             wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "span.fs11pt")))
-            date_frame = datetime.now().strftime("%Y") + "-" + sel_month + "-"
+            current_date = datetime.now()
+            date_second = current_date.strftime('%H:%M:%S')
+            date_frame = current_date.strftime("%Y") + "-" + sel_month + "-"
 
             for date in sel_date_list:
                 for sel_site in sel_site_list:
@@ -59,14 +62,14 @@ def main():
                         button = driver.find_element(By.XPATH, button_value)
                     except NoSuchElementException:
                         is_exception = True
-                        print(date_frame + date + " : 가능한 " + sel_site + " 사이트가 없습니다.")
+                        print(date_frame + date + ' ' + date_second + " : 가능한 " + sel_site + " 사이트가 없습니다.")
 
                     if not is_exception:
                         if button.is_enabled():
                             button.click()
                             is_enable = True
                             if is_enable:
-                                print(date_frame + date + " 일자 : " + sel_site + ' ZONE 선택완료')
+                                print(date_frame + date + ' ' + date_second + " 일자 : " + sel_site + ' ZONE 선택완료')
                                 wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "button.areacode")))
                                 select_area(sel_num_list, wait, driver)
                                 captcha(wait, driver)
@@ -77,6 +80,7 @@ def main():
                                 while True:
                                     playsound('done.mp3')
             driver.refresh()
+            time.sleep(delay)
 
 
 def captcha(wait, driver):
