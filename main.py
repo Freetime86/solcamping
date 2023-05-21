@@ -17,7 +17,7 @@ import time
 # 시스템 설정
 py.FAILSAFE = False
 global try_cnt
-delay = 5 # 모니터링 용 매크로 돌릴땐 빠른 0추천
+delay = 30  # 모니터링 용 매크로 돌릴땐 빠른 0추천
 
 def main():
     try_cnt = 1
