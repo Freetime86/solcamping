@@ -19,11 +19,11 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 1  # 머신 시작 간격
-period = 3  # 연박 수
+period = 1  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 room_list = ['503', '504', '505', '506', '507', '508', '509', '510', '502', '501']  # 사이트 번호 지정
 sel_month_list = ['06']
-sel_date_list = ['0621']
+sel_date_list = ['0620']
 sel_site_list = ['E']
 
 user_name = '조수윤'
@@ -117,22 +117,23 @@ def main(thread_name):
                                     start_index = target_index_e
                                     fix_room_num = 380
 
+                                url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
+                                data = {
+                                    'actFile': 'tracking',
+                                    'actMode': 'Areain',
+                                    'actZone': site,
+                                    'actDate': target_date
+                                }  # 요청할 데이터
+                                response = request_step1(method_name='POST', url=url, dict_data=data)
+                                if response.get('status_code') == 200:
+                                    dict_data = json.loads(response.get('text')).get('data')
+                                cookie = response.get('cookies')
+
                                 for site_index in range(loop_site_cnt):
                                     sel_num = 0
                                     if int(room) > 0:
                                         sel_num = int(room) - fix_room_num
                                     if start_index == sel_num or sel_num == 0:
-                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
-                                        data = {
-                                            'actFile': 'tracking',
-                                            'actMode': 'Areain',
-                                            'actZone': site,
-                                            'actDate': target_date
-                                        }  # 요청할 데이터
-                                        response = request_step1(method_name='POST', url=url, dict_data=data)
-                                        if response.get('status_code') == 200:
-                                            dict_data = json.loads(response.get('text')).get('data')
-                                        cookie = response.get('cookies')
                                         room_key = str('appRoom[') + str(start_index) + str("]")
                                         machine_id_txt = str(
                                             thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + ' -> '

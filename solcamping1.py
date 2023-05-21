@@ -115,22 +115,23 @@ def main(thread_name):
                                     start_index = target_index_e
                                     fix_room_num = 380
 
+                                url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
+                                data = {
+                                    'actFile': 'tracking',
+                                    'actMode': 'Areain',
+                                    'actZone': site,
+                                    'actDate': target_date
+                                }  # 요청할 데이터
+                                response = request_step1(method_name='POST', url=url, dict_data=data)
+                                if response.get('status_code') == 200:
+                                    dict_data = json.loads(response.get('text')).get('data')
+                                cookie = response.get('cookies')
+
                                 for site_index in range(loop_site_cnt):
                                     sel_num = 0
                                     if int(room) > 0:
                                         sel_num = int(room) - fix_room_num
                                     if start_index == sel_num or sel_num == 0:
-                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
-                                        data = {
-                                            'actFile': 'tracking',
-                                            'actMode': 'Areain',
-                                            'actZone': site,
-                                            'actDate': target_date
-                                        }  # 요청할 데이터
-                                        response = request_step1(method_name='POST', url=url, dict_data=data)
-                                        if response.get('status_code') == 200:
-                                            dict_data = json.loads(response.get('text')).get('data')
-                                        cookie = response.get('cookies')
                                         room_key = str('appRoom[') + str(start_index) + str("]")
                                         machine_id_txt = str(
                                             thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + ' -> '
