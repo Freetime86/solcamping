@@ -173,7 +173,7 @@ def main(thread_name):
                                                 'appMobile_3': user_phone3,  # 변수
                                                 'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
                                                 'appEmail_id': email,  # 변수
-                                                'appEmail_dom': 'naver.com',  # 변수
+                                                'appEmail_dom': 'gmail.com',  # 변수
                                                 'startArea_1': '경기도',
                                                 'startArea_2': '하남',
                                                 'arrivalDate': '15',  # 도착 시간 14시 고정
