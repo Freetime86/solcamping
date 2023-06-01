@@ -30,7 +30,7 @@ sel_site_list = ['E']
 
 user_name = '권혁인'
 user_phone = '01020569536'
-email = 'psmp07052'
+email = 'sochi007'
 continue_work = False
 trying = False
 
@@ -201,7 +201,7 @@ def main(dataset):
                                             'appMobile_3': user_phone3,  # 변수
                                             'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
                                             'appEmail_id': email,  # 변수
-                                            'appEmail_dom': 'gmail.com',  # 변수
+                                            'appEmail_dom': 'naver.com',  # 변수
                                             'startArea_1': '경기도',
                                             'startArea_2': '하남',
                                             'arrivalDate': '15',  # 도착 시간 14시 고정

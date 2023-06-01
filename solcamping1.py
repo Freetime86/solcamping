@@ -24,13 +24,13 @@ time_cut = 1  # 머신 시작 간격
 period = 2  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 room_list = ['510', '503', '504', '505', '506', '507', '508', '509']  # 사이트 번호 지정
-sel_month_list = ['06']
-sel_date_list = ['0626']
+sel_month_list = ['07']
+sel_date_list = ['0701']
 sel_site_list = ['E']
 
 user_name = '김형민'
 user_phone = '01091251464'
-email = 'nannipriest'
+email = 'ttasik_asp'
 continue_work = False
 trying = False
 

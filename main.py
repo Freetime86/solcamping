@@ -17,13 +17,13 @@ import time
 # 시스템 설정
 py.FAILSAFE = False
 global try_cnt
-delay = 30  # 모니터링 용 매크로 돌릴땐 빠른 0추천
+delay = 0  # 모니터링 용 매크로 돌릴땐 빠른 0추천
 
 def main():
     try_cnt = 1
     while True:
         sel_month = '06'
-        sel_date_list = ['16']
+        sel_date_list = ['29']
         sel_site_list = ['E']
         sel_num_list = []
 
@@ -79,6 +79,7 @@ def main():
                                 # main()
                                 while True:
                                     playsound('done.mp3')
+                                    pass
             driver.refresh()
             time.sleep(delay)
 
