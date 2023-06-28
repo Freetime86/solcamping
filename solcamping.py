@@ -96,8 +96,8 @@ def main(dataset):
                     date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
                     now = datetime.now()
 
-                    if date_dt_begin < now < date_dt_end:
-                    #if True:
+                    #if date_dt_begin < now < date_dt_end:
+                    if True:
                         # 선택된 사이트가 있으면 그 사이트만 looping
                         for site in sel_site_list:
                         # 탐색 zone 순서
@@ -185,7 +185,7 @@ def main(dataset):
                                             continue_work = False
                                             reservation_access = False
                                             print(str(datetime.now()) + ' // ' + str(thread_name) + ' - ' + room_num + ' 이미 선점된 사이트라 예약 시도를 종료 합니다.')
-                                            #sys.exit()
+                                            sys.exit()
                                         else:
                                             continue_work = False
                                             reservation_access = False

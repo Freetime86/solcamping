@@ -186,7 +186,7 @@ def main(dataset):
                                             continue_work = False
                                             reservation_access = False
                                             print(str(datetime.now()) + ' // ' + str(thread_name) + ' - ' + room_num + ' 이미 선점된 사이트라 예약 시도를 종료 합니다.')
-                                            #sys.exit()
+                                            sys.exit()
                                         else:
                                             continue_work = False
                                             reservation_access = False
