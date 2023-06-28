@@ -19,25 +19,29 @@ import sys
 py.FAILSAFE = False
 global try_cnt
 
-machine = 8  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
-time_cut = 1  # 머신 시작 간격
-period = 2  # 연박 수
+machine = 1  # room_list 배수
+time_cut = 0.1  # 머신 시작 간격
+period = 1  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 room_list = ['510', '503', '504', '505', '506', '507', '508', '509']  # 사이트 번호 지정
 sel_month_list = ['07']
-sel_date_list = ['0701']
+sel_date_list = ['0728']
 sel_site_list = ['E']
 
-user_name = '김형민'
-user_phone = '01091251464'
-email = 'ttasik_asp'
 continue_work = False
 trying = False
 
-# 가명예약
-#user_name = '김진혁'
-#user_phone = '01065325434'
-#email = 'ksmfriend81'
+#user_name = '김형민'
+#user_phone = '01091251464'
+#email = 'nannipriest'
+
+#user_name = '원성광'
+#user_phone = '01024277670'
+#email = 'psmp07052'
+
+user_name = '김민수'
+user_phone = '01048983767'
+email = 'kms77priest'
 
 dataset = {"reservated": False}
 
@@ -89,7 +93,7 @@ def main(dataset):
                 month = date[0:2]
                 day = date[2:4]
                 if sel_month == month:
-                    date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 10:00:00'
+                    date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:50'
                     date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:10'
 
                     date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
@@ -168,7 +172,7 @@ def main(dataset):
                                     sys.exit()
                                 #else:
                                 #    print('시스템 대기 상태 중')
-                            if not continue_work and not trying:
+                            if not trying:
                                 continue_work = True
                                 response = request_step2(method_name='POST', url=url, dict_data=data, cookies=cookie)
                                 reservation_access = True
@@ -183,8 +187,9 @@ def main(dataset):
                                             or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.':
                                         if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
                                             continue_work = False
-                                            print(thread_name + ' 이미 선점된 사이트라 예약 시도를 종료 합니다.')
-                                            sys.exit()
+                                            reservation_access = False
+                                            print(str(datetime.now()) + ' // ' + str(thread_name) + ' - ' + room_num + ' 이미 선점된 사이트라 예약 시도를 종료 합니다.')
+                                            #sys.exit()
                                         else:
                                             continue_work = False
                                             reservation_access = False
@@ -202,8 +207,8 @@ def main(dataset):
                                             'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
                                             'appEmail_id': email,  # 변수
                                             'appEmail_dom': 'naver.com',  # 변수
-                                            'startArea_1': '서울특별시',
-                                            'startArea_2': '마포',
+                                            'startArea_1': '경기도',
+                                            'startArea_2': '의정부',
                                             'arrivalDate': '14',  # 도착 시간 14시 고정
                                             'discountType': '0',  # 할인 정보 없음 고정
                                             'step': 'Confirm',  # 승인 플래그
@@ -492,13 +497,17 @@ def request_step3(method_name, url, dict_data, cookies, is_urlencoded=True):
         return {**dict_meta, **{'text': response.text}}
 
 
-for i in range(machine):
-    nametag = i + 1
-    name = "MACHINE{}".format(nametag)
+v_cnt = 0
+for i in range(len(room_list) * machine):
+    nametag = i + 1 - v_cnt
+    if (i+1) % len(room_list) == 0:
+        v_cnt = v_cnt + len(room_list)
+    name = "MACHINE{}".format(i+1)
     dataset['name'] = name
     dataset['nametag'] = nametag
     t = Worker(dataset)  # sub thread 생성
-    #t.daemon = True
+   #t.daemon = True
     t.start()
     time.sleep(time_cut)
+
 
