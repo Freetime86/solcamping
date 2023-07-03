@@ -27,7 +27,7 @@ room_list = ['504', '507', '510']  # 사이트 번호 지정
 #room_list = ['503', '510', '509', '508', '507', '506', '505', '504']
 sel_month_list = ['08']
 sel_date_list = ['0801']
-sel_site_list = ['C']
+sel_site_list = ['E']
 
 continue_work = False
 trying = False
