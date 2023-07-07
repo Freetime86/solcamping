@@ -19,7 +19,7 @@ import sys
 py.FAILSAFE = False
 global try_cnt
 
-machine = 8  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
+machine = 5  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 1  # 머신 시작 간격
 period = 3  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
@@ -27,13 +27,13 @@ delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사�
 room_list = ['503', '510', '509', '508', '507', '506', '505', '504']
 temp_room_list = room_list.copy()
 sel_month_list = ['08']
-sel_date_list = ['0804']
+sel_date_list = ['0807']
 sel_site_list = ['E']
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 1   # 사용자 정보 세팅
+user_type = 99   # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -131,7 +131,7 @@ def main(dataset):
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
             first_message = True
 
-        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 07:31:55'
+        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:55'
         date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
 
         date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
