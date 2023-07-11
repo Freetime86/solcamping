@@ -19,15 +19,15 @@ import sys
 py.FAILSAFE = False
 global try_cnt
 
-machine = 5  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
-time_cut = 1  # 머신 시작 간격
-period = 3  # 연박 수
+machine = 4  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
+time_cut = 0  # 머신 시작 간격
+period = 1  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
-#room_list = ['503', '506', '509']  # 사이트 번호 지정
-room_list = ['503', '510', '509', '508', '507', '506', '505', '504']
+#room_list = ['503', '510', '508', '507', '506', '509', '505']  # 사이트 번호 지정
+room_list = ['507', '510']
 temp_room_list = room_list.copy()
 sel_month_list = ['08']
-sel_date_list = ['0807']
+sel_date_list = ['0812']
 sel_site_list = ['E']
 
 continue_work = False
@@ -131,8 +131,8 @@ def main(dataset):
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
             first_message = True
 
-        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:55'
-        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
+        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 22:23:00'
+        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 22:23:15'
 
         date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
         date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
@@ -140,6 +140,7 @@ def main(dataset):
 
         if date_dt_begin < now < date_dt_end:
         #if True:
+            time.sleep((nametag-1)*0.1)
             for sel_month in sel_month_list:
                 global param_date
                 form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
@@ -154,12 +155,13 @@ def main(dataset):
                     month = date[0:2]
                     day = date[2:4]
                     if sel_month == month:
-                        try:
-                            # 선택된 사이트가 있으면 그 사이트만 looping
-                            for site in sel_site_list:
-                                # 탐색 zone 순서
-                                # Machine 숫자로 단일 지정하게 된다.
-                                for room in room_list:
+
+                        # 선택된 사이트가 있으면 그 사이트만 looping
+                        for site in sel_site_list:
+                            # 탐색 zone 순서
+                            # Machine 숫자로 단일 지정하게 된다.
+                            for room in room_list:
+                                try:
                                     access = False
                                     index = 0
                                     for temp_room in temp_room_list:
@@ -205,11 +207,11 @@ def main(dataset):
                                             dict_data = json.loads(response.get('text')).get('data')
                                         cookie = response.get('cookies')
 
-                                        #for site_index in range(loop_site_cnt):
-                                        #    sel_num = 0
-                                        #    if int(room) > 0:
-                                        #        sel_num = int(room) - fix_room_num
-                                        #    if start_index == sel_num or sel_num == 0:
+                                        # for site_index in range(loop_site_cnt):
+                                        #sel_num = 0
+                                        # if int(room) > 0:
+                                        #sel_num = int(room) - fix_room_num
+                                        #if start_index == sel_num or sel_num == 0:
                                         start_index = int(room) - fix_room_num
                                         room_key = str('appRoom[') + str(start_index) + str("]")
                                         machine_id_txt = str(datetime.now()) + ' // ' + str(
@@ -231,7 +233,7 @@ def main(dataset):
                                         }
                                         while continue_work:
                                             if trying:
-                                                #print(thread_name + ' 이미 예약 완료된 기록이 존재 합니다. 종료 합니다.')
+                                                print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
                                                 sys.exit()
                                             #else:
                                             #    print('시스템 대기 상태 중')
@@ -251,7 +253,8 @@ def main(dataset):
                                                     if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
                                                         continue_work = False
                                                         reservation_access = False
-                                                        print(machine_id_txt + ' 이미 선점된 사이트라 예약 시도를 종료 합니다.')
+                                                        print(machine_id_txt + ' 이미 선점된 사이트라 재시도 합니다.')
+                                                        #raise Exception('dsdsd')
                                                         #sys.exit()
                                                     else:
                                                         continue_work = False
@@ -301,9 +304,9 @@ def main(dataset):
                                         else:
                                             print(thread_name + ' 선행된 예약이 있어, 더 이상 예약 시도를 하지 않고 종료 합니다.')
                                             sys.exit()
-                        except:
-                            print(str(thread_name) + ' 에러 발생 재실행')
-                            continue
+                                except:
+                                    print(str(datetime.now()) + " // " + str(thread_name) + ' NETWORK ERROR RETRY')
+                                    pass
 
         time.sleep(delay)
 
