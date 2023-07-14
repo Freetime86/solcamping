@@ -21,7 +21,7 @@ global try_cnt
 
 machine = 4  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 0  # 머신 시작 간격
-period = 3  # 연박 수
+period = 1  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 #room_list = ['503', '510', '508', '507', '506', '509', '505']  # 사이트 번호 지정
 room_list = ['507', '510']
@@ -34,7 +34,7 @@ sel_site_list = ['E']
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 5   # 사용자 정보 세팅
+user_type = 999   # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -203,7 +203,6 @@ def main(dataset):
                                             loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
                                             start_index = target_index_e
                                             fix_room_num = 380
-                                        raise Exception('dddddd')
                                         url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
                                         data = {
                                             'actFile': 'tracking',
