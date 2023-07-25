@@ -21,13 +21,13 @@ global try_cnt
 
 machine = 4  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 0  # 머신 시작 간격
-period = 1  # 연박 수
+period = 2  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 #room_list = ['503', '510', '508', '507', '506', '509', '505']  # 사이트 번호 지정
-#room_list = ['503', '510']
+room_list = ['503', '510']
 #room_list = ['503', '510', '509', '508', '507', '506', '505', '504']
 #D 사이트
-room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
+#room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
 temp_room_list = room_list.copy()
 sel_month_list = ['08']
 sel_date_list = ['0826']
@@ -36,7 +36,7 @@ sel_site_list = ['D']
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 999   # 사용자 정보 세팅
+user_type = 5   # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -363,6 +363,10 @@ def retry_moudule(site, target_date, room, fix_room_num, thread_name, continue_w
         #        sel_num = int(room) - fix_room_num
         #    if start_index == sel_num or sel_num == 0:
         start_index = int(room) - fix_room_num
+        # 객실정보 처리
+        # D 사이트 709번은 APP INDEX를 한칸 더 간다.
+        if site == 'D' and room == '709':
+            start_index = start_index + 1
         room_key = str('appRoom[') + str(start_index) + str("]")
         machine_id_txt = str(datetime.now()) + ' // ' + str(
             thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + '/' + site + room + ' -> '
