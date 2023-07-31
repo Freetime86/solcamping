@@ -13,15 +13,17 @@ import time
 import json
 import threading
 import sys
+import urllib3
 
 
 # 시스템 설정
 py.FAILSAFE = False
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 global try_cnt
 
 machine = 4  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 0  # 머신 시작 간격
-period = 2  # 연박 수
+period = 1  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 #room_list = ['503', '510', '508', '507', '506', '509', '505']  # 사이트 번호 지정
 room_list = ['503', '510']
@@ -30,13 +32,13 @@ room_list = ['503', '510']
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
 temp_room_list = room_list.copy()
 sel_month_list = ['08']
-sel_date_list = ['0826']
-sel_site_list = ['D']
+sel_date_list = ['0831']
+sel_site_list = ['E']
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 5   # 사용자 정보 세팅
+user_type = 99   # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -148,8 +150,8 @@ def main(dataset):
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
             first_message = True
 
-        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 10:00:00'
-        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
+        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 19:20:00'
+        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 19:20:15'
 
         date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
         date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
@@ -328,7 +330,8 @@ def main(dataset):
                                         else:
                                             print(thread_name + ' 선행된 예약이 있어, 더 이상 예약 시도를 하지 않고 종료 합니다.')
                                             sys.exit()
-                                except:
+                                except Exception as ex:
+                                    print(ex)
                                     if trying:
                                         print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
                                         sys.exit()
@@ -453,7 +456,8 @@ def retry_moudule(site, target_date, room, fix_room_num, thread_name, continue_w
                     else:
                         print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
                         sys.exit()
-    except:
+    except Exception as ex:
+        print(ex)
         if trying:
             print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
             sys.exit()
@@ -465,7 +469,7 @@ def captcha(cookie, thread_name):
     # 이미지 로드
     millisec = int(time.time() * 1000)
     url = "https://camping.gtdc.or.kr/DZ_reservation/CAPTCHA/code_numbers.png?v=" + str(millisec)
-    response = requests.post(url=url, cookies=cookie)
+    response = requests.post(url=url, cookies=cookie, verify=False)
     if response.status_code == 200:
         with open("captcha" + str(thread_name) + ".png", 'wb') as f:
             f.write(response.content)
@@ -609,7 +613,7 @@ def request_step1(method_name, url, dict_data, is_urlencoded=True):
         response = requests.get(url=url, params=dict_data)
     elif method_name == 'POST':  # POST방식인 경우
         if is_urlencoded is True:
-            response = requests.post(url=url, data=dict_data,
+            response = requests.post(url=url, data=dict_data, verify=False,
                                      headers={
                                          'Accept': 'application/json, text/javascript, */*; q=0.01',
                                          'Accept-Encoding': 'gzip, deflate, br',
@@ -648,7 +652,7 @@ def request_step2(method_name, url, dict_data, cookies, is_urlencoded=True):
         response = requests.get(url=url, params=dict_data)
     elif method_name == 'POST':  # POST방식인 경우
         if is_urlencoded is True:
-            response = requests.post(url=url, data=dict_data, cookies=cookies,
+            response = requests.post(url=url, data=dict_data, cookies=cookies, verify=False,
                                      headers={
                                          'Accept': 'application/json, text/javascript, */*; q=0.01',
                                          'Accept-Encoding': 'gzip, deflate, br',
@@ -687,7 +691,7 @@ def request_step3(method_name, url, dict_data, cookies, is_urlencoded=True):
         response = requests.get(url=url, params=dict_data)
     elif method_name == 'POST':  # POST방식인 경우
         if is_urlencoded is True:
-            response = requests.post(url=url, data=dict_data, cookies=cookies,
+            response = requests.post(url=url, data=dict_data, cookies=cookies, verify=False,
                                      headers={
                                          'Accept': 'application/json, text/javascript, */*; q=0.01',
                                          'Accept-Encoding': 'gzip, deflate, br',
