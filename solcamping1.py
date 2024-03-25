@@ -20,7 +20,7 @@ py.FAILSAFE = False
 global try_cnt
 
 machine = 8  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
-time_cut = 1  # 머신 시작 간격
+time_cut = 0  # 머신 시작 간격
 period = 1  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 #room_list = ['503', '506', '509']  # 사이트 번호 지정
@@ -131,8 +131,8 @@ def main(dataset):
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
             first_message = True
 
-        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:55'
-        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
+        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 21:18:00'
+        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 21:18:15'
 
         date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
         date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
@@ -193,6 +193,7 @@ def main(dataset):
                                             loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
                                             start_index = target_index_e
                                             fix_room_num = 380
+                                        raise Exception('exception')
                                         url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
                                         data = {
                                             'actFile': 'tracking',
@@ -303,11 +304,117 @@ def main(dataset):
                                             sys.exit()
                         except:
                             print(str(thread_name) + ' 에러 발생 재실행')
-                            continue
+                            retry_moudule(site, target_date, room, fix_room_num, thread_name, continue_work, trying, user_phone1, user_phone2, user_phone3)
 
         time.sleep(delay)
 
 
+def retry_moudule(site, target_date, room, fix_room_num, thread_name, continue_work, trying, user_phone1, user_phone2, user_phone3):
+    print(thread_name + ' 재실행중~~~')
+    url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
+    data = {
+        'actFile': 'tracking',
+        'actMode': 'Areain',
+        'actZone': site,
+        'actDate': target_date
+    }  # 요청할 데이터
+    response = request_step1(method_name='POST', url=url, dict_data=data)
+    if response.get('status_code') == 200:
+        dict_data = json.loads(response.get('text')).get('data')
+    cookie = response.get('cookies')
+
+    # for site_index in range(loop_site_cnt):
+    #    sel_num = 0
+    #    if int(room) > 0:
+    #        sel_num = int(room) - fix_room_num
+    #    if start_index == sel_num or sel_num == 0:
+    start_index = int(room) - fix_room_num
+    room_key = str('appRoom[') + str(start_index) + str("]")
+    machine_id_txt = str(datetime.now()) + ' // ' + str(
+        thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + '/' + site + room + ' -> '
+    room_num = str(site + str(int(start_index) + fix_room_num))
+
+    dict_meta = captcha(cookie, thread_name)
+    url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
+    data = {
+        'step': dict_data.get('step'),
+        'conn': dict_data.get('conn'),
+        'resArea': dict_data.get('Area'),
+        'resCheckin': dict_data.get('Checkin'),
+        'resPeriod': str(period),
+        'actFile': 'reservation',
+        'actMode': 'Entryin',
+        room_key: '1',
+        'CAPTCHA_TEXT': dict_meta.get('captcha')
+    }
+    while continue_work:
+        if trying:
+            # print(thread_name + ' 이미 예약 완료된 기록이 존재 합니다. 종료 합니다.')
+            sys.exit()
+        # else:
+        #    print('시스템 대기 상태 중')
+    if not continue_work and not trying:
+        continue_work = True
+        response = request_step2(method_name='POST', url=url, dict_data=data, cookies=cookie)
+        reservation_access = True
+        if response.get('status_code') != 200:
+            print(machine_id_txt + '네트워크 전송에 실패하였습니다.')
+            continue_work = False
+            reservation_access = False
+        else:
+            result_txt = json.loads(response.get('text'))
+            if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
+                    or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
+                    or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.':
+                if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
+                    continue_work = False
+                    reservation_access = False
+                    print(machine_id_txt + ' 이미 선점된 사이트라 예약 시도를 종료 합니다.')
+                    # sys.exit()
+                else:
+                    continue_work = False
+                    reservation_access = False
+                    print(machine_id_txt + result_txt.get('ERROR'))
+            dict_data = json.loads(response.get('text')).get('data')
+
+        if reservation_access:
+            if not trying:
+                url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
+                data = {
+                    'appName': user_name,  # 이름
+                    'appMobile_1': user_phone1,  # 변수
+                    'appMobile_2': user_phone2,  # 변수
+                    'appMobile_3': user_phone3,  # 변수
+                    'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
+                    'appEmail_id': email,  # 변수
+                    'appEmail_dom': domain,  # 변수
+                    'startArea_1': area1,
+                    'startArea_2': area2,
+                    'arrivalDate': '14',  # 도착 시간 14시 고정
+                    'discountType': '0',  # 할인 정보 없음 고정
+                    'step': 'Confirm',  # 승인 플래그
+                    'conn': dict_data.get('conn'),
+                    'resArea': dict_data.get('Area'),
+                    'resCheckin': dict_data.get('Checkin'),
+                    'resPeriod': str(period),
+                    'resRoom': dict_data.get('Room'),
+                    'actFile': 'reservation',
+                    'actMode': 'Request'
+                }
+                if not trying:
+                    trying = True
+                    response = request_step3(method_name='POST', url=url, dict_data=data,
+                                             cookies=cookie)
+                    if response.get('status_code') == 200:
+                        print(str(thread_name) + ' : ' + str(
+                            datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
+                    else:
+                        print(str(thread_name) + ' : ' + str(
+                            datetime.now().strftime("%X")) + ' ' + room_num + " 예약 실패")
+                    sys.exit()
+                else:
+                    print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
+                    sys.exit()
 def captcha(cookie, thread_name):
     # 이미지 로드
     millisec = int(time.time() * 1000)

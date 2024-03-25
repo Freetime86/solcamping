@@ -1,19 +1,21 @@
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from PIL import Image
-from datetime import datetime
-from bs4 import BeautifulSoup
-from urllib.request import urlopen
-import pyautogui as py
-import numpy as np
-import cv2
 import requests
-import time
 import json
 import threading
 import sys
 import urllib3
+from selenium import webdriver
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import pyautogui as py
+import numpy as np
+from PIL import Image
+import cv2
+from playsound import playsound
+from datetime import datetime
+from selenium.common.exceptions import NoSuchElementException
+import time
 
 
 # 시스템 설정
@@ -21,26 +23,28 @@ py.FAILSAFE = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 global try_cnt
 
-machine = 4  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
+machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 0  # 머신 시작 간격
-period = 1  # 연박 수
+period = 2  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
-test = False
-#room_list = ['503', '510', '508', '507', '506', '509', '505']  # 사이트 번호 지정
-room_list = ['503']
-#room_list = ['503', '504', '505', '506', '507', '508', '510', '509']
+# room_list = ['503', '510', '508', '507', '506', '509', '505']  # 사이트 번호 지정
+# room_list = ['503', '510']
+room_list = ['510', '509', '508', '507', '506', '505', '501', '502']
+# 직수 되는곳
+#room_list = ['505']
+#room_list = ['503', '510', '508', '506']
 #room_list = ['311', '312', '313', '314', '315', '316', '317', '318']
 # D 사이트
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
 temp_room_list = room_list.copy()
-sel_month_list = ['04']
-sel_date_list = ['0425']
+sel_month_list = ['10']
+sel_date_list = ['1023']
 sel_site_list = ['E']
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 99  # 사용자 정보 세팅
+user_type = 4  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -55,6 +59,7 @@ if user_type == 1:
     email = 'jsy3032'
     domain = 'gmail.com'
     area1 = '경기도'
+    area2 = '위례'
 elif user_type == 2:
     user_name = '김형민'
     user_phone = '01091251464'
@@ -91,10 +96,11 @@ elif user_type == 6:
     area1 = '경기도'
     area2 = '부천'
 elif user_type == 9:
-    user_name = '김명신'
-    user_phone = '01033457871'
-    email = 'vspyths75cloud'
+    user_name = '김민수'
+    user_phone = '01022866574'
+    email = 'kms77priest'
     domain = 'naver.com'
+    area1 = '경기도'
     area2 = '동탄'
 elif user_type == 99:
     user_name = '김수혁'
@@ -124,13 +130,6 @@ elif user_type == 99999:
     domain = 'gmail.com'
     area1 = '경상북도'
     area2 = '김천'
-elif user_type == 999999:
-    user_name = '김강민'
-    user_phone = '01054551274'
-    email = 'kangchlrh11'
-    domain = 'gmail.com'
-    area1 = '경상북도'
-    area2 = '포항'
 
 dataset = {"reservated": False}
 
@@ -167,205 +166,203 @@ def main(dataset):
 
     first_message = False
     enter_logic = True
-    while True:
-        #time.sleep(15)
-        if not first_message:
-            print('WORKING... : ' + str(thread_name) + ' 예약 중')
-            first_message = True
+    if not first_message:
+        print('WORKING... : ' + str(thread_name) + ' 예약 중')
+        first_message = True
 
-        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:59'
-        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
+    date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:58'
+    date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
 
-        date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
-        date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
-        now = datetime.now()
+    date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
+    date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
+    now = datetime.now()
 
-        if (date_dt_begin < now < date_dt_end) or test:
-        #if True:
-            if enter_logic:
-                time.sleep((nametag - 1) * 1)
-                enter_logic = False
-            for sel_month in sel_month_list:
-                global param_date
-                form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
-                param_date = str(datetime.now().strftime("%Y") + sel_month)
+    #if date_dt_begin < now < date_dt_end:
+    if True:
+        if enter_logic:
+            time.sleep((nametag - 1) * 1)
+            enter_logic = False
+        for sel_month in sel_month_list:
+            global param_date
+            form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
+            param_date = str(datetime.now().strftime("%Y") + sel_month)
 
-                for date in sel_date_list:
-                    global continue_work
-                    global trying
-                    global temp_room_list
-                    if len(temp_room_list) < 1:
-                        temp_room_list = room_list.copy()
-                    month = date[0:2]
-                    day = date[2:4]
-                    if sel_month == month:
+            for date in sel_date_list:
+                global continue_work
+                global trying
+                global temp_room_list
+                if len(temp_room_list) < 1:
+                    temp_room_list = room_list.copy()
+                month = date[0:2]
+                day = date[2:4]
+                if sel_month == month:
 
-                        # 선택된 사이트가 있으면 그 사이트만 looping
-                        for site in sel_site_list:
-                            # 탐색 zone 순서
-                            # Machine 숫자로 단일 지정하게 된다.
-                            for room in room_list:
-                                try:
-                                    access = False
-                                    index = 0
-                                    for temp_room in temp_room_list:
-                                        if temp_room == room:
-                                            access = True
-                                            del temp_room_list[index]
-                                            break
-                                        index = index + 1
+                    # 선택된 사이트가 있으면 그 사이트만 looping
+                    for site in sel_site_list:
+                        # 탐색 zone 순서
+                        # Machine 숫자로 단일 지정하게 된다.
+                        for room in room_list:
+                            try:
+                                access = False
+                                index = 0
+                                for temp_room in temp_room_list:
+                                    if temp_room == room:
+                                        access = True
+                                        del temp_room_list[index]
+                                        break
+                                    index = index + 1
 
-                                    if access:
-                                        # room = room_list[nametag-1]
-                                        target_date = form_date + str(day)
-                                        if site == 'A':
-                                            loop_site_cnt = a_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_a
-                                            fix_room_num = 100
-                                            fix_room_num_1 = -6
-                                        elif site == 'B':
-                                            loop_site_cnt = b_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_b
-                                            fix_room_num = 159
-                                        elif site == 'C':
-                                            loop_site_cnt = c_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_c
-                                            fix_room_num = 218
-                                        elif site == 'D':
-                                            loop_site_cnt = d_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_d
-                                            fix_room_num = 533  # D 예외 참조 : SITE ROOM : 709 APPROOM : 552
-                                        elif site == 'E':
-                                            loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_e
-                                            fix_room_num = 380
-                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
-                                        data = {
-                                            'actFile': 'tracking',
-                                            'actMode': 'Areain',
-                                            'actZone': site,
-                                            'actDate': target_date
-                                        }  # 요청할 데이터
-                                        response = request_step1(method_name='POST', url=url, dict_data=data)
-                                        if response.get('status_code') == 200:
-                                            dict_data = json.loads(response.get('text')).get('data')
-                                        cookie = response.get('cookies')
+                                if access:
+                                    # room = room_list[nametag-1]
+                                    target_date = form_date + str(day)
+                                    if site == 'A':
+                                        loop_site_cnt = a_site_cnt  # 사이트 순환 돌릴 꺼
+                                        start_index = target_index_a
+                                        fix_room_num = 100
+                                        fix_room_num_1 = -6
+                                    elif site == 'B':
+                                        loop_site_cnt = b_site_cnt  # 사이트 순환 돌릴 꺼
+                                        start_index = target_index_b
+                                        fix_room_num = 159
+                                    elif site == 'C':
+                                        loop_site_cnt = c_site_cnt  # 사이트 순환 돌릴 꺼
+                                        start_index = target_index_c
+                                        fix_room_num = 218
+                                    elif site == 'D':
+                                        loop_site_cnt = d_site_cnt  # 사이트 순환 돌릴 꺼
+                                        start_index = target_index_d
+                                        fix_room_num = 533  # D 예외 참조 : SITE ROOM : 709 APPROOM : 552
+                                    elif site == 'E':
+                                        loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
+                                        start_index = target_index_e
+                                        fix_room_num = 380
+                                    url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
+                                    data = {
+                                        'actFile': 'tracking',
+                                        'actMode': 'Areain',
+                                        'actZone': site,
+                                        'actDate': target_date
+                                    }  # 요청할 데이터
+                                    response = request_step1(method_name='POST', url=url, dict_data=data)
+                                    if response.get('status_code') == 200:
+                                        dict_data = json.loads(response.get('text')).get('data')
+                                    cookie = response.get('cookies')
 
-                                        # for site_index in range(loop_site_cnt):
-                                        # sel_num = 0
-                                        # if int(room) > 0:
-                                        # sel_num = int(room) - fix_room_num
-                                        # if start_index == sel_num or sel_num == 0:
+                                    # for site_index in range(loop_site_cnt):
+                                    # sel_num = 0
+                                    # if int(room) > 0:
+                                    # sel_num = int(room) - fix_room_num
+                                    # if start_index == sel_num or sel_num == 0:
 
-                                        start_index = int(room) - fix_room_num
+                                    start_index = int(room) - fix_room_num
 
-                                        # 객실정보 처리
-                                        # D 사이트 709번은 APP INDEX를 한칸 더 간다.
-                                        if site == 'D' and room == '709':
-                                            start_index = start_index + 1
-                                        room_key = str('appRoom[') + str(start_index) + str("]")
-                                        machine_id_txt = str(datetime.now()) + ' // ' + str(
-                                            thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + '/' + site + str(
-                                            room) + ' -> '
-                                        room_num = str(site + str(int(start_index) + fix_room_num))
+                                    # 객실정보 처리
+                                    # D 사이트 709번은 APP INDEX를 한칸 더 간다.
+                                    if site == 'D' and room == '709':
+                                        start_index = start_index + 1
+                                    room_key = str('appRoom[') + str(start_index) + str("]")
+                                    machine_id_txt = str(datetime.now()) + ' // ' + str(
+                                        thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + '/' + site + str(
+                                        room) + ' -> '
+                                    room_num = str(site + str(int(start_index) + fix_room_num))
 
-                                        dict_meta = captcha(cookie, thread_name)
-                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
-                                        data = {
-                                            'step': dict_data.get('step'),
-                                            'conn': dict_data.get('conn'),
-                                            'resArea': dict_data.get('Area'),
-                                            'resCheckin': dict_data.get('Checkin'),
-                                            'resPeriod': str(period),
-                                            'actFile': 'reservation',
-                                            'actMode': 'Entryin',
-                                            room_key: '1',
-                                            'CAPTCHA_TEXT': dict_meta.get('captcha')
-                                        }
-                                        while continue_work:
-                                            if trying:
-                                                print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
-                                                sys.exit()
-                                            # else:
-                                            #    print('시스템 대기 상태 중')
-                                        if not continue_work and not trying:
-                                            continue_work = True
-                                            response = request_step2(method_name='POST', url=url, dict_data=data,
-                                                                     cookies=cookie)
-                                            if response.get('status_code') != 200:
-                                                print(machine_id_txt + '네트워크 전송에 실패하였습니다.')
-                                                continue_work = False
-                                            else:
-                                                result_txt = json.loads(response.get('text'))
-                                                if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
-                                                        or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
-                                                        or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.' \
-                                                        or result_txt.get('ERROR') == '객실정보가 확인되지 않았습니다.':
-                                                    if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
-                                                        continue_work = False
-                                                        print(machine_id_txt + ' 이미 선점된 사이트라 재시도 합니다.')
-                                                        # raise Exception('dsdsd')
-                                                        # sys.exit()
-                                                    else:
-                                                        continue_work = False
-                                                        print(machine_id_txt + result_txt.get('ERROR'))
-                                                else:
-                                                    dict_data = json.loads(response.get('text')).get('data')
-                                                    if not trying and dict_data is not None:
-                                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
-                                                        data = {
-                                                            'appName': user_name,  # 이름
-                                                            'appMobile_1': user_phone1,  # 변수
-                                                            'appMobile_2': user_phone2,  # 변수
-                                                            'appMobile_3': user_phone3,  # 변수
-                                                            'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
-                                                            'appEmail_id': email,  # 변수
-                                                            'appEmail_dom': domain,  # 변수
-                                                            'startArea_1': area1,
-                                                            'startArea_2': area2,
-                                                            'arrivalDate': '14',  # 도착 시간 14시 고정
-                                                            'discountType': '0',  # 할인 정보 없음 고정
-                                                            'step': 'Confirm',  # 승인 플래그
-                                                            'conn': dict_data.get('conn'),
-                                                            'resArea': dict_data.get('Area'),
-                                                            'resCheckin': dict_data.get('Checkin'),
-                                                            'resPeriod': str(period),
-                                                            'resRoom': dict_data.get('Room'),
-                                                            'actFile': 'reservation',
-                                                            'actMode': 'Request'
-                                                        }
-                                                        if not trying:
-                                                            trying = True
-                                                            response = request_step3(method_name='POST', url=url,
-                                                                                     dict_data=data,
-                                                                                     cookies=cookie)
-                                                            if response.get('status_code') == 200:
-                                                                print(str(thread_name) + ' : ' + str(
-                                                                    datetime.now().strftime(
-                                                                        "%X")) + ' ' + room_num + " 예약 완료")
-                                                            else:
-                                                                print(str(thread_name) + ' : ' + str(
-                                                                    datetime.now().strftime(
-                                                                        "%X")) + ' ' + room_num + " 예약 실패")
-                                                            sys.exit()
-                                                        else:
-                                                            print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
-                                                            sys.exit()
-
-                                        else:
-                                            print(thread_name + ' 선행된 예약이 있어, 더 이상 예약 시도를 하지 않고 종료 합니다.')
+                                    dict_meta = captcha(cookie, thread_name)
+                                    url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
+                                    data = {
+                                        'step': dict_data.get('step'),
+                                        'conn': dict_data.get('conn'),
+                                        'resArea': dict_data.get('Area'),
+                                        'resCheckin': dict_data.get('Checkin'),
+                                        'resPeriod': str(period),
+                                        'actFile': 'reservation',
+                                        'actMode': 'Entryin',
+                                        room_key: '1',
+                                        'CAPTCHA_TEXT': dict_meta.get('captcha')
+                                    }
+                                    while continue_work:
+                                        if trying:
+                                            print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
                                             sys.exit()
-                                except Exception as ex:
-                                    print(ex)
-                                    continue_work = False
-                                    if trying:
-                                        print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
-                                        sys.exit()
-                                    print(str(thread_name) + ' 에러 발생 재실행')
-                                    retry_moudule(site, target_date, room, fix_room_num, thread_name, continue_work,
-                                                  trying, user_phone1, user_phone2, user_phone3)
+                                        # else:
+                                        #    print('시스템 대기 상태 중')
+                                    if not continue_work and not trying:
+                                        continue_work = True
+                                        response = request_step2(method_name='POST', url=url, dict_data=data,
+                                                                 cookies=cookie)
+                                        if response.get('status_code') != 200:
+                                            print(machine_id_txt + '네트워크 전송에 실패하였습니다.')
+                                            continue_work = False
+                                        else:
+                                            result_txt = json.loads(response.get('text'))
+                                            if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
+                                                    or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
+                                                    or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.' \
+                                                    or result_txt.get('ERROR') == '객실정보가 확인되지 않았습니다.':
+                                                if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
+                                                    continue_work = False
+                                                    print(machine_id_txt + ' 이미 선점된 사이트라 재시도 합니다.')
+                                                    # raise Exception('dsdsd')
+                                                    # sys.exit()
+                                                else:
+                                                    continue_work = False
+                                                    print(machine_id_txt + result_txt.get('ERROR'))
+                                            else:
+                                                dict_data = json.loads(response.get('text')).get('data')
+                                                if not trying and dict_data is not None:
+                                                    url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
+                                                    data = {
+                                                        'appName': user_name,  # 이름
+                                                        'appMobile_1': user_phone1,  # 변수
+                                                        'appMobile_2': user_phone2,  # 변수
+                                                        'appMobile_3': user_phone3,  # 변수
+                                                        'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
+                                                        'appEmail_id': email,  # 변수
+                                                        'appEmail_dom': domain,  # 변수
+                                                        'startArea_1': area1,
+                                                        'startArea_2': area2,
+                                                        'arrivalDate': '14',  # 도착 시간 14시 고정
+                                                        'discountType': '0',  # 할인 정보 없음 고정
+                                                        'step': 'Confirm',  # 승인 플래그
+                                                        'conn': dict_data.get('conn'),
+                                                        'resArea': dict_data.get('Area'),
+                                                        'resCheckin': dict_data.get('Checkin'),
+                                                        'resPeriod': str(period),
+                                                        'resRoom': dict_data.get('Room'),
+                                                        'actFile': 'reservation',
+                                                        'actMode': 'Request'
+                                                    }
+                                                    if not trying:
+                                                        trying = True
+                                                        response = request_step3(method_name='POST', url=url,
+                                                                                 dict_data=data,
+                                                                                 cookies=cookie)
+                                                        if response.get('status_code') == 200:
+                                                            print(str(thread_name) + ' : ' + str(
+                                                                datetime.now().strftime(
+                                                                    "%X")) + ' ' + room_num + " 예약 완료")
+                                                        else:
+                                                            print(str(thread_name) + ' : ' + str(
+                                                                datetime.now().strftime(
+                                                                    "%X")) + ' ' + room_num + " 예약 실패")
+                                                        sys.exit()
+                                                    else:
+                                                        print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
+                                                        sys.exit()
 
-        time.sleep(delay)
+                                    else:
+                                        print(thread_name + ' 선행된 예약이 있어, 더 이상 예약 시도를 하지 않고 종료 합니다.')
+                                        sys.exit()
+                            except Exception as ex:
+                                print(ex)
+                                continue_work = False
+                                if trying:
+                                    print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
+                                    sys.exit()
+                                print(str(thread_name) + ' 에러 발생 재실행')
+                                retry_moudule(site, target_date, room, fix_room_num, thread_name, continue_work,
+                                              trying, user_phone1, user_phone2, user_phone3)
+
+    time.sleep(delay)
 
 
 def retry_moudule(site, target_date, room, fix_room_num, thread_name, continue_work, trying, user_phone1, user_phone2,
@@ -749,12 +746,227 @@ def request_step3(method_name, url, dict_data, cookies, is_urlencoded=True):
         return {**dict_meta, **{'text': response.text}}
 
 
-for i in range(machine):
-    nametag = i + 1
-    name = "MACHINE{}".format(nametag)
-    dataset['name'] = name
-    dataset['nametag'] = nametag
-    t = Worker(dataset)  # sub thread 생성
-    # t.daemon = True
-    t.start()
-    time.sleep(time_cut)
+def solcamp_engine():
+    for i in range(machine):
+        nametag = i + 1
+        name = "MACHINE{}".format(nametag)
+        dataset['name'] = name
+        dataset['nametag'] = nametag
+        t = Worker(dataset)  # sub thread 생성
+        # t.daemon = True
+        t.start()
+        time.sleep(time_cut)
+
+
+
+
+delay = 5  # 모니터링 용 매크로 돌릴땐 빠른 0추천
+
+def starter():
+    try_cnt = 1
+    while True:
+        sel_month = '09'
+        sel_date_list = ['29']
+        sel_site_list = ['E']
+        sel_num_list = []
+
+        driver = webdriver.Chrome()
+        wait = WebDriverWait(driver, 300)
+        date_frame = datetime.now().strftime("%Y") + sel_month
+        url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=" + date_frame + "&step=Areas"
+        driver.get(url)
+        #driver.maximize_window()
+
+        # 이용수칙 팝업 찾기
+        check_box = driver.find_elements(By.NAME, 'today_dpnone')
+        if len(check_box) > 0:
+            check_box[0].click()
+        pop_btn_list = driver.find_elements(By.CSS_SELECTOR, "button.btn-dark")
+        if len(pop_btn_list) > 0:
+            pop_btn_list[0].click()
+
+
+
+        # 날짜 찾기
+        is_enable = False
+        while not is_enable:
+            try:
+                wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "span.fs11pt")))
+                current_date = datetime.now()
+                date_second = current_date.strftime('%H:%M:%S')
+                date_frame = current_date.strftime("%Y") + "-" + sel_month + "-"
+
+                for date in sel_date_list:
+                    for sel_site in sel_site_list:
+                        button_value = "//button[@value='" + sel_site + ":" + date_frame + date + "']"
+
+                        is_exception = False
+                        try:
+                            button = driver.find_element(By.XPATH, button_value)
+                        except NoSuchElementException:
+                            is_exception = True
+                            print(date_frame + date + ' ' + date_second + " : 가능한 " + sel_site + " 사이트가 없습니다.")
+
+                        if not is_exception:
+                            if button.is_enabled():
+                                button.click()
+                                is_enable = True
+                                if is_enable:
+                                    #일시적으로 삭제, SOLCAMP ACTIVATOR 와 함께 동작
+                                    #print(date_frame + date + ' ' + date_second + " 일자 : " + sel_site + ' ZONE 선택완료')
+                                    #wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "button.areacode")))
+                                    #select_area(sel_num_list, wait, driver)
+                                    #captcha_starter(wait, driver)
+
+                                    # try_cnt = try_cnt + 1
+                                    # print('시도횟수 : ' + str(try_cnt))
+                                    # driver.close()
+                                    # main()
+                                    solcamp_engine()
+                                    while True:
+                                        playsound('done.mp3')
+                                        pass
+            except:
+                pass
+
+            driver.refresh()
+            time.sleep(delay)
+
+
+def captcha_starter(wait, driver):
+    wait.until(EC.visibility_of_element_located((By.ID, "CAPTCHA_CODE")))
+    driver.find_element(By.ID, 'CAPTCHA_CODE').screenshot('captcha.png')
+    # 이미지 로드
+    image = Image.open('captcha.png')
+    image.save('captcha.png')
+
+    # target_image = cv2.imread('captcha.png', cv2.IMREAD_GRAYSCALE)
+    target_image = target_image = cv2.imread('captcha.png')
+    index = 0
+    color = 'b'
+    cpatcha_code = '00000'
+    while index < 10:
+        check_count1 = 0  # 최소 3개 이상 찍혀야 인정하자
+        check_count2 = 0  # 최소 3개 이상 찍혀야 인정하자
+        check_count3 = 0  # 최소 3개 이상 찍혀야 인정하자
+        check_count4 = 0  # 최소 3개 이상 찍혀야 인정하자
+        check_count5 = 0  # 최소 3개 이상 찍혀야 인정하자
+        check_flag1 = False
+        check_flag2 = False
+        check_flag3 = False
+        check_flag4 = False
+        check_flag5 = False
+        max_count = 3   # 정교함 밑에 쓰레드홀드랑 연관
+
+        last_index = 0
+        color_loop = 0  # 5개의 색깔별 숫자
+
+        while color_loop < 5:
+            if color_loop == 0:
+                color = 'b'
+            elif color_loop == 1:
+                color = 'g'
+            elif color_loop == 2:
+                color = 'r'
+            elif color_loop == 3:
+                color = 's'
+            elif color_loop == 4:
+                color = 'y'
+            template_name = 'captcha/' + color + str(index) + '.png'
+            # 이미지 로드
+            img = cv2.imread(template_name)
+            # 색상 제거
+            # img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+            # 타겟 이미지에서 탬플릿 매칭
+            result = cv2.matchTemplate(img, target_image, cv2.TM_CCOEFF_NORMED)
+            threshold = 0.63  # 절때 건들이지 말것 정확도  맨앞 노란8잡기위함
+            loc = np.where(result >= threshold)
+            for pt in zip(*loc[::-1]):
+                x = pt[0]
+                if 1 < x < 10 and not check_flag1:
+                    check_count1 = check_count1 + 1
+                    # print(str(x) + ' ' + template_name)
+                    if last_index != index:
+                        check_count1 = 1
+                    if check_count1 >= max_count:
+                        # print(template_name + ' : 첫번째' + str(x))
+                        cpatcha_code = str(index) + cpatcha_code[1:5]
+                        check_flag1 = True
+                    last_index = index
+                elif 30 < x < 40 and not check_flag2:
+                    check_count2 = check_count2 + 1
+                    if last_index != index:
+                        check_count2 = 1
+                    if check_count2 >= max_count:
+                        # print(template_name + ' : 두번째' + str(x))
+                        cpatcha_code = cpatcha_code[0:1] + str(index) + cpatcha_code[2:5]
+                        check_flag2 = True
+                    last_index = index
+                elif 60 < x < 70 and not check_flag3:
+                    check_count3 = check_count3 + 1
+                    if last_index != index:
+                        check_count3 = 1
+                    if check_count3 >= max_count:
+                        # print(template_name + ' : 세번째' + str(x))
+                        cpatcha_code = cpatcha_code[0:2] + str(index) + cpatcha_code[3:5]
+                        check_flag3 = True
+                    last_index = index
+                elif 90 < x < 100 and not check_flag4:
+                    check_count4 = check_count4 + 1
+                    if last_index != index:
+                        check_count4 = 1
+                    if check_count4 >= max_count:
+                        # print(template_name + ' : 네번째' + str(x))
+                        cpatcha_code = cpatcha_code[0:3] + str(index) + cpatcha_code[4:5]
+                        check_flag4 = True
+                    last_index = index
+                elif 120 < x < 130 and not check_flag5:
+                    if last_index != index:
+                        check_count5 = 1
+                    check_count5 = check_count5 + 1
+                    if check_count5 >= max_count:
+                        # print(template_name + ' : 다섯번째' + str(x))
+                        cpatcha_code = cpatcha_code[0:4] + str(index) + cpatcha_code[5:5]
+                        check_flag5 = True
+                    last_index = index
+            color_loop = color_loop + 1
+
+        index = index + 1
+    wait.until(EC.visibility_of_element_located((By.ID, "CAPTCHA_TEXT"))).send_keys(cpatcha_code)
+    #time.sleep(3)
+    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "button.bluish"))).click()
+    #print(str(datetime.now().strftime("%X")) + ' color code : ' + cpatcha_code)
+
+    pass
+
+
+def select_area(sel_num_list, wait, driver):
+    area_list = driver.find_elements(By.CSS_SELECTOR, "button.on")
+    area_found = False
+    for area in area_list:
+        if len(sel_num_list) > 0:
+            for sel_site_num in sel_num_list:
+                if (area.find_element(By.CSS_SELECTOR, "span").text == sel_site_num) and not area_found:
+                    print(str(datetime.now().strftime("%X")) + ' 사이트 선택 : ' + str(area.find_element(By.CSS_SELECTOR, "span").text))
+                    area.click()
+                    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "select.select30")))
+                    selector = Select(driver.find_elements(By.CSS_SELECTOR, "select.select30")[0])
+                    selector.select_by_index(4)
+                    area_found = True
+
+                    break
+        else:
+            if not area_found:
+                print(str(datetime.now().strftime("%X")) + ' 사이트 선택 : ' + str(area.find_element(By.CSS_SELECTOR, "span").text))
+                area.click()
+                wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "select.select30")))
+                selector = Select(driver.find_elements(By.CSS_SELECTOR, "select.select30")[0])
+                selector.select_by_index(4)
+                area_found = True
+
+    if not area_found:
+        exit(str(datetime.now().strftime("%X")) + ' THERE IS NO AREA ENABLE')
+
+
+starter()
