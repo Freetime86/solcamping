@@ -24,24 +24,24 @@ global try_cnt
 
 machine = 2  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 0  # 머신 시작 간격
-period = 2  # 연박 수
+period = 1  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
-test = True
-room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
+test = False
+#room_list = ['503']  # 사이트 번호 지정
 #room_list = ['503']
-#room_list = ['503', '504', '505', '506', '507', '508', '510', '509']
+room_list = ['503', '504', '505', '506', '507', '508', '510', '509']
 #room_list = ['311', '312', '313', '314', '315', '316', '317', '318']
 # D 사이트
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
 temp_room_list = room_list.copy()
 sel_month_list = ['07']
-sel_date_list = ['0713']
-sel_site_list = ['E']
+sel_date_list = ['0714']
+site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 3  # 사용자 정보 세팅
+user_type = 9  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -62,6 +62,7 @@ if user_type == 1:
     email = 'jsy3032'
     domain = 'gmail.com'
     area1 = '경기도'
+    area2 = '광명'
 elif user_type == 2:
     user_name = '김형민'
     user_phone = '01091251464'
@@ -104,6 +105,13 @@ elif user_type == 7:
     domain = 'gmail.com'
     area1 = '경기도'
     area2 = '성남'
+elif user_type == 8:
+    user_name = '박현정'
+    user_phone = '01085983083'
+    email = 'fpahs414'
+    domain = 'naver.com'
+    area1 = '경기도'
+    area2 = '구리'
 elif user_type == 9:
     user_name = '김명신'
     user_phone = '01022866574'
@@ -186,6 +194,12 @@ def main(dataset):
     target_index_d = 168  # D 사이트 시작 index
     target_index_e = 121  # E 사이트 시작 index
 
+    # date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:59'
+    # date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
+
+    date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:50'
+    date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
+
     first_message = False
     enter_logic = True
     while True:
@@ -194,12 +208,6 @@ def main(dataset):
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
             first_message = True
 
-        #date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:59'
-        #date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
-
-        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:50'
-        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
-
         date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
         date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
         now = datetime.now()
@@ -207,7 +215,6 @@ def main(dataset):
         userAgent = generate_user_agent(os='win', device_type='desktop')
 
         if (date_dt_begin < now < date_dt_end) or test:
-        #if True:
             if enter_logic:
                 time.sleep((nametag - 1) * 1)
                 enter_logic = False
@@ -225,171 +232,140 @@ def main(dataset):
                     month = date[0:2]
                     day = date[2:4]
                     if sel_month == month:
+                        try:
+                            param_name = 'room' + str(nametag)
+                            index = dataset[param_name]
+                            room = room_list[int(index)-1]
+                            target_date = form_date + str(day)
+                            if site == 'A':
+                                fix_room_num = 100
+                            elif site == 'B':
+                                fix_room_num = 159
+                            elif site == 'C':
+                                fix_room_num = 218
+                            elif site == 'D':
+                                fix_room_num = 533  # D 예외 참조 : SITE ROOM : 709 APPROOM : 552
+                            elif site == 'E':
+                                fix_room_num = 380
+                            url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
+                            data = {
+                                'actFile': 'tracking',
+                                'actMode': 'Areain',
+                                'actZone': site,
+                                'actDate': target_date
+                            }  # 요청할 데이터
+                            response = request_step1(userAgent, method_name='POST', url=url, dict_data=data)
+                            if response.get('status_code') == 200:
+                                dict_data = json.loads(response.get('text')).get('data')
+                            cookie = response.get('cookies')
 
-                        # 선택된 사이트가 있으면 그 사이트만 looping
-                        for site in sel_site_list:
-                            # 탐색 zone 순서
-                            # Machine 숫자로 단일 지정하게 된다.
-                            for room in room_list:
-                                try:
-                                    access = False
-                                    index = 0
-                                    for temp_room in temp_room_list:
-                                        if temp_room == room:
-                                            access = True
-                                            del temp_room_list[index]
-                                            break
-                                        index = index + 1
+                            start_index = int(room) - fix_room_num
 
-                                    if access:
-                                        # room = room_list[nametag-1]
-                                        target_date = form_date + str(day)
-                                        if site == 'A':
-                                            loop_site_cnt = a_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_a
-                                            fix_room_num = 100
-                                            fix_room_num_1 = -6
-                                        elif site == 'B':
-                                            loop_site_cnt = b_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_b
-                                            fix_room_num = 159
-                                        elif site == 'C':
-                                            loop_site_cnt = c_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_c
-                                            fix_room_num = 218
-                                        elif site == 'D':
-                                            loop_site_cnt = d_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_d
-                                            fix_room_num = 533  # D 예외 참조 : SITE ROOM : 709 APPROOM : 552
-                                        elif site == 'E':
-                                            loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
-                                            start_index = target_index_e
-                                            fix_room_num = 380
-                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
-                                        data = {
-                                            'actFile': 'tracking',
-                                            'actMode': 'Areain',
-                                            'actZone': site,
-                                            'actDate': target_date
-                                        }  # 요청할 데이터
-                                        response = request_step1(userAgent, method_name='POST', url=url, dict_data=data)
-                                        if response.get('status_code') == 200:
-                                            dict_data = json.loads(response.get('text')).get('data')
-                                        cookie = response.get('cookies')
+                            # 객실정보 처리
+                            # D 사이트 709번은 APP INDEX를 한칸 더 간다.
+                            if site == 'D' and room == '709':
+                                start_index = start_index + 1
+                            room_key = str('appRoom[') + str(start_index) + str("]")
+                            machine_id_txt = str(datetime.now()) + ' // ' + str(
+                                thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + '/' + site + str(
+                                room) + ' -> '
+                            room_num = str(site + str(int(start_index) + fix_room_num))
 
-                                        # for site_index in range(loop_site_cnt):
-                                        # sel_num = 0
-                                        # if int(room) > 0:
-                                        # sel_num = int(room) - fix_room_num
-                                        # if start_index == sel_num or sel_num == 0:
-
-                                        start_index = int(room) - fix_room_num
-
-                                        # 객실정보 처리
-                                        # D 사이트 709번은 APP INDEX를 한칸 더 간다.
-                                        if site == 'D' and room == '709':
-                                            start_index = start_index + 1
-                                        room_key = str('appRoom[') + str(start_index) + str("]")
-                                        machine_id_txt = str(datetime.now()) + ' // ' + str(
-                                            thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + '/' + site + str(
-                                            room) + ' -> '
-                                        room_num = str(site + str(int(start_index) + fix_room_num))
-
-                                        dict_meta = captcha(cookie, thread_name)
-                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
-                                        data = {
-                                            'step': dict_data.get('step'),
-                                            'conn': dict_data.get('conn'),
-                                            'resArea': dict_data.get('Area'),
-                                            'resCheckin': dict_data.get('Checkin'),
-                                            'resPeriod': str(period),
-                                            'actFile': 'reservation',
-                                            'actMode': 'Entryin',
-                                            room_key: '1',
-                                            'CAPTCHA_TEXT': dict_meta.get('captcha')
-                                        }
-                                        while continue_work:
-                                            if trying:
-                                                print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
-                                                sys.exit()
-                                            # else:
-                                            #    print('시스템 대기 상태 중')
-                                        if not continue_work and not trying:
-                                            continue_work = True
-                                            response = request_step2(userAgent, method_name='POST', url=url, dict_data=data,
-                                                                     cookies=cookie)
-                                            if response.get('status_code') != 200:
-                                                print(machine_id_txt + '네트워크 전송에 실패하였습니다.')
-                                                continue_work = False
-                                            else:
-                                                result_txt = json.loads(response.get('text'))
-                                                if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
-                                                        or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
-                                                        or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.' \
-                                                        or result_txt.get('ERROR') == '객실정보가 확인되지 않았습니다.':
-                                                    if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
-                                                        continue_work = False
-                                                        print(machine_id_txt + ' 이미 선점된 사이트라 재시도 합니다.')
-                                                        # raise Exception('dsdsd')
-                                                        # sys.exit()
-                                                    else:
-                                                        continue_work = False
-                                                        print(machine_id_txt + result_txt.get('ERROR'))
-                                                else:
-                                                    dict_data = json.loads(response.get('text')).get('data')
-                                                    if not trying and dict_data is not None:
-                                                        url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
-                                                        data = {
-                                                            'appName': user_name,  # 이름
-                                                            'appMobile_1': user_phone1,  # 변수
-                                                            'appMobile_2': user_phone2,  # 변수
-                                                            'appMobile_3': user_phone3,  # 변수
-                                                            'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
-                                                            'appEmail_id': email,  # 변수
-                                                            'appEmail_dom': domain,  # 변수
-                                                            'startArea_1': area1,
-                                                            'startArea_2': area2,
-                                                            'arrivalDate': '14',  # 도착 시간 14시 고정
-                                                            'discountType': '0',  # 할인 정보 없음 고정
-                                                            'step': 'Confirm',  # 승인 플래그
-                                                            'conn': dict_data.get('conn'),
-                                                            'resArea': dict_data.get('Area'),
-                                                            'resCheckin': dict_data.get('Checkin'),
-                                                            'resPeriod': str(period),
-                                                            'resRoom': dict_data.get('Room'),
-                                                            'actFile': 'reservation',
-                                                            'actMode': 'Request'
-                                                        }
-                                                        if not trying:
-                                                            trying = True
-                                                            response = request_step3(userAgent, method_name='POST', url=url,
-                                                                                     dict_data=data,
-                                                                                     cookies=cookie)
-                                                            if response.get('status_code') == 200:
-                                                                print(str(thread_name) + ' : ' + str(
-                                                                    datetime.now().strftime(
-                                                                        "%X")) + ' ' + room_num + " 예약 완료")
-                                                            else:
-                                                                print(str(thread_name) + ' : ' + str(
-                                                                    datetime.now().strftime(
-                                                                        "%X")) + ' ' + room_num + " 예약 실패")
-                                                            sys.exit()
-                                                        else:
-                                                            print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
-                                                            sys.exit()
-
-                                        else:
-                                            print(thread_name + ' 선행된 예약이 있어, 더 이상 예약 시도를 하지 않고 종료 합니다.')
-                                            sys.exit()
-                                except Exception as ex:
-                                    print(ex)
+                            dict_meta = captcha(cookie, thread_name)
+                            url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
+                            data = {
+                                'step': dict_data.get('step'),
+                                'conn': dict_data.get('conn'),
+                                'resArea': dict_data.get('Area'),
+                                'resCheckin': dict_data.get('Checkin'),
+                                'resPeriod': str(period),
+                                'actFile': 'reservation',
+                                'actMode': 'Entryin',
+                                room_key: '1',
+                                'CAPTCHA_TEXT': dict_meta.get('captcha')
+                            }
+                            while continue_work:
+                                if trying:
+                                    print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
+                                    sys.exit()
+                                # else:
+                                #    print('시스템 대기 상태 중')
+                            if not continue_work and not trying:
+                                continue_work = True
+                                response = request_step2(userAgent, method_name='POST', url=url, dict_data=data,
+                                                         cookies=cookie)
+                                if response.get('status_code') != 200:
+                                    print(machine_id_txt + '네트워크 전송에 실패하였습니다.')
                                     continue_work = False
-                                    if trying:
-                                        print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
-                                        sys.exit()
-                                    print(str(thread_name) + ' 에러 발생 재실행')
-                                    retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name, continue_work,
-                                                  trying, user_phone1, user_phone2, user_phone3)
+                                else:
+                                    result_txt = json.loads(response.get('text'))
+                                    if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.' \
+                                            or result_txt.get('ERROR') == '선택하신 기간은 예약할 수 없습니다.' \
+                                            or result_txt.get('ERROR') == '자동입력방지코드가 일치하지 않습니다.' \
+                                            or result_txt.get('ERROR') == '객실정보가 확인되지 않았습니다.':
+                                        if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
+                                            continue_work = False
+                                            print(machine_id_txt + ' 이미 선점된 사이트라 프로세스를 종료 합니다.')
+                                            # raise Exception('dsdsd')
+                                            sys.exit()
+                                        else:
+                                            continue_work = False
+                                            print(machine_id_txt + result_txt.get('ERROR'))
+                                    else:
+                                        dict_data = json.loads(response.get('text')).get('data')
+                                        if not trying and dict_data is not None:
+                                            url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET
+                                            data = {
+                                                'appName': user_name,  # 이름
+                                                'appMobile_1': user_phone1,  # 변수
+                                                'appMobile_2': user_phone2,  # 변수
+                                                'appMobile_3': user_phone3,  # 변수
+                                                'appMobile_Sending': 'Y',  # 정보 제공 Y 고정
+                                                'appEmail_id': email,  # 변수
+                                                'appEmail_dom': domain,  # 변수
+                                                'startArea_1': area1,
+                                                'startArea_2': area2,
+                                                'arrivalDate': '14',  # 도착 시간 14시 고정
+                                                'discountType': '0',  # 할인 정보 없음 고정
+                                                'step': 'Confirm',  # 승인 플래그
+                                                'conn': dict_data.get('conn'),
+                                                'resArea': dict_data.get('Area'),
+                                                'resCheckin': dict_data.get('Checkin'),
+                                                'resPeriod': str(period),
+                                                'resRoom': dict_data.get('Room'),
+                                                'actFile': 'reservation',
+                                                'actMode': 'Request'
+                                            }
+                                            if not trying:
+                                                response = request_step3(userAgent, method_name='POST', url=url,
+                                                                         dict_data=data,
+                                                                         cookies=cookie)
+                                                if response.get('status_code') == 200:
+                                                    trying = True
+                                                    print(str(thread_name) + ' : ' + str(
+                                                        datetime.now().strftime(
+                                                            "%X")) + ' ' + room_num + " 예약 완료")
+                                                else:
+                                                    print(str(thread_name) + ' : ' + str(
+                                                        datetime.now().strftime(
+                                                            "%X")) + ' ' + room_num + " 예약 실패")
+                                                sys.exit()
+                                            else:
+                                                print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
+                                                sys.exit()
+
+                            else:
+                                print(thread_name + ' 선행된 예약이 있어, 더 이상 예약 시도를 하지 않고 종료 합니다.')
+                                sys.exit()
+                        except Exception as ex:
+                            print(ex)
+                            continue_work = False
+                            if trying:
+                                print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
+                                sys.exit()
+                            print(str(thread_name) + ' 에러 발생 재실행')
+                            retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name, continue_work,
+                                          trying, user_phone1, user_phone2, user_phone3)
 
         time.sleep(delay)
 
@@ -458,7 +434,7 @@ def retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name,
                         if result_txt.get('ERROR') == '이미 예약되었거나, 예약할 수 없는 구역이 선택되었습니다.':
                             continue_work = False
                             print(machine_id_txt + ' 이미 선점된 사이트라 예약 시도를 종료 합니다.')
-                            # sys.exit()
+                            sys.exit()
                         else:
                             continue_work = False
                             print(machine_id_txt + result_txt.get('ERROR'))
@@ -769,9 +745,11 @@ def request_step3(userAgent, method_name, url, dict_data, cookies, is_urlencoded
         return {**dict_meta, **{'text': response.text}}
 
 
-for i in range(machine):
+for i in range(len(room_list)):
     nametag = i + 1
     name = "MACHINE{}".format(nametag)
+    tag = 'room' + str(i+1)
+    dataset[tag] = i
     dataset['name'] = name
     dataset['nametag'] = nametag
     t = Worker(dataset)  # sub thread 생성
