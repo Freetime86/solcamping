@@ -26,8 +26,8 @@ options.add_experimental_option("detach", True)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 global try_cnt
 
-machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
-time_cut = 5  # 머신 시작 간격
+machine = 2  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
+time_cut = 1  # 머신 시작 간격
 period = 1  # 연박 수
 delay = 0  # 모니터링 리프레시 속도
 test = True
@@ -38,13 +38,13 @@ room_exception = ['501', '502']
 # D 사이트
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
 sel_month_list = ['07']
-sel_date_list = ['0723']
-site = 'C'
+sel_date_list = ['0730']
+site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 99  # 사용자 정보 세팅
+user_type = 5  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -205,7 +205,7 @@ def main(dataset):
     target_index_e = 121  # E 사이트 시작 index
 
     first_message = False
-    enter_logic = True
+    #enter_logic = True
     step = ''
     conn = ''
     area = ''
@@ -230,9 +230,9 @@ def main(dataset):
 
         #if (date_dt_begin < now < date_dt_end) or test:
         #if True:
-        if enter_logic:
-            time.sleep((nametag - 1) * 1)
-            enter_logic = False
+        #if enter_logic:
+        #    time.sleep((nametag - 1) * 1)
+        #    enter_logic = False
         for sel_month in sel_month_list:
             global param_date
             form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
