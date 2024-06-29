@@ -16,7 +16,6 @@ import threading
 import sys
 import urllib3
 
-
 # 시스템 설정
 py.FAILSAFE = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -27,15 +26,15 @@ time_cut = 0  # 머신 시작 간격
 period = 1  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 test = True
-#room_list = ['503']  # 사이트 번호 지정
-#room_list = ['505']
+# room_list = ['503']  # 사이트 번호 지정
+# room_list = ['505']
 room_list = ['503', '504', '505', '506', '507']
-#room_list = ['311', '312', '313', '314', '315', '316', '317', '318']
+#room_list = ['311']
 # D 사이트
-#room_list = ['701', '703', '707', '708']
+# room_list = ['701', '703', '707', '708']
 temp_room_list = room_list.copy()
 sel_month_list = ['07']
-sel_date_list = ['0719']
+sel_date_list = ['0707']
 site = 'E'
 
 continue_work = False
@@ -210,7 +209,8 @@ def main(dataset):
     first_message = False
     enter_logic = True
     while True:
-        time.sleep(2)
+        #if test:
+            #time.sleep(2)
         if not first_message:
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
             first_message = True
@@ -243,7 +243,7 @@ def main(dataset):
                         try:
                             param_name = 'room' + str(nametag)
                             index = dataset[param_name]
-                            room = room_list[int(index)-1]
+                            room = room_list[int(index) - 1]
                             target_date = form_date + str(day)
                             if site == 'A':
                                 fix_room_num = 100
@@ -381,7 +381,8 @@ def main(dataset):
         time.sleep(delay)
 
 
-def retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name, continue_work, trying, user_phone1, user_phone2,
+def retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name, continue_work, trying, user_phone1,
+                  user_phone2,
                   user_phone3, cookie, dict_data):
     print(thread_name + ' 오류 재가동 모듈을 실행합니다.')
     if trying:
@@ -839,10 +840,42 @@ def request_step3(userAgent, method_name, url, dict_data, cookies, is_urlencoded
         return {**dict_meta, **{'text': response.text}}
 
 
+def check_sites(sdate, userAgent):
+    # 예약 파라미터 세팅
+    url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=" + sdate
+    response = requests.post(url=url,
+                            headers={
+                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                                'Accept-Encoding': 'gzip, deflate, br, zstd',
+                                'Accept-Language': 'ko,en;q=0.9,en-US;q=0.8',
+                                'Connection': 'keep-alive',
+                                'Content-Length': '317',
+                                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                                'Host': 'camping.gtdc.or.kr',
+                                'Origin': 'https://www.cjfmc.or.kr',
+                                'Referer': 'https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation',
+                                'Sec-Ch-Ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
+                                'Sec-Ch-Ua-Mobile': '?0',
+                                'Sec-Ch-Ua-Platform': '"Windows"',
+                                'Sec-Fetch-Dest': 'document',
+                                'Sec-Fetch-Mode': 'navigate',
+                                'Sec-Fetch-Site': 'same-origin',
+                                'Sec-Fetch-User': '?1',
+                                'Upgrade-Insecure-Requests': '1',
+                                'User-Agent': userAgent})
+
+    dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                 'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+    if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+        return {**dict_meta, **response.json()}
+    else:  # 문자열 형태인 경우
+        return {**dict_meta, **{'text': response.text}}
+
+
 for i in range(len(room_list)):
     nametag = i + 1
     name = "MACHINE{}".format(nametag)
-    tag = 'room' + str(i+1)
+    tag = 'room' + str(i + 1)
     dataset[tag] = i
     dataset['name'] = name
     dataset['nametag'] = nametag
