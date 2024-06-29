@@ -29,7 +29,7 @@ global try_cnt
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
 period = 1  # 연박 수
-delay = 3  # 모니터링 리프레시 속도
+delay = 10  # 모니터링 리프레시 속도
 test = True
 #room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
 #room_list = ['503']
@@ -39,13 +39,13 @@ room_list = ['503', '504', '505', '506', '507', '508', '510', '509']
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
 temp_room_list = room_list.copy()
 sel_month_list = ['07']
-sel_date_list = ['0719', '0720']
+sel_date_list = ['0719', '0720', '0705', '0706', '0707', '0712', '0713', '0714']
 site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 9  # 사용자 정보 세팅
+user_type = 5  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -216,6 +216,7 @@ def main(dataset):
     time.sleep(1)
     driver.find_element(By.CLASS_NAME, 'btn-dark').click()
     # _cookies = driver.get_cookies()
+
     while True:
         if not first_message:
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
@@ -224,12 +225,17 @@ def main(dataset):
         #date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:59'
         #date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
 
-        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:50'
-        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
+        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 07:00:00'
+        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 23:00:00'
 
         date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
         date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
         now = datetime.now()
+
+        if date_dt_begin < now < date_dt_end:
+            delay = 2
+        else:
+            delay = 10
 
         userAgent = generate_user_agent(os='win', device_type='desktop')
 
