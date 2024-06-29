@@ -22,26 +22,26 @@ py.FAILSAFE = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 global try_cnt
 
-machine = 2  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
+machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 0  # 머신 시작 간격
-period = 2  # 연박 수
+period = 1  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 test = True
-room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
+#room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
 #room_list = ['503']
-#room_list = ['503', '504', '505', '506', '507', '508', '510', '509']
+room_list = ['503', '504', '505', '506', '507', '508', '510', '509']
 #room_list = ['311', '312', '313', '314', '315', '316', '317', '318']
 # D 사이트
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
 temp_room_list = room_list.copy()
 sel_month_list = ['07']
-sel_date_list = ['0713']
-sel_site_list = ['E']
+sel_date_list = ['0711']
+site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 3  # 사용자 정보 세팅
+user_type = 99  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -216,18 +216,34 @@ def main(dataset):
                 form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
                 param_date = str(datetime.now().strftime("%Y") + sel_month)
 
-                for date in sel_date_list:
-                    global continue_work
-                    global trying
-                    global temp_room_list
-                    if len(temp_room_list) < 1:
-                        temp_room_list = room_list.copy()
-                    month = date[0:2]
-                    day = date[2:4]
-                    if sel_month == month:
+                if test:
+                    #res = requests.get("https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=202407")
+                    response = check_sites(param_date, userAgent)
+                    html_element = BeautifulSoup(response.get('text'), "html.parser")
+                    day_list = html_element.find('table', 'mt10').find_all('li')
 
-                        # 선택된 사이트가 있으면 그 사이트만 looping
-                        for site in sel_site_list:
+                    exist_cnt = False
+                    for day in day_list:
+                        if 'value' in day.button.attrs:
+                            dayinfo = day.button['value']
+                            if site == dayinfo[0:1]:
+                                print(dayinfo)
+                                for date in sel_date_list:
+                                    target_date = form_date + str(date[2:4])
+                                    if dayinfo[2:12] == target_date:
+                                        exist_cnt = True
+
+                if not test or exist_cnt:
+                    for date in sel_date_list:
+                        global continue_work
+                        global trying
+                        global temp_room_list
+                        if len(temp_room_list) < 1:
+                            temp_room_list = room_list.copy()
+                        month = date[0:2]
+                        day = date[2:4]
+                        if sel_month == month:
+
                             # 탐색 zone 순서
                             # Machine 숫자로 단일 지정하게 된다.
                             for room in room_list:
@@ -767,6 +783,39 @@ def request_step3(userAgent, method_name, url, dict_data, cookies, is_urlencoded
         return {**dict_meta, **response.json()}
     else:  # 문자열 형태인 경우
         return {**dict_meta, **{'text': response.text}}
+
+
+def check_sites(sdate, userAgent):
+    # 예약 파라미터 세팅
+    url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=" + sdate
+    response = requests.post(url=url,
+                            headers={
+                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                                'Accept-Encoding': 'gzip, deflate, br, zstd',
+                                'Accept-Language': 'ko,en;q=0.9,en-US;q=0.8',
+                                'Connection': 'keep-alive',
+                                'Content-Length': '317',
+                                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                                'Host': 'camping.gtdc.or.kr',
+                                'Origin': 'https://www.cjfmc.or.kr',
+                                'Referer': 'https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation',
+                                'Sec-Ch-Ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
+                                'Sec-Ch-Ua-Mobile': '?0',
+                                'Sec-Ch-Ua-Platform': '"Windows"',
+                                'Sec-Fetch-Dest': 'document',
+                                'Sec-Fetch-Mode': 'navigate',
+                                'Sec-Fetch-Site': 'same-origin',
+                                'Sec-Fetch-User': '?1',
+                                'Upgrade-Insecure-Requests': '1',
+                                'User-Agent': userAgent})
+
+    dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                 'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+    if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+        return {**dict_meta, **response.json()}
+    else:  # 문자열 형태인 경우
+        return {**dict_meta, **{'text': response.text}}
+
 
 
 for i in range(machine):
