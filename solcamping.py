@@ -56,12 +56,20 @@ area2 = ''
 # 01021655418
 # 01021177488
 # 01099898806
-if user_type == 1:
+if user_type == 0:
     user_name = '조수윤'
     user_phone = '01024863033'
     email = 'jsy3032'
     domain = 'gmail.com'
     area1 = '경기도'
+    area2 = '광명'
+elif user_type == 1:
+    user_name = '최윤정'
+    user_phone = '01047035795'
+    email = 'cdw1317'
+    domain = 'naver.com'
+    area1 = '경기도'
+    area2 = '광명'
 elif user_type == 2:
     user_name = '김형민'
     user_phone = '01091251464'
@@ -104,6 +112,13 @@ elif user_type == 7:
     domain = 'gmail.com'
     area1 = '경기도'
     area2 = '성남'
+elif user_type == 8:
+    user_name = '박현정'
+    user_phone = '01085983083'
+    email = 'fpahs414'
+    domain = 'naver.com'
+    area1 = '경기도'
+    area2 = '구리'
 elif user_type == 9:
     user_name = '김명신'
     user_phone = '01022866574'
