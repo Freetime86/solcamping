@@ -1,6 +1,8 @@
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from PIL import Image
 from datetime import datetime
 from user_agent import generate_user_agent, generate_navigator
@@ -19,13 +21,15 @@ import urllib3
 
 # 시스템 설정
 py.FAILSAFE = False
+options = Options()
+options.add_experimental_option("detach", True)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
-time_cut = 0  # 머신 시작 간격
+time_cut = 5  # 머신 시작 간격
 period = 1  # 연박 수
-delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
+delay = 3  # 모니터링 리프레시 속도
 test = True
 #room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
 #room_list = ['503']
@@ -35,13 +39,13 @@ room_list = ['503', '504', '505', '506', '507', '508', '510', '509']
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
 temp_room_list = room_list.copy()
 sel_month_list = ['07']
-sel_date_list = ['0711']
+sel_date_list = ['0719', '0720']
 site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 99  # 사용자 정보 세팅
+user_type = 9  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -203,8 +207,16 @@ def main(dataset):
 
     first_message = False
     enter_logic = True
+    driver = webdriver.Chrome(options=options)
+    url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=" + str(
+        datetime.now().strftime("%Y") + sel_month_list[0])
+    driver.get(url)
+    time.sleep(5)
+    driver.find_element(By.NAME, 'today_dpnone').click()
+    time.sleep(1)
+    driver.find_element(By.CLASS_NAME, 'btn-dark').click()
+    # _cookies = driver.get_cookies()
     while True:
-        #time.sleep(15)
         if not first_message:
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
             first_message = True
@@ -230,25 +242,29 @@ def main(dataset):
                 global param_date
                 form_date = datetime.now().strftime("%Y") + '-' + sel_month + '-'
                 param_date = str(datetime.now().strftime("%Y") + sel_month)
-
+                exist_cnt = False
                 if test:
                     #res = requests.get("https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=202407")
-                    response = check_sites(param_date, userAgent)
-                    html_element = BeautifulSoup(response.get('text'), "html.parser")
-                    day_list = html_element.find('table', 'mt10').find_all('li')
-
-                    exist_cnt = False
-                    for day in day_list:
-                        if 'value' in day.button.attrs:
-                            dayinfo = day.button['value']
-                            if site == dayinfo[0:1]:
-                                print(dayinfo)
-                                for date in sel_date_list:
-                                    target_date = form_date + str(date[2:4])
-                                    if dayinfo[2:12] == target_date:
+                    day_list = driver.find_elements(By.CLASS_NAME, 'mt5')
+                    #print(str(thread_name) + ' CHECKING --- ' + str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                    index = 1
+                    for dayinfo in day_list:
+                        if len(sel_date_list) == 0:
+                            print('예약완료 시스템 종료')
+                            sys.exit()
+                        for date in sel_date_list:
+                            if int(index) == int(date[2:4]):
+                                str_idx = dayinfo.text.rfind(site)
+                                if len(dayinfo.text) >= int(str_idx)+8:
+                                    count = int(dayinfo.text[int(str_idx)+6:int(str_idx)+7])
+                                    if count > 0:
+                                        #print(dayinfo.text)
                                         exist_cnt = True
+                                        break
+                        index = index + 1
 
                 if not test or exist_cnt:
+
                     for date in sel_date_list:
                         global continue_work
                         global trying
@@ -257,6 +273,10 @@ def main(dataset):
                             temp_room_list = room_list.copy()
                         month = date[0:2]
                         day = date[2:4]
+
+                        if test:
+                            continue_work = False
+                            trying = False
                         if sel_month == month:
 
                             # 탐색 zone 순서
@@ -340,7 +360,7 @@ def main(dataset):
                                             'CAPTCHA_TEXT': dict_meta.get('captcha')
                                         }
                                         while continue_work:
-                                            if trying:
+                                            if trying and not test:
                                                 print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
                                                 sys.exit()
                                             # else:
@@ -400,35 +420,41 @@ def main(dataset):
                                                                 print(str(thread_name) + ' : ' + str(
                                                                     datetime.now().strftime(
                                                                         "%X")) + ' ' + room_num + " 예약 완료")
+                                                                if test:
+                                                                    break
                                                             else:
                                                                 print(str(thread_name) + ' : ' + str(
                                                                     datetime.now().strftime(
                                                                         "%X")) + ' ' + room_num + " 예약 실패")
-                                                            sys.exit()
+                                                            if not test:
+                                                                sys.exit()
                                                         else:
-                                                            print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
-                                                            sys.exit()
+                                                            if not test:
+                                                                print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
+                                                                sys.exit()
 
                                         else:
-                                            print(thread_name + ' 선행된 예약이 있어, 더 이상 예약 시도를 하지 않고 종료 합니다.')
-                                            sys.exit()
+                                            if not test:
+                                                print(thread_name + ' 선행된 예약이 있어, 더 이상 예약 시도를 하지 않고 종료 합니다.')
+                                                sys.exit()
                                 except Exception as ex:
                                     print(ex)
                                     continue_work = False
-                                    if trying:
+                                    if trying and not test:
                                         print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
                                         sys.exit()
                                     print(str(thread_name) + ' 에러 발생 재실행')
                                     retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name, continue_work,
                                                   trying, user_phone1, user_phone2, user_phone3)
 
+        driver.refresh()
         time.sleep(delay)
 
 
 def retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name, continue_work, trying, user_phone1, user_phone2,
                   user_phone3):
     print(thread_name + ' 오류 재가동 모듈을 실행합니다.')
-    if trying:
+    if trying and not test:
         print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
         sys.exit()
     try:
@@ -470,8 +496,8 @@ def retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name,
             }
             while continue_work:
                 print(thread_name + ' 9999')
-                if trying:
-                    # print(thread_name + ' 이미 예약 완료된 기록이 존재 합니다. 종료 합니다.')
+                if trying and not test:
+                    print(thread_name + ' 이미 예약 완료된 기록이 존재 합니다. 종료 합니다.')
                     sys.exit()
                 # else:
                 #    print('시스템 대기 상태 중')
@@ -529,14 +555,16 @@ def retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name,
                                 else:
                                     print(str(thread_name) + ' : ' + str(
                                         datetime.now().strftime("%X")) + ' ' + room_num + " 예약 실패")
-                                sys.exit()
+                                if not test:
+                                    sys.exit()
                             else:
-                                print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
-                                sys.exit()
+                                if not test:
+                                    print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
+                                    sys.exit()
     except Exception as ex:
         print(ex)
         continue_work = False
-        if trying:
+        if trying and not test:
             print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
             sys.exit()
         print(str(thread_name) + '에러 발생 재실행2')
@@ -803,13 +831,14 @@ def request_step3(userAgent, method_name, url, dict_data, cookies, is_urlencoded
 def check_sites(sdate, userAgent):
     # 예약 파라미터 세팅
     url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=" + sdate
-    response = requests.post(url=url,
+    response = requests.get(url=url,
                             headers={
                                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                                 'Accept-Encoding': 'gzip, deflate, br, zstd',
                                 'Accept-Language': 'ko,en;q=0.9,en-US;q=0.8',
                                 'Connection': 'keep-alive',
                                 'Content-Length': '317',
+                                'Cookie': 'DENOBIZID=sdo845l7s8p8u0ninlh2hbmn21; weather=%7B%222024-06-29%22%3A%7B%22icon%22%3A%22cloud%22%2C%22tmp%22%3A%2219.1%22%2C%22reh%22%3A%2284%22%2C%22wsd%22%3A%222.3%22%7D%2C%222024-06-30%22%3A%7B%22min%22%3A%2222%22%2C%22max%22%3A%2226%22%2C%22icon%22%3A%22rain%22%7D%2C%222024-07-01%22%3A%7B%22min%22%3A%2223%22%2C%22max%22%3A%2223%22%2C%22icon%22%3A%22cloud2%22%7D%2C%222024-07-02%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2222%22%2C%22max%22%3A%2226%22%7D%2C%222024-07-03%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2222%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-04%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2230%22%7D%2C%222024-07-05%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-06%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2222%22%2C%22max%22%3A%2229%22%7D%2C%222024-07-07%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-08%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-09%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2227%22%7D%7D',
                                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                                 'Host': 'camping.gtdc.or.kr',
                                 'Origin': 'https://www.cjfmc.or.kr',
