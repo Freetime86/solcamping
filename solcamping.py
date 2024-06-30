@@ -41,7 +41,7 @@ site = 'B'
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 9999  # 사용자 정보 세팅
+user_type = 0  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -453,16 +453,16 @@ def main(dataset):
                                                                 }
                                                                 if not trying:
                                                                     trying = True
-                                                                    print(form_date + str(day) + ' ' + str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
-                                                                    #response = request_step3(userAgent, method_name='POST', url=url, dict_data=data, cookies=cookie)
-                                                                    #if response.get('status_code') == 200:
-                                                                    #    print(form_date + str(day) + ' ' + str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
-                                                                    #    if test:
-                                                                    #        break
-                                                                    #else:
-                                                                    #    print(form_date + str(day) + ' ' + str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + room_num + " 예약 실패")
-                                                                    #if not test:
-                                                                    #    sys.exit()
+                                                                    #print(form_date + str(day) + ' ' + str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
+                                                                    response = request_step3(userAgent, method_name='POST', url=url, dict_data=data, cookies=cookie)
+                                                                    if response.get('status_code') == 200:
+                                                                        print(form_date + str(day) + ' ' + str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
+                                                                        if test:
+                                                                            break
+                                                                    else:
+                                                                        print(form_date + str(day) + ' ' + str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + room_num + " 예약 실패")
+                                                                    if not test:
+                                                                        sys.exit()
                                                                 else:
                                                                     if not test:
                                                                         print(thread_name + ' 선행된 예약이 있어, 최종 확정 예약을 수행 하지 않고 종료 합니다.')
