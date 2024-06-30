@@ -29,23 +29,18 @@ global try_cnt
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
 period = 1  # 연박 수
-delay = 10  # 모니터링 리프레시 속도
+delay = 0  # 모니터링 리프레시 속도
 test = True
-#room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
-#room_list = ['503']
-room_list = ['503', '504', '505', '506', '507', '508', '510', '509']
-#room_list = ['311', '312', '313', '314', '315', '316', '317', '318']
-# D 사이트
-#room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
-temp_room_list = room_list.copy()
+#room_exception = ['501', '502']
+room_exception = []
 sel_month_list = ['07']
-sel_date_list = ['0719', '0720', '0705', '0706', '0707', '0712', '0713', '0714']
-site = 'E'
+sel_date_list = ['0706', '0713', '0719', '0720', '0727']
+site = 'B'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 5  # 사용자 정보 세팅
+user_type = 0  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -207,6 +202,11 @@ def main(dataset):
 
     first_message = False
     enter_logic = True
+    step = ''
+    conn = ''
+    area = ''
+    checkin = ''
+
     driver = webdriver.Chrome(options=options)
     url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=" + str(
         datetime.now().strftime("%Y") + sel_month_list[0])
@@ -270,35 +270,45 @@ def main(dataset):
                         index = index + 1
 
                 if not test or exist_cnt:
-
                     for date in sel_date_list:
                         global continue_work
                         global trying
-                        global temp_room_list
-                        if len(temp_room_list) < 1:
-                            temp_room_list = room_list.copy()
+
                         month = date[0:2]
                         day = date[2:4]
+                        is_code_create = False
 
                         if test:
                             continue_work = False
                             trying = False
                         if sel_month == month:
 
-                            # 탐색 zone 순서
-                            # Machine 숫자로 단일 지정하게 된다.
-                            for room in room_list:
-                                try:
-                                    access = False
-                                    index = 0
-                                    for temp_room in temp_room_list:
-                                        if temp_room == room:
-                                            access = True
-                                            del temp_room_list[index]
-                                            break
-                                        index = index + 1
+                            if len(sel_date_list) >= 1 and not is_code_create:
+                                response = create_room_code(param_date, userAgent, site, form_date + str(day))
+                                if response.get('status_code') == 200:
+                                    dict_data = json.loads(response.get('text')).get('data')
+                                    step = dict_data['step']
+                                    conn = dict_data['conn']
+                                    area = dict_data['Area']
+                                    checkin = dict_data['Checkin']
+                                    is_code_create = True
 
-                                    if access:
+                            response = checking_zone(param_date, userAgent, step, conn, area, checkin)
+                            if response.get('status_code') == 200:
+                                cookie = response.get('cookies')
+
+                                html_code = BeautifulSoup(response['text'], 'html.parser')
+                                room_list = []
+                                btn_site_list = html_code.find_all('button', class_='areacode')
+                                for btn_site in btn_site_list:
+                                    if 'on' in btn_site.attrs['class']:
+                                        if btn_site.span.text[1:4] not in room_exception:
+                                            room_list.append(btn_site.span.text[1:4])
+
+                                # 탐색 zone 순서
+                                # Machine 숫자로 단일 지정하게 된다.
+                                for room in room_list:
+                                    try:
                                         # room = room_list[nametag-1]
                                         target_date = form_date + str(day)
                                         if site == 'A':
@@ -419,19 +429,13 @@ def main(dataset):
                                                         }
                                                         if not trying:
                                                             trying = True
-                                                            response = request_step3(userAgent, method_name='POST', url=url,
-                                                                                     dict_data=data,
-                                                                                     cookies=cookie)
+                                                            response = request_step3(userAgent, method_name='POST', url=url,dict_data=data,cookies=cookie)
                                                             if response.get('status_code') == 200:
-                                                                print(str(thread_name) + ' : ' + str(
-                                                                    datetime.now().strftime(
-                                                                        "%X")) + ' ' + room_num + " 예약 완료")
+                                                                print(form_date + str(day) + ' ' + str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + room_num + " 예약 완료")
                                                                 if test:
                                                                     break
                                                             else:
-                                                                print(str(thread_name) + ' : ' + str(
-                                                                    datetime.now().strftime(
-                                                                        "%X")) + ' ' + room_num + " 예약 실패")
+                                                                print(form_date + str(day) + ' ' + str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + room_num + " 예약 실패")
                                                             if not test:
                                                                 sys.exit()
                                                         else:
@@ -443,15 +447,15 @@ def main(dataset):
                                             if not test:
                                                 print(thread_name + ' 선행된 예약이 있어, 더 이상 예약 시도를 하지 않고 종료 합니다.')
                                                 sys.exit()
-                                except Exception as ex:
-                                    print(ex)
-                                    continue_work = False
-                                    if trying and not test:
-                                        print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
-                                        sys.exit()
-                                    print(str(thread_name) + ' 에러 발생 재실행')
-                                    retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name, continue_work,
-                                                  trying, user_phone1, user_phone2, user_phone3)
+                                    except Exception as ex:
+                                        print(ex)
+                                        continue_work = False
+                                        if trying and not test:
+                                            print(thread_name + ' 이미 예약이 성공하여 프로세스를 종료 합니다.')
+                                            sys.exit()
+                                        print(str(thread_name) + ' 에러 발생 재실행')
+                                        retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name, continue_work,
+                                                      trying, user_phone1, user_phone2, user_phone3)
 
         driver.refresh()
         time.sleep(delay)
@@ -866,7 +870,82 @@ def check_sites(sdate, userAgent):
     else:  # 문자열 형태인 경우
         return {**dict_meta, **{'text': response.text}}
 
+def checking_zone(sdate, userAgent, step, conn, area, checkin):
+    # 예약 파라미터 세팅
+    data = {
+        'step': step,
+        'conn': conn,
+        'resArea': area,
+        'resCheckin': checkin
+    }
+    url = "https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=" + sdate + "&step=Areas"
+    response = requests.post(url=url, data=data, verify=False,
+                            headers={
+                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                                'Accept-Encoding': 'gzip, deflate, br, zstd',
+                                'Accept-Language': 'ko,en;q=0.9,en-US;q=0.8',
+                                'Cashe-Control': 'max-age=0',
+                                'Connection': 'keep-alive',
+                                'Content-Length': '92',
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Cookie': '_fwb=1087YMtDkxacg2rmDe2mK1T.1704761532551; _pk_id.2.e22d=125687f4c95c914f.1716335579.; popupbox_cautionAgree=1; DENOBIZID=730kkdlng6mp1it6mqs7khh3d1; weather=%7B%222024-06-30%22%3A%7B%22min%22%3A%2222%22%2C%22max%22%3A%2226%22%2C%22icon%22%3A%22cloud2%22%2C%22tmp%22%3A%2222.6%22%2C%22reh%22%3A%2297%22%2C%22wsd%22%3A%220.3%22%7D%2C%222024-07-01%22%3A%7B%22min%22%3A%2222%22%2C%22max%22%3A%2223%22%2C%22icon%22%3A%22cloud2%22%7D%2C%222024-07-02%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2222%22%2C%22max%22%3A%2226%22%7D%2C%222024-07-03%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2222%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-04%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2230%22%7D%2C%222024-07-05%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-06%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2222%22%2C%22max%22%3A%2229%22%7D%2C%222024-07-07%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-08%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-09%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2227%22%7D%7D; weather_now=%7B%22sunrise%22%3A%220740%22%2C%22icon%22%3A%22cloud2%22%2C%22tmp%22%3A%2222.6%22%2C%22reh%22%3A%2297%22%2C%22wsd%22%3A%220.3%22%7D; _dz_[aa93685bcc63bc88e7996084b90aaa29]=1; _pk_ref.2.e22d=%5B%22%22%2C%22%22%2C1719682959%2C%22https%3A%2F%2Fsearch.naver.com%2Fsearch.naver%3Fwhere%3Dnexearch%26sm%3Dtop_hty%26fbm%3D0%26ie%3Dutf8%26query%3D%EC%97%B0%EA%B3%A1%2B%EC%86%94%ED%96%A5%EA%B8%B0%22%5D; _pk_ses.2.e22d=1; wcs_bt=30b89a3a9feb3:1719683091',
+                                'Host': 'camping.gtdc.or.kr',
+                                'Origin': 'https://camping.gtdc.or.kr',
+                                'Referer': 'https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=' + sdate,
+                                'Sec-Ch-Ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
+                                'Sec-Ch-Ua-Mobile': '?0',
+                                'Sec-Ch-Ua-Platform': '"Windows"',
+                                'Sec-Fetch-Dest': 'document',
+                                'Sec-Fetch-Mode': 'navigate',
+                                'Sec-Fetch-Site': 'same-origin',
+                                'Sec-Fetch-User': '?1',
+                                'Upgrade-Insecure-Requests': '1',
+                                'User-Agent': userAgent})
 
+    dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                 'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+    if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+        return {**dict_meta, **response.json()}
+    else:  # 문자열 형태인 경우
+        return {**dict_meta, **{'text': response.text}}
+
+
+def create_room_code(sdate, userAgent, site, sel_date):
+    # 예약 파라미터 세팅
+    data = {
+        'actFile': 'tracking',
+        'actMode': 'Areain',
+        'actZone': site,
+        'actDate': sel_date
+    }
+    url = "https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json"
+    response = requests.post(url=url, data=data, verify=False,
+                            headers={
+                                'Accept': 'application/json, text/javascript, */*; q=0.01',
+                                'Accept-Encoding': 'gzip, deflate, br, zstd',
+                                'Accept-Language': 'ko,en;q=0.9,en-US;q=0.8',
+                                'Connection': 'keep-alive',
+                                'Content-Length': '60',
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Cookie': '_fwb=1087YMtDkxacg2rmDe2mK1T.1704761532551; _pk_id.2.e22d=125687f4c95c914f.1716335579.; popupbox_cautionAgree=1; DENOBIZID=730kkdlng6mp1it6mqs7khh3d1; weather=%7B%222024-06-30%22%3A%7B%22min%22%3A%2222%22%2C%22max%22%3A%2226%22%2C%22icon%22%3A%22cloud2%22%2C%22tmp%22%3A%2222.6%22%2C%22reh%22%3A%2297%22%2C%22wsd%22%3A%220.3%22%7D%2C%222024-07-01%22%3A%7B%22min%22%3A%2222%22%2C%22max%22%3A%2223%22%2C%22icon%22%3A%22cloud2%22%7D%2C%222024-07-02%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2222%22%2C%22max%22%3A%2226%22%7D%2C%222024-07-03%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2222%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-04%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2230%22%7D%2C%222024-07-05%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-06%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2222%22%2C%22max%22%3A%2229%22%7D%2C%222024-07-07%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-08%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2228%22%7D%2C%222024-07-09%22%3A%7B%22icon%22%3A%22rain%22%2C%22min%22%3A%2223%22%2C%22max%22%3A%2227%22%7D%7D; weather_now=%7B%22sunrise%22%3A%220740%22%2C%22icon%22%3A%22cloud2%22%2C%22tmp%22%3A%2222.6%22%2C%22reh%22%3A%2297%22%2C%22wsd%22%3A%220.3%22%7D; _dz_[aa93685bcc63bc88e7996084b90aaa29]=1; _pk_ref.2.e22d=%5B%22%22%2C%22%22%2C1719682959%2C%22https%3A%2F%2Fsearch.naver.com%2Fsearch.naver%3Fwhere%3Dnexearch%26sm%3Dtop_hty%26fbm%3D0%26ie%3Dutf8%26query%3D%EC%97%B0%EA%B3%A1%2B%EC%86%94%ED%96%A5%EA%B8%B0%22%5D; _pk_ses.2.e22d=1; wcs_bt=30b89a3a9feb3:1719683091',
+                                'Host': 'camping.gtdc.or.kr',
+                                'Origin': 'https://camping.gtdc.or.kr',
+                                'Referer': 'https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=' + sdate,
+                                'Sec-Ch-Ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
+                                'Sec-Ch-Ua-Mobile': '?0',
+                                'Sec-Ch-Ua-Platform': '"Windows"',
+                                'Sec-Fetch-Dest': 'empty',
+                                'Sec-Fetch-Mode': 'cors',
+                                'Sec-Fetch-Site': 'same-origin',
+                                'User-Agent': userAgent,
+                                'X-Requested-With': 'XMLHttpRequest'})
+
+    dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                 'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+    if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+        return {**dict_meta, **response.json()}
+    else:  # 문자열 형태인 경우
+        return {**dict_meta, **{'text': response.text}}
 
 for i in range(machine):
     nametag = i + 1
