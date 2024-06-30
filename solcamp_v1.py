@@ -270,10 +270,14 @@ def main(dataset):
                             # 탐색 zone 순서
                             # Machine 숫자로 단일 지정하게 된다.
                             pass_logic = True
+                            msg_cnt_check = False
                             if room_want in room_list:
                                 pass_logic = False
                             for room in room_list:
-                                print('ROOM LIST : ' + str(room_list))
+                                if not msg_cnt_check:
+                                    print(str(thread_name) + ' : ' + str(datetime.now().strftime("%X")) + ' ' + 'ROOM LIST : ' + str(room_list))
+                                    msg_cnt_check = True
+
                                 if pass_logic or room == room_want:
                                     try:
                                         # room = room_list[nametag-1]
