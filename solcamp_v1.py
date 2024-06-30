@@ -30,7 +30,7 @@ machine = 2  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박
 time_cut = 1  # 머신 시작 간격
 period = 1  # 연박 수
 delay = 0  # 모니터링 리프레시 속도
-test = True
+test = False
 #room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
 #room_list = ['503']
 room_exception = ['501', '502']
@@ -218,7 +218,7 @@ def main(dataset):
             first_message = True
 
         date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:50'
-        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:15'
+        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:01:00'
 
         date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
         date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
