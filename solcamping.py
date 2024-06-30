@@ -29,13 +29,15 @@ global try_cnt
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
 period = 1  # 연박 수
-delay = 0  # 모니터링 리프레시 속도
+day_delay = 2
+delay = 0
+night_delay = 10  # 모니터링 리프레시 속도
 test = True
 #room_exception = ['501', '502']
 room_exception = []
 room_want = ['240', '238', '234', '232', '236']
 sel_month_list = ['07']
-sel_date_list = ['0708', '0706', '0713', '0719', '0720', '0721', '0727']
+sel_date_list = ['0706', '0713', '0719', '0720', '0721', '0727']
 site = 'B'
 
 continue_work = False
@@ -234,9 +236,9 @@ def main(dataset):
         now = datetime.now()
 
         if date_dt_begin < now < date_dt_end:
-            delay = 3
+            delay = day_delay
         else:
-            delay = 10
+            delay = night_delay
 
         userAgent = generate_user_agent(os='win', device_type='desktop')
 
