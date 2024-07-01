@@ -29,7 +29,7 @@ global try_cnt
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
 period = 1  # 연박 수
-day_delay = 2
+day_delay = 1
 delay = 0
 night_delay = 5  # 모니터링 리프레시 속도
 test = True
@@ -257,12 +257,18 @@ def main(dataset):
                         # res = requests.get("https://camping.gtdc.or.kr/DZ_reservation/reserCamping_v3.php?xch=reservation&xid=camping_reservation&sdate=202407")
                         day_list = driver.find_elements(By.CLASS_NAME, 'mt5')
                         # print(str(thread_name) + ' CHECKING --- ' + str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                        current_date = datetime.now().strftime("%m-%d")
+
                         index = 1
+                        if current_date[0:2] == sel_month:
+                            index = index + int(current_date[3:5])
+
+                        temp_sel_date_list = sel_date_list.copy()
                         for dayinfo in day_list:
                             if len(sel_date_list) == 0:
                                 print('예약완료 시스템 종료')
                                 sys.exit()
-                            for date in sel_date_list:
+                            for date in temp_sel_date_list:
                                 if int(index) == int(date[2:4]):
                                     str_idx = dayinfo.text.rfind(site)
                                     if len(dayinfo.text) >= int(str_idx) + 8:
@@ -271,6 +277,8 @@ def main(dataset):
                                             # print(dayinfo.text)
                                             exist_cnt = True
                                             break
+                                    temp_sel_date_list.remove(date)
+                                    break
                             index = index + 1
 
                     if not test or exist_cnt:
@@ -506,6 +514,7 @@ def main(dataset):
             driver.refresh()
             time.sleep(delay)
         except Exception as ex:
+            print('EXCEPTION!!!!! // ' + str(ex))
             continue
 
 
