@@ -37,7 +37,7 @@ test = True
 room_exception = []
 room_want = ['240', '238', '234', '232', '236']
 sel_month_list = ['07']
-sel_date_list = ['0706', '0713', '0719', '0720', '0721', '0726', '0727']
+sel_date_list = ['0719', '0720']
 site = 'B'
 
 continue_work = False
@@ -261,6 +261,9 @@ def main(dataset):
 
                         index = 1
                         if current_date[0:2] == sel_month:
+                            current_st_time = datetime.now().strftime('%H:%M:%S')
+                            if current_st_time < '14:00:00':
+                                index = index - 1
                             index = index + int(current_date[3:5])
 
                         temp_sel_date_list = sel_date_list.copy()
@@ -274,7 +277,7 @@ def main(dataset):
                                     if len(dayinfo.text) >= int(str_idx) + 8:
                                         count = int(dayinfo.text[int(str_idx) + 6:int(str_idx) + 7])
                                         if count > 0:
-                                            # print(dayinfo.text)
+                                            print(dayinfo.text)
                                             exist_cnt = True
                                             break
                                     temp_sel_date_list.remove(date)
@@ -307,6 +310,7 @@ def main(dataset):
 
                                 response = checking_zone(param_date, userAgent, step, conn, area, checkin)
                                 if response.get('status_code') == 200:
+
                                     cookie = response.get('cookies')
 
                                     html_code = BeautifulSoup(response['text'], 'html.parser')
