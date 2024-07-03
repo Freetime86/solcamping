@@ -26,7 +26,7 @@ options.add_experimental_option("detach", True)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 global try_cnt
 
-machine = 2  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
+machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 1  # 머신 시작 간격
 period = 1  # 연박 수
 delay = 0  # 모니터링 리프레시 속도
@@ -34,18 +34,18 @@ test = False
 #room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
 #room_list = ['503']
 room_exception = ['501', '502']
-room_want = '503'
+room_want = '505'
 #room_list = ['311', '312', '313', '314', '315', '316', '317', '318']
 # D 사이트
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
-sel_month_list = ['07']
-sel_date_list = ['0731']
+sel_month_list = ['08']
+sel_date_list = ['0803']
 site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 999  # 사용자 정보 세팅
+user_type = 5  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -217,8 +217,8 @@ def main(dataset):
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
             first_message = True
 
-        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:50'
-        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:01:00'
+        date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:55'
+        date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:30'
 
         date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
         date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
