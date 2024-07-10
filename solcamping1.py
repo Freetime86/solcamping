@@ -35,10 +35,10 @@ night_delay = 5  # 모니터링 리프레시 속도
 test = True
 #room_exception = ['501', '502']
 room_exception = []
-room_want = ['706', '707', '708', '709']
-sel_month_list = ['07']
-sel_date_list = ['0727']
-site = 'D'
+room_want = ['503']
+sel_month_list = ['08']
+sel_date_list = ['0809', '0810']
+site = 'E'
 
 continue_work = False
 trying = False
