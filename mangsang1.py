@@ -35,7 +35,7 @@ night_delay = 5  # 모니터링 리프레시 속도
 test = True
 #room_exception = ['501', '502']
 room_exception = []
-room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
+room_want = []
 sel_month_list = ['8']
 sel_date_list = ['01', '02', '03', '04']
 site = '6'
@@ -43,7 +43,7 @@ site = '6'
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 5  # 사용자 정보 세팅
+user_type = 0  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -60,117 +60,14 @@ area2 = ''
 # 01099898806
 if user_type == 0:
     user_name = '조수윤'
-    user_phone = '01024863033'
-    email = 'jsy3032'
-    domain = 'gmail.com'
-    area1 = '경기도'
-    area2 = '광명'
-elif user_type == 1:
-    user_name = '최윤정'
-    user_phone = '01047035795'
-    email = 'cdw1317'
-    domain = 'naver.com'
-    area1 = '경기도'
-    area2 = '광명'
-elif user_type == 2:
-    user_name = '김형민'
-    user_phone = '01091251464'
-    email = 'ttasik_asp'
-    domain = 'naver.com'
-    area1 = '경기도'
-    area2 = '성남'
-elif user_type == 3:
-    user_name = '권혁인'
-    user_phone = '01020569536'
-    email = 'sochi007'
-    domain = 'naver.com'
-    area1 = '경기도'
-    area2 = '남양주'
-elif user_type == 4:
-    user_name = '원성광'
-    user_phone = '01024277670'
-    email = 'dnjstjdrhkd'
-    domain = 'naver.com'
-    area1 = '경기도'
-    area2 = '양평'
+    pwd = 'cca1174848'
+    id = 'jsy3033'
+
 elif user_type == 5:
     user_name = '박상민'
-    user_phone = '01024863038'
-    email = 'psm0705'
-    domain = 'gmail.com'
-    area1 = '경기도'
-    area2 = '의정부'
     pwd = 'cjswosla86'
     id = 'psm0705'
-elif user_type == 6:
-    user_name = '박태수'
-    user_phone = '01029953995'
-    email = 'parktaesu9999'
-    domain = 'naver.com'
-    area1 = '경기도'
-    area2 = '부천'
-elif user_type == 7:
-    user_name = '문광일'
-    user_phone = '01064145497'
-    email = 'aizylove'
-    domain = 'gmail.com'
-    area1 = '경기도'
-    area2 = '성남'
-elif user_type == 8:
-    user_name = '박현정'
-    user_phone = '01085983083'
-    email = 'fpahs414'
-    domain = 'naver.com'
-    area1 = '경기도'
-    area2 = '구리'
-elif user_type == 9:
-    user_name = '김명신'
-    user_phone = '01022866574'
-    email = 'vspyths75cloud'
-    domain = 'naver.com'
-    area2 = '동탄'
-elif user_type == 99:
-    user_name = '김수혁'
-    user_phone = '01025173038'
-    email = 'sook78dock'
-    domain = 'gmail.com'
-    area1 = '경기도'
-    area2 = '화성'
-elif user_type == 999:
-    user_name = '이유진'
-    user_phone = '01083814672'
-    email = 'leejin92'
-    domain = 'naver.com'
-    area1 = '경기도'
-    area2 = '부천'
-elif user_type == 9999:
-    user_name = '김혁진'
-    user_phone = '01077972487'
-    email = 'kimjins88'
-    domain = 'naver.com'
-    area1 = '경기도'
-    area2 = '부천'
-elif user_type == 99999:
-    user_name = '김수정'
-    user_phone = '01056947788'
-    email = 'sjflower0723'
-    domain = 'gmail.com'
-    area1 = '경상북도'
-    area2 = '김천'
-elif user_type == 999999:
-    user_name = '김강민'
-    user_phone = '01048983777'
-    email = 'kangchlrh11'
-    domain = 'gmail.com'
-    area1 = '경상북도'
-    area2 = '포항'
-elif user_type == 9999999:
-    user_name = '윤지영'
-    user_phone = '0102165418'
-    email = 'freechalee111'
-    domain = 'gmail.com'
-    area1 = '경상남도'
-    area2 = '창원'
+
 
 dataset = {"reservated": False}
 
@@ -311,12 +208,13 @@ def main(dataset):
                                                         summit_btn[0].click()
                                                         WebDriverWait(driver, 5).until(EC.alert_is_present())
                                                         driver.switch_to.alert.accept()
+                                                        driver.get(url)
                             else:
                                 print('retry')
             driver.refresh()
             time.sleep(delay)
         except Exception as ex:
-            driver.refresh()
+            driver.get(url)
             #print('EXCEPTION!!!!! // ' + str(ex))
             continue
 
@@ -325,15 +223,24 @@ def captcha(cookie, thread_name):
     #테서렉트 로드
     pytesseract.pytesseract.tesseract_cmd = r'C:\Users\psm07\AppData\Local\tesseract.exe'
 
-    # 이미지 로드
-    url = "https://www.campingkorea.or.kr/bbs/bbs_gdlibrary.inc.php"
-    response = requests.post(url=url, cookies=cookie, verify=False)
-    if response.status_code == 200:
-        with open("captcha.png", 'wb') as f:
-            f.write(response.content)
-    image = Image.open('captcha.png')
-    captcha_code = pytesseract.image_to_string(image, lang='eng', config='--psm 9 -c page_separator=""')
-    #print(pytesseract.image_to_string(image, lang='eng', config='--psm 9 -c page_separator=""'))
+    _pass = False
+    captcha_code = ''
+    while not _pass:
+        # 이미지 로드
+        url = "https://www.campingkorea.or.kr/bbs/bbs_gdlibrary.inc.php"
+        response = requests.post(url=url, cookies=cookie, verify=False)
+
+        if response.status_code == 200:
+            filename = id + "_captcha.png"
+            with open(filename, 'wb') as f:
+                f.write(response.content)
+            image = Image.open(filename)
+            image = cv2.imread(filename)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+            captcha_code = pytesseract.image_to_string(gray, lang='eng', config='--psm 9 -c page_separator=""')
+            #print(pytesseract.image_to_string(image, lang='eng', config='--psm 9 -c page_separator=""'))
+            _pass = True
     return captcha_code
 
 
