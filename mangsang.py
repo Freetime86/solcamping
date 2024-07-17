@@ -115,23 +115,26 @@ def main(dataset):
     area = ''
     checkin = ''
 
-    driver = webdriver.Chrome(options=options)
-    url = "https://www.campingkorea.or.kr/member/login.htm"
-    driver.get(url)
-    driver.find_element(By.ID, 'userid').click()
-    driver.find_element(By.ID, 'userid').send_keys(id)
-    driver.find_element(By.ID, 'passwd').click()
-    driver.find_element(By.ID, 'passwd').send_keys(pwd)
-    driver.find_element(By.CLASS_NAME, 'btn_login').click()
-    url = "https://www.campingkorea.or.kr/reservation/06.htm?code=&year=2024&month=" + sel_month_list[0] + "#container"
-    driver.get(url)
-    # _cookies = driver.get_cookies()
+    begin = True
 
     while True:
         try:
             if not first_message:
                 print('WORKING... : ' + str(thread_name) + ' 예약 중')
                 first_message = True
+
+            if begin:
+                driver = webdriver.Chrome(options=options)
+                url = "https://www.campingkorea.or.kr/member/login.htm"
+                driver.get(url)
+                driver.find_element(By.ID, 'userid').click()
+                driver.find_element(By.ID, 'userid').send_keys(id)
+                driver.find_element(By.ID, 'passwd').click()
+                driver.find_element(By.ID, 'passwd').send_keys(pwd)
+                driver.find_element(By.CLASS_NAME, 'btn_login').click()
+                url = "https://www.campingkorea.or.kr/reservation/06.htm?code=&year=2024&month=" + sel_month_list[0] + "#container"
+                driver.get(url)
+                begin = False
 
             main_cals = driver.find_element(By.CLASS_NAME, 'calendar')
             day_list = main_cals.find_elements(By.CLASS_NAME, 'app-able')
@@ -214,7 +217,9 @@ def main(dataset):
             driver.refresh()
             time.sleep(delay)
         except Exception as ex:
-            driver.get(url)
+            driver.refresh()
+            if len(driver.find_elements(By.ID, 'userid')) > 0:
+                begin = True
             #print('EXCEPTION!!!!! // ' + str(ex))
             continue
 
