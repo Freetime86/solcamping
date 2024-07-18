@@ -159,6 +159,7 @@ def main(dataset):
 
                     if day_text in sel_date_list:
                         dowork = True
+                        break
             if dowork:
                 dowork = False
                 if len(driver.find_elements(By.CLASS_NAME, 'btn_bg')) > 0:
