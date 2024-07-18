@@ -37,16 +37,18 @@ test = True
 room_exception = []
 room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
 sel_month_list = ['8']
-sel_date_list = ['01', '02', '03', '04']
+sel_date_list = ['01', '02', '03']
 site = '6'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 5  # 사용자 정보 세팅
+user_type = 0  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
+rpwd = ''
+rid = ''
 email = ''
 domain = ''
 area1 = ''
@@ -60,13 +62,23 @@ area2 = ''
 # 01099898806
 if user_type == 0:
     user_name = '조수윤'
-    pwd = 'cca1174848'
-    id = 'jsy3033'
-
+    rpwd = 'cca1174848'
+    rid = 'jsy3033'
+elif user_type == 1:
+    user_name = '권혁인'
+    rpwd = 'hi83188318'
+    rid = 'sochi007'
+elif user_type == 4:
+    user_name = '박현정'
+    rpwd = 'p1357924680'
+    rid = 'fpahs414'
 elif user_type == 5:
     user_name = '박상민'
-    pwd = 'cjswosla86'
-    id = 'psm0705'
+    rpwd = 'cjswosla86'
+    rid = 'psm0705'
+else:
+    print('User type이 없습니다. 종료합니다')
+    exit()
 
 
 dataset = {"reservated": False}
@@ -82,13 +94,13 @@ elif site == '3':
 elif site == '4':
     site_text = '전통한옥'
 elif site == '5':
-    site_text = ''
+    site_text = '캐라반'
 elif site == '6':
     site_text = '자동차캠핑장'
 elif site == '7':
-    site_text = '글램핑'
+    site_text = '글램핑'       #2인
 elif site == '8':
-    site_text = ''
+    site_text = '글램핑'       #4인
 elif site == '9':
     site_text = '캐빈하우스'
 else:
@@ -115,7 +127,16 @@ def main(dataset):
     area = ''
     checkin = ''
 
-    begin = True
+    driver = ''
+    dowork = False
+    driver1 = webdriver.Chrome(options=options)
+    url1 = "https://www.campingkorea.or.kr/reservation/06.htm?code=&year=2024&month=" + sel_month_list[0] + "#container"
+    driver1.get(url1)
+
+    driver = webdriver.Chrome(options=options)
+    url = "https://www.campingkorea.or.kr/member/login.htm"
+    driver.get(url)
+    # _cookies = driver.get_cookies()
 
     while True:
         try:
@@ -123,104 +144,125 @@ def main(dataset):
                 print('WORKING... : ' + str(thread_name) + ' 예약 중')
                 first_message = True
 
-            if begin:
-                driver = webdriver.Chrome(options=options)
-                url = "https://www.campingkorea.or.kr/member/login.htm"
-                driver.get(url)
-                driver.find_element(By.ID, 'userid').click()
-                driver.find_element(By.ID, 'userid').send_keys(id)
-                driver.find_element(By.ID, 'passwd').click()
-                driver.find_element(By.ID, 'passwd').send_keys(pwd)
-                driver.find_element(By.CLASS_NAME, 'btn_login').click()
-                url = "https://www.campingkorea.or.kr/reservation/06.htm?code=&year=2024&month=" + sel_month_list[0] + "#container"
-                driver.get(url)
-                begin = False
+            main_cals1 = driver1.find_element(By.CLASS_NAME, 'calendar')
+            day_list1 = main_cals1.find_elements(By.CLASS_NAME, 'app-able')
 
-            main_cals = driver.find_element(By.CLASS_NAME, 'calendar')
-            day_list = main_cals.find_elements(By.CLASS_NAME, 'app-able')
-
-            if len(day_list) > 0:
+            if len(day_list1) > 0:
                 day_list_new = []
-                for day in day_list:
+                for day in day_list1:
                     if site_text in day.text:
                         day_list_new.append(day)
 
                 for day in day_list_new:
                     link_element = day.find_element(By.TAG_NAME, 'a')
-                    day_text = link_element.get_attribute('onclick')[48:50]
+                    day_text = link_element.get_attribute('title')[8:10]
                     if len(day_text) == 1:
                         day_text = '0' + day_text
 
                     if day_text in sel_date_list:
-                        link_element.click()
-                        _cookies = driver.get_cookies()
-                        cookie_dict = {}
-                        for cookie in _cookies:
-                            cookie_dict[cookie['name']] = cookie['value']
+                        dowork = True
+            if dowork:
+                dowork = False
+                if len(driver.find_elements(By.CLASS_NAME, 'btn_bg')) > 0:
+                    driver.find_elements(By.CLASS_NAME, 'btn_bg')[0].find_element(By.TAG_NAME, 'a').click()
+                    time.sleep(0.1)
+                    driver.find_elements(By.CLASS_NAME, 'btn_bg')[0].find_element(By.TAG_NAME, 'a').click()
+                url = "https://www.campingkorea.or.kr/member/login.htm"
+                driver.get(url)
+                driver.find_element(By.ID, 'userid').click()
+                driver.find_element(By.ID, 'userid').send_keys(rid)
+                driver.find_element(By.ID, 'passwd').click()
+                driver.find_element(By.ID, 'passwd').send_keys(rpwd)
+                driver.find_element(By.CLASS_NAME, 'btn_login').click()
+                url = "https://www.campingkorea.or.kr/reservation/06.htm?code=&year=2024&month=" + sel_month_list[0] + "#container"
+                driver.get(url)
 
-                        captcha_code = captcha(cookie_dict, thread_name)
-                        driver.find_element(By.ID, 'auth_name').send_keys(captcha_code)
-                        time.sleep(0.1)
-                        buttons = driver.find_elements(By.CLASS_NAME, 'btn_blue')
-                        if len(buttons) > 0:
-                            buttons[0].click()
-                            WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'mapimg')))
-                            all_sites = driver.find_element(By.ID, 'mapimg').find_elements(By.TAG_NAME, 'a')
-                            if len(all_sites) > 0:
-                                for each_site in all_sites:
-                                    if 'area_act' in each_site.get_attribute('href'):
-                                        site_num = each_site.text
-                                        if len(site_num) == 1:
-                                            site_num = '0' + site_num
+                main_cals = driver.find_element(By.CLASS_NAME, 'calendar')
+                day_list = main_cals.find_elements(By.CLASS_NAME, 'app-able')
 
-                                        room_pass = False
-                                        if site_num in room_want:
-                                            room_pass = True
-                                        elif len(room_want) == 0:
-                                            room_pass = True
+                if len(day_list) > 0:
+                    day_list_new = []
+                    for day in day_list:
+                        if site_text in day.text:
+                            day_list_new.append(day)
 
-                                        if room_pass:
-                                            each_site.click()
-                                            summit_btn = driver.find_elements(By.CLASS_NAME, 'btn_color')
-                                            if len(summit_btn) > 0:
-                                                time.sleep(0.1)
-                                                summit_btn[0].click()
-                                                #진행여부
-                                                WebDriverWait(driver, 5).until(EC.alert_is_present())
-                                                driver.switch_to.alert.accept()
-                                                #다음단계진행 재차 확인
-                                                WebDriverWait(driver, 5).until(EC.alert_is_present())
-                                                driver.switch_to.alert.accept()
-                                                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'res_Check')))
-                                                driver.find_element(By.ID, 'res_Check').click()
-                                                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'animall_Check')))
-                                                driver.find_element(By.ID, 'animall_Check').click()
+                    for day in day_list_new:
+                        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, 'a')))
+                        link_element = day.find_element(By.TAG_NAME, 'a')
+                        day_text = link_element.get_attribute('onclick')[48:50]
+                        if len(day_text) == 1:
+                            day_text = '0' + day_text
+                        sel_date_list_temp = sel_date_list.copy()
+                        if day_text in sel_date_list_temp:
+                            link_element.click()
+                            _cookies = driver.get_cookies()
+                            cookie_dict = {}
+                            for cookie in _cookies:
+                                cookie_dict[cookie['name']] = cookie['value']
+
+                            captcha_code = captcha(cookie_dict, thread_name)
+                            driver.find_element(By.ID, 'auth_name').send_keys(captcha_code)
+                            time.sleep(0.1)
+                            buttons = driver.find_elements(By.CLASS_NAME, 'btn_blue')
+                            if len(buttons) > 0:
+                                buttons[0].click()
+                                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'mapimg')))
+                                all_sites = driver.find_element(By.ID, 'mapimg').find_elements(By.TAG_NAME, 'a')
+                                if len(all_sites) > 0:
+                                    for each_site in all_sites:
+                                        if 'area_act' in each_site.get_attribute('href'):
+                                            site_num = each_site.text
+                                            if len(site_num) == 1:
+                                                site_num = '0' + site_num
+
+                                            room_pass = False
+                                            if site_num in room_want:
+                                                room_pass = True
+                                            elif len(room_want) == 0:
+                                                room_pass = True
+
+                                            if room_pass:
+                                                each_site.click()
                                                 summit_btn = driver.find_elements(By.CLASS_NAME, 'btn_color')
                                                 if len(summit_btn) > 0:
                                                     time.sleep(0.1)
                                                     summit_btn[0].click()
+                                                    #진행여부
                                                     WebDriverWait(driver, 5).until(EC.alert_is_present())
                                                     driver.switch_to.alert.accept()
-                                                    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'r_account3')))
-                                                    driver.find_element(By.ID, 'r_account3').click()
+                                                    #다음단계진행 재차 확인
                                                     WebDriverWait(driver, 5).until(EC.alert_is_present())
                                                     driver.switch_to.alert.accept()
+                                                    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'res_Check')))
+                                                    driver.find_element(By.ID, 'res_Check').click()
+                                                    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'animall_Check')))
+                                                    driver.find_element(By.ID, 'animall_Check').click()
                                                     summit_btn = driver.find_elements(By.CLASS_NAME, 'btn_color')
                                                     if len(summit_btn) > 0:
                                                         time.sleep(0.1)
                                                         summit_btn[0].click()
                                                         WebDriverWait(driver, 5).until(EC.alert_is_present())
                                                         driver.switch_to.alert.accept()
-                                                        driver.get(url)
-                            else:
-                                print('retry')
-            driver.refresh()
+                                                        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'r_account3')))
+                                                        driver.find_element(By.ID, 'r_account3').click()
+                                                        WebDriverWait(driver, 5).until(EC.alert_is_present())
+                                                        driver.switch_to.alert.accept()
+                                                        summit_btn = driver.find_elements(By.CLASS_NAME, 'btn_color')
+                                                        if len(summit_btn) > 0:
+                                                            time.sleep(0.1)
+                                                            summit_btn[0].click()
+                                                            WebDriverWait(driver, 5).until(EC.alert_is_present())
+                                                            driver.switch_to.alert.accept()
+                                                            print(site_text + " " + site_num + " " + str(sel_month_list[0]) + "월 " + day_text + "일 예약완료")
+                                                            sel_date_list_temp.remove(day_text)
+                                                            driver.get(url)
+                                    driver.refresh()
+                                else:
+                                    print('retry')
+            driver1.refresh()
             time.sleep(delay)
         except Exception as ex:
-            driver.refresh()
-            if len(driver.find_elements(By.ID, 'userid')) > 0:
-                begin = True
-            #print('EXCEPTION!!!!! // ' + str(ex))
+            driver1.refresh()
             continue
 
 
