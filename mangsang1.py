@@ -33,8 +33,9 @@ period = 1  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 test = True
+#room_exception = ['501', '502']
 room_exception = []
-room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '13']
+room_want = []
 sel_month_list = ['8']
 sel_date_list = ['01', '02', '03']
 site = '6'
@@ -42,7 +43,7 @@ site = '6'
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 5  # 사용자 정보 세팅
+user_type = 1  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -78,6 +79,7 @@ elif user_type == 5:
 else:
     print('User type이 없습니다. 종료합니다')
     exit()
+
 
 dataset = {"reservated": False}
 
@@ -166,8 +168,6 @@ def main(dataset):
                     driver.find_elements(By.CLASS_NAME, 'btn_bg')[0].find_element(By.TAG_NAME, 'a').click()
                     time.sleep(0.1)
                     driver.find_elements(By.CLASS_NAME, 'btn_bg')[0].find_element(By.TAG_NAME, 'a').click()
-                url = "https://www.campingkorea.or.kr/member/login.htm"
-                driver.get(url)
                 driver.find_element(By.ID, 'userid').click()
                 driver.find_element(By.ID, 'userid').send_keys(rid)
                 driver.find_element(By.ID, 'passwd').click()
@@ -178,13 +178,11 @@ def main(dataset):
 
                 main_cals = driver.find_element(By.CLASS_NAME, 'calendar')
                 day_list = main_cals.find_elements(By.CLASS_NAME, 'app-able')
-
                 if len(day_list) > 0:
                     day_list_new = []
                     for day in day_list:
                         if site_text in day.text:
                             day_list_new.append(day)
-
                     for day in day_list_new:
                         WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, 'a')))
                         link_element = day.find_element(By.TAG_NAME, 'a')
@@ -277,7 +275,7 @@ def captcha(cookie, thread_name):
         response = requests.post(url=url, cookies=cookie, verify=False)
 
         if response.status_code == 200:
-            filename = id + "_captcha.png"
+            filename = rid + "_captcha.png"
             with open(filename, 'wb') as f:
                 f.write(response.content)
             image = Image.open(filename)
