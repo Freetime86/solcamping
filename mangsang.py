@@ -68,6 +68,14 @@ elif user_type == 1:
     user_name = '권혁인'
     rpwd = 'hi83188318'
     rid = 'sochi007'
+elif user_type == 2:
+    user_name = '김계자'
+    rpwd = 'cjswosla86'
+    rid = 'psm07051'
+elif user_type == 3:
+    user_name = '박응순'
+    rpwd = 'cjswosla86'
+    rid = 'parksi'
 elif user_type == 4:
     user_name = '박현정'
     rpwd = 'p1357924680'

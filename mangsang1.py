@@ -35,7 +35,7 @@ night_delay = 5  # 모니터링 리프레시 속도
 test = True
 #room_exception = ['501', '502']
 room_exception = []
-room_want = []
+room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16']
 sel_month_list = ['8']
 sel_date_list = ['01', '02', '03']
 site = '6'
@@ -68,6 +68,14 @@ elif user_type == 1:
     user_name = '권혁인'
     rpwd = 'hi83188318'
     rid = 'sochi007'
+elif user_type == 2:
+    user_name = '김계자'
+    rpwd = 'cjswosla86'
+    rid = 'psm07051'
+elif user_type == 3:
+    user_name = '박응순'
+    rpwd = 'cjswosla86'
+    rid = 'parksi'
 elif user_type == 4:
     user_name = '박현정'
     rpwd = 'p1357924680'
