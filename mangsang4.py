@@ -33,12 +33,16 @@ period = 1  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 test = True
-#room_exception = ['501', '502']
-room_exception = []
-room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16']
+room_want = ['112', '115', '119', '101', '110', '106', '102', '103', '109', '111', '116', '120', '121', '122', '123']
+#2인실 ['104' ,'105', '107', '108', '113', '114, '117', '118']
+#4인실 ['102', '103', '109', '111', '116', '120', '121', '122', '123']
+#6인실 ['112', '115', '119']
+#8인실 ['101', '110']
+#10인실 ['106']
+
 sel_month_list = ['8']
-sel_date_list = ['01', '02', '03']
-site = '6'
+sel_date_list = ['01', '02', '03', '09', '10', '15', '16', '17', '23', '24', '30', '31']
+site = '1'
 
 continue_work = False
 trying = False
@@ -84,6 +88,10 @@ elif user_type == 5:
     user_name = '박상민'
     rpwd = 'cjswosla86'
     rid = 'psm0705'
+elif user_type == 6:
+    user_name = '윤민주'
+    rpwd = 'cca1174848'
+    rid = 'jsy3038'
 else:
     print('User type이 없습니다. 종료합니다')
     exit()
@@ -152,6 +160,7 @@ def main(dataset):
                 print('WORKING... : ' + str(thread_name) + ' 예약 중')
                 first_message = True
 
+            WebDriverWait(driver1, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'calendar')))
             main_cals1 = driver1.find_element(By.CLASS_NAME, 'calendar')
             day_list1 = main_cals1.find_elements(By.CLASS_NAME, 'app-able')
 
@@ -215,7 +224,9 @@ def main(dataset):
                                 all_sites = driver.find_element(By.ID, 'mapimg').find_elements(By.TAG_NAME, 'a')
                                 if len(all_sites) > 0:
                                     for each_site in all_sites:
-                                        if 'area_act' in each_site.get_attribute('href'):
+                                        href_text = each_site.get_attribute('href')
+                                        #print(href_text)
+                                        if 'area_act' in href_text or 'room_Code2' in href_text:
                                             site_num = each_site.text
                                             if len(site_num) == 1:
                                                 site_num = '0' + site_num
