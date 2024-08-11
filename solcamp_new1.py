@@ -28,7 +28,7 @@ delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사�
 test = False
 # room_list = ['503']  # 사이트 번호 지정
 # room_list = ['505']
-room_list = ['503']
+room_list = ['504']
 #room_list = ['311']
 # D 사이트
 # room_list = ['701', '703', '707', '708']
@@ -40,7 +40,7 @@ site = 'E'
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 9  # 사용자 정보 세팅
+user_type = 99  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
