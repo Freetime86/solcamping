@@ -40,7 +40,7 @@ site = 'E'
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 9  # 사용자 정보 세팅
+user_type = 999  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
