@@ -23,10 +23,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # 사이트 선택 ~ 순서는 A부터 절때 역방향이면 안됨!!
 # EX A1 ~ B1 이면 A1,2,3,4,5 ~ 와 B사이트 1번까지 랜덤 선택
 
-SITE_FROM = ['A01']
-SITE_TO = ['A55']
-START_DATE = ['20240629']
-END_DATE = ['20240630']
+SITE_FROM = ['A45']
+SITE_TO = ['A56']
+START_DATE = ['20250410']
+END_DATE = ['20250420']
 RESERVATION_CNT = 1
 SUCCESS_COUNT = 99
 
@@ -108,8 +108,9 @@ def main_process(_data):
 
     site_t_cnt = _site_t_num + add_t_cnt
     driver = webdriver.Chrome(options=options)
-    url = "https://camp.cjfmc.or.kr/cjcamp/campsite/L37844353"
+    url = "https://www.cjfmc.or.kr/camping/cjcamp/campsite/L37844353"
     driver.get(url)
+    time.sleep(1)
     _cookies = driver.get_cookies()
     # token
 
