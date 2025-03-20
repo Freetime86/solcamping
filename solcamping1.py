@@ -7,6 +7,7 @@ from PIL import Image
 from datetime import datetime
 from user_agent import generate_user_agent, generate_navigator
 from bs4 import BeautifulSoup
+from selenium.webdriver.support.ui import WebDriverWait
 from urllib.request import urlopen
 import pyautogui as py
 import numpy as np
@@ -36,14 +37,14 @@ test = True
 #room_exception = ['501', '502']
 room_exception = []
 room_want = ['503']
-sel_month_list = ['08']
-sel_date_list = ['0809', '0810']
+sel_month_list = ['09']
+sel_date_list = ['0913']
 site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 5  # 사용자 정보 세팅
+user_type = 9  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -215,8 +216,8 @@ def main(dataset):
         datetime.now().strftime("%Y") + sel_month_list[0])
     driver.get(url)
     time.sleep(5)
-    driver.find_element(By.NAME, 'today_dpnone').click()
-    time.sleep(1)
+    #driver.find_element(By.NAME, 'today_dpnone').click()
+    #time.sleep(1)
     driver.find_element(By.CLASS_NAME, 'btn-dark').click()
     # _cookies = driver.get_cookies()
 
@@ -517,6 +518,8 @@ def main(dataset):
 
             driver.refresh()
             time.sleep(delay)
+            WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'btn-dark')))
+            driver.find_element(By.CLASS_NAME, 'btn-dark').click()
         except Exception as ex:
             print('EXCEPTION!!!!! // ' + str(ex))
             continue
