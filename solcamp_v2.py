@@ -345,7 +345,7 @@ def main(dataset):
                                                 'resPeriod': str(period),
                                                 'actFile': 'reservation',
                                                 'actMode': 'Entryin',
-                                                room_key: '1',
+                                                room_key: '4',
                                                 'CAPTCHA_TEXT': dict_meta.get('captcha')
                                             }
                                             while continue_work:
