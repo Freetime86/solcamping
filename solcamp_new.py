@@ -21,9 +21,9 @@ py.FAILSAFE = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 global try_cnt
 
-machine = 2  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
+machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 0  # 머신 시작 간격
-period = 1  # 연박 수
+period = 3  # 연박 수
 delay = 0  # 모니터링 속도 예약 시에는 빠른 딜레이 0초로 사용한다
 test = False
 # room_list = ['503']  # 사이트 번호 지정
@@ -33,14 +33,14 @@ room_list = ['503']
 # D 사이트
 # room_list = ['701', '703', '707', '708']
 temp_room_list = room_list.copy()
-sel_month_list = ['09']
-sel_date_list = ['0911']
+sel_month_list = ['05']
+sel_date_list = ['0501']
 site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 999  # 사용자 정보 세팅
+user_type = 0  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''

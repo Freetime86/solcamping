@@ -23,8 +23,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # 사이트 선택 ~ 순서는 A부터 절때 역방향이면 안됨!!
 # EX A1 ~ B1 이면 A1,2,3,4,5 ~ 와 B사이트 1번까지 랜덤 선택
 
-SITE_FROM = ['A01']
-SITE_TO = ['A59']
+SITE_FROM = ['B01']
+SITE_TO = ['B10']
 START_DATE = ['20250405']
 END_DATE = ['20250406']
 RESERVATION_CNT = 1

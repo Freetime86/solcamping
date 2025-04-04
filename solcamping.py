@@ -35,15 +35,15 @@ night_delay = 5  # 모니터링 리프레시 속도
 test = True
 #room_exception = ['501', '502']
 room_exception = []
-room_want = ['240', '238', '234', '232', '236']
-sel_month_list = ['07']
-sel_date_list = ['0719', '0720']
-site = 'B'
+room_want = ['501']
+sel_month_list = ['04']
+sel_date_list = ['0416']
+site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 0  # 사용자 정보 세팅
+user_type = 5  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
