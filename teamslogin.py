@@ -34,6 +34,7 @@ def main():
     while True:
         try:
             time.sleep(300)
+            driver.refresh()
         except Exception as ex:
             #dr.refresh()
             continue
