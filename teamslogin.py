@@ -33,7 +33,7 @@ def main():
 
     while True:
         try:
-            time.sleep(300)
+            time.sleep(250)
             driver.refresh()
         except Exception as ex:
             #dr.refresh()
