@@ -25,8 +25,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 SITE_FROM = ['A01']
 SITE_TO = ['A59']
-START_DATE = ['20250405']
-END_DATE = ['20250406']
+START_DATE = ['20250503']
+END_DATE = ['20250506']
 RESERVATION_CNT = 1
 SUCCESS_COUNT = 99
 
@@ -109,19 +109,15 @@ def main_process(_data):
     site_t_cnt = _site_t_num + add_t_cnt
     driver = webdriver.Chrome(options=options)
     url = "https://www.cjfmc.or.kr/camping/cjcamp/campsite/L37844353"
-    driver.get(url)
-    time.sleep(1)
-    _cookies = driver.get_cookies()
-    # token
 
-    #wait.until(EC.visibility_of_element_located((By.ID, "tocken")))
     if ALWAYS:
+        driver.get(url)
+        time.sleep(1)
+        _cookies = driver.get_cookies()
+        wait = WebDriverWait(driver, 300)
+        # token
+        wait.until(EC.presence_of_element_located((By.ID, "tocken")))
         param['tocken'] = driver.find_element(By.ID, "tocken").get_attribute('value')
-
-
-    cookie_dict = {}
-    for cookie in _cookies:
-        cookie_dict[cookie['name']] = cookie['value']
 
     cycle_cnt = 0
     while True:
@@ -135,7 +131,17 @@ def main_process(_data):
         if (date_dt_begin < now) or ALWAYS:
             # 조회 API
             if not ALWAYS:
+                driver.get(url)
+                time.sleep(1)
+                _cookies = driver.get_cookies()
+                wait = WebDriverWait(driver, 300)
+                # token
+                wait.until(EC.presence_of_element_located((By.ID, "tocken")))
                 param['tocken'] = driver.find_element(By.ID, "tocken").get_attribute('value')
+
+            cookie_dict = {}
+            for cookie in _cookies:
+                cookie_dict[cookie['name']] = cookie['value']
 
             response = request_date(param, cookie_dict)
             if response.get('status_code') != 200:
