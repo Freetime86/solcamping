@@ -12,7 +12,7 @@ import json
 import threading
 import sys
 import urllib3
-import pytesseract
+from selenium.webdriver.support.ui import WebDriverWait
 
 # 시스템 설정
 py.FAILSAFE = False
@@ -30,7 +30,17 @@ def main():
     driver = webdriver.Chrome(options=options)
     url = "https://teams.microsoft.com/v2/?culture=ko-kr&country=kr"
     driver.get(url)
-
+    wait = WebDriverWait(driver, 300)
+    wait.until(EC.visibility_of_element_located((By.ID, "i0116"))).send_keys('DT076070@mobis-partners.com')
+    driver.find_element(By.ID, 'idSIButton9').click()
+    wait.until(EC.visibility_of_element_located((By.ID, "i0118"))).send_keys('CJSWOsla86!@12')
+    driver.find_element(By.ID, 'idSIButton9').click()
+    wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "table")))
+    driver.find_elements(By.CLASS_NAME, 'table')[1].click()
+    wait.until(EC.visibility_of_element_located((By.ID, "idSIButton9")))
+    driver.find_element(By.ID, 'idSIButton9').click()
+    wait.until(EC.visibility_of_element_located((By.ID, "hiddenformSubmitBtn")))
+    driver.find_element(By.ID, 'hiddenformSubmitBtn').click()
     while True:
         try:
             time.sleep(250)
