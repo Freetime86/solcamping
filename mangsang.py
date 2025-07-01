@@ -4,7 +4,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from PIL import Image
-from datetime import datetime
+from datetime import datetime, timedelta
 from selenium.webdriver.support.ui import WebDriverWait
 from user_agent import generate_user_agent, generate_navigator
 from bs4 import BeautifulSoup
@@ -29,25 +29,32 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
-period = 1  # 연박 수
+period = 3  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 test = True
-room_want = ['112', '115', '119', '101', '110', '106', '102', '103', '109', '111', '116', '120', '121', '122', '123']
+room_exception = []
+#room_want = ['112', '115', '119', '101', '110', '106', '102', '103', '109', '111', '116', '120', '121', '122', '123']
 #2인실 ['104' ,'105', '107', '108', '113', '114, '117', '118']
 #4인실 ['102', '103', '109', '111', '116', '120', '121', '122', '123']
 #6인실 ['112', '115', '119']
 #8인실 ['101', '110']
 #10인실 ['106']
+#자동차야영장 1~41번까지
+#앞열 5~13
+#취사장 가까운 열 1~4
+room_want = ['05', '06', '07', '08', '09', '10', '11', '12', '13']
+room_pick = []
 
-sel_month_list = ['8']
-sel_date_list = ['01', '02', '03', '09', '10', '15', '16', '17', '23', '24', '30', '31']
-site = '1'
+sel_year_list = ['2025']
+sel_month_list = ['07']
+sel_date_list = ['31']
+site = '6'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 6  # 사용자 정보 세팅
+user_type = 1  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -66,11 +73,11 @@ area2 = ''
 # 01099898806
 if user_type == 0:
     user_name = '조수윤'
-    rpwd = 'cca1174848'
+    rpwd = 'CJSWOsla86!@123'
     rid = 'jsy3033'
 elif user_type == 1:
     user_name = '권혁인'
-    rpwd = 'hi83188318'
+    rpwd = 'khi831883!'
     rid = 'sochi007'
 elif user_type == 2:
     user_name = '김계자'
@@ -86,7 +93,7 @@ elif user_type == 4:
     rid = 'fpahs414'
 elif user_type == 5:
     user_name = '박상민'
-    rpwd = 'cjswosla86'
+    rpwd = 'CJSWOsla86!@'
     rid = 'psm0705'
 elif user_type == 6:
     user_name = '윤민주'
@@ -96,32 +103,52 @@ else:
     print('User type이 없습니다. 종료합니다')
     exit()
 
-
 dataset = {"reservated": False}
 
 #예약 타입 text
 site_text = ''
+faciltyNo = ''
+faciltyCode = ''
 if site == '1':
     site_text = '든바다'
+    faciltyNo = '1300'
+    faciltyCode = 'MA'
 elif site == '2':
     site_text = '난바다'
+    faciltyNo = '1400'
+    faciltyCode = 'MB'
 elif site == '3':
     site_text = '허허바다'
+    faciltyNo = '1500'
+    faciltyCode = 'MB'
 elif site == '4':
     site_text = '전통한옥'
+    faciltyNo = '1100'
+    faciltyCode = 'HA'
 elif site == '5':
     site_text = '캐라반'
+    faciltyNo = '1700'
+    faciltyCode = 'BA'
 elif site == '6':
     site_text = '자동차캠핑장'
+    faciltyNo = '1600'
+    faciltyCode = 'RR'
 elif site == '7':
-    site_text = '글램핑'       #2인
+    site_text = '글램핑'  #2인
+    faciltyNo = '1801'
+    faciltyCode = 'LB'
 elif site == '8':
-    site_text = '글램핑'       #4인
+    site_text = '글램핑'  #4인
+    faciltyNo = '1802'
+    faciltyCode = 'LA'
 elif site == '9':
     site_text = '캐빈하우스'
+    faciltyNo = '1200'
+    faciltyCode = 'CH'
 else:
     print('사이트 선택 오류! 시스템 종료')
     exit()
+
 
 class Worker(threading.Thread):
     def __init__(self, dataset):
@@ -133,178 +160,227 @@ class Worker(threading.Thread):
 
 
 def main(dataset):
-    thread_name = dataset['name']
-    nametag = dataset['nametag']
 
     first_message = False
-    enter_logic = True
-    step = ''
-    conn = ''
-    area = ''
-    checkin = ''
+    start_time = time.time()
+    begin = True
+    temp_hold = False
+    time_message = ''
+    chk_start_time = time.time()
+    new_run_cnt = 0
+    global approve
+    _checker = False
 
-    driver = ''
-    dowork = False
-    driver1 = webdriver.Chrome(options=options)
-    url1 = "https://www.campingkorea.or.kr/reservation/06.htm?code=&year=2024&month=" + sel_month_list[0] + "#container"
-    driver1.get(url1)
+    print('감시 모드 시작')
+    print('입력정보 ' + str(site_text) + ' / ' + str(room_want))
+
+    if test:
+        while not _checker:
+            _checker = False
+            for year in sel_year_list:
+                for month in sel_month_list:
+                    for date in sel_date_list:
+                        result = check_available(year, month, date)
+                        if result.get('status_code') != 200:
+                            print('통신 실패 재점검')
+                        else:
+                            _list = result.get('value').split('|^|')
+                            for type in _list:
+                                if not '예약완료' in type and site_text in type:
+                                    _checker = True
+                                    approve = True
+                                    if not temp_hold:
+                                        print('예약 가능 활성화 확인 시스템 기동 시작')
+                                    break
 
     driver = webdriver.Chrome(options=options)
-    url = "https://www.campingkorea.or.kr/member/login.htm"
+    url = "https://www.campingkorea.or.kr/login/BD_loginForm.do"
     driver.get(url)
-    # _cookies = driver.get_cookies()
+    driver.maximize_window()
+
+    wait = WebDriverWait(driver, 100)
+
+    wait.until(EC.visibility_of_element_located((By.ID, "userId"))).send_keys(rid)
+    wait.until(EC.visibility_of_element_located((By.ID, "userPassword"))).send_keys(rpwd)
+    wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "mBtn2"))).click()
+    # 팝업 보지않기 제거
+    wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "jsBtnClose2")))
+
+    _cookies = driver.get_cookies()
+    cookie_dict = {}
+    for cookie in _cookies:
+        cookie_dict[cookie['name']] = cookie['value']
 
     while True:
         try:
             if not first_message:
-                print('WORKING... : ' + str(thread_name) + ' 예약 중')
                 first_message = True
 
-            WebDriverWait(driver1, 5).until(EC.presence_of_element_located((By.CLASS_NAME, 'calendar')))
-            main_cals1 = driver1.find_element(By.CLASS_NAME, 'calendar')
-            day_list1 = main_cals1.find_elements(By.CLASS_NAME, 'app-able')
+            wait_time = time.time() - chk_start_time  # 경과된 시간 계산
 
-            if len(day_list1) > 0:
-                day_list_new = []
-                for day in day_list1:
-                    if site_text in day.text:
-                        day_list_new.append(day)
+            if wait_time >= 3600 * new_run_cnt:  # 3600초 == 1시간
+                print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' / 경과 시간 : ' + str(new_run_cnt) + '시간')
+                new_run_cnt = new_run_cnt + 1
+            elif new_run_cnt == 0:
+                new_run_cnt = 1
 
-                for day in day_list_new:
-                    link_element = day.find_element(By.TAG_NAME, 'a')
-                    day_text = link_element.get_attribute('title')[8:10]
-                    if len(day_text) == 1:
-                        day_text = '0' + day_text
+            if approve:
+                elapsed_time = 0
+                if test:
+                    if temp_hold:
+                        elapsed_time = time.time() - start_time  # 경과된 시간 계산
+                        message = '임시점유 대기 시간 ' + str(int(elapsed_time/60)) + '분 대기 중'
+                        if time_message != message:
+                            time_message = message
+                            print(message)
+                        else:
+                            time_message = message
 
-                    if day_text in sel_date_list:
-                        dowork = True
-                        break
-            if dowork:
-                dowork = False
-                if len(driver.find_elements(By.CLASS_NAME, 'btn_bg')) > 0:
-                    driver.find_elements(By.CLASS_NAME, 'btn_bg')[0].find_element(By.TAG_NAME, 'a').click()
-                    time.sleep(0.1)
-                    driver.find_elements(By.CLASS_NAME, 'btn_bg')[0].find_element(By.TAG_NAME, 'a').click()
-                driver.find_element(By.ID, 'userid').click()
-                driver.find_element(By.ID, 'userid').send_keys(rid)
-                driver.find_element(By.ID, 'passwd').click()
-                driver.find_element(By.ID, 'passwd').send_keys(rpwd)
-                driver.find_element(By.CLASS_NAME, 'btn_login').click()
-                url = "https://www.campingkorea.or.kr/reservation/06.htm?code=&year=2024&month=" + sel_month_list[0] + "#container"
-                driver.get(url)
+                if (elapsed_time >= 240 and temp_hold) or begin or not test:
+                    temp_hold = False
+                    start_time = time.time()
+                    for year in sel_year_list:
+                        for month in sel_month_list:
+                            for date in sel_date_list:
+                                from_date = (datetime.strptime(year + month + date, '%Y%m%d')).strftime('%Y-%m-%d')
+                                to_date = (datetime.strptime(year + month + date, '%Y%m%d') + timedelta(days=int(period))).strftime('%Y-%m-%d')
 
-                main_cals = driver.find_element(By.CLASS_NAME, 'calendar')
-                day_list = main_cals.find_elements(By.CLASS_NAME, 'app-able')
-                if len(day_list) > 0:
-                    day_list_new = []
-                    for day in day_list:
-                        if site_text in day.text:
-                            day_list_new.append(day)
-                    for day in day_list_new:
-                        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.TAG_NAME, 'a')))
-                        link_element = day.find_element(By.TAG_NAME, 'a')
-                        day_text = link_element.get_attribute('onclick')[48:50]
-                        if len(day_text) == 1:
-                            day_text = '0' + day_text
-                        sel_date_list_temp = sel_date_list.copy()
-                        if day_text in sel_date_list_temp:
-                            link_element.click()
-                            _cookies = driver.get_cookies()
-                            cookie_dict = {}
-                            for cookie in _cookies:
-                                cookie_dict[cookie['name']] = cookie['value']
-
-                            captcha_code = captcha(cookie_dict, thread_name)
-                            driver.find_element(By.ID, 'auth_name').send_keys(captcha_code)
-                            time.sleep(0.1)
-                            buttons = driver.find_elements(By.CLASS_NAME, 'btn_blue')
-                            if len(buttons) > 0:
-                                buttons[0].click()
-                                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'mapimg')))
-                                all_sites = driver.find_element(By.ID, 'mapimg').find_elements(By.TAG_NAME, 'a')
-                                if len(all_sites) > 0:
-                                    for each_site in all_sites:
-                                        href_text = each_site.get_attribute('href')
-                                        #print(href_text)
-                                        if 'area_act' in href_text or 'room_Code2' in href_text:
-                                            site_num = each_site.text
-                                            if len(site_num) == 1:
-                                                site_num = '0' + site_num
-
-                                            room_pass = False
-                                            if site_num in room_want:
-                                                room_pass = True
-                                            elif len(room_want) == 0:
-                                                room_pass = True
-
-                                            if room_pass:
-                                                each_site.click()
-                                                summit_btn = driver.find_elements(By.CLASS_NAME, 'btn_color')
-                                                if len(summit_btn) > 0:
-                                                    time.sleep(0.1)
-                                                    summit_btn[0].click()
-                                                    #진행여부
-                                                    WebDriverWait(driver, 5).until(EC.alert_is_present())
-                                                    driver.switch_to.alert.accept()
-                                                    #다음단계진행 재차 확인
-                                                    WebDriverWait(driver, 5).until(EC.alert_is_present())
-                                                    driver.switch_to.alert.accept()
-                                                    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'res_Check')))
-                                                    driver.find_element(By.ID, 'res_Check').click()
-                                                    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'animall_Check')))
-                                                    driver.find_element(By.ID, 'animall_Check').click()
-                                                    summit_btn = driver.find_elements(By.CLASS_NAME, 'btn_color')
-                                                    if len(summit_btn) > 0:
-                                                        time.sleep(0.1)
-                                                        summit_btn[0].click()
-                                                        WebDriverWait(driver, 5).until(EC.alert_is_present())
-                                                        driver.switch_to.alert.accept()
-                                                        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'r_account3')))
-                                                        driver.find_element(By.ID, 'r_account3').click()
-                                                        WebDriverWait(driver, 5).until(EC.alert_is_present())
-                                                        driver.switch_to.alert.accept()
-                                                        summit_btn = driver.find_elements(By.CLASS_NAME, 'btn_color')
-                                                        if len(summit_btn) > 0:
-                                                            time.sleep(0.1)
-                                                            summit_btn[0].click()
-                                                            WebDriverWait(driver, 5).until(EC.alert_is_present())
-                                                            driver.switch_to.alert.accept()
-                                                            print(site_text + " " + site_num + " " + str(sel_month_list[0]) + "월 " + day_text + "일 예약완료")
-                                                            sel_date_list_temp.remove(day_text)
-                                                            driver.get(url)
-                                    driver.refresh()
+                                print(str(from_date) + ' ~ ' + str(to_date) + ' / ' + str(site_text) + ' 예약 시도 중')
+                                response = reservation_list(from_date, to_date, faciltyNo, faciltyCode, cookie_dict)
+                                room_list = []
+                                _isPass = False
+                                if response['status_code'] == 200 and response['value'] is not None:
+                                    room_list = response['value']['childFcltyList']
+                                    _isPass = True
                                 else:
-                                    print('retry')
-            driver1.refresh()
-            time.sleep(delay)
+                                    print('점유 불가 ' + response['message'])
+
+                                if _isPass:
+                                    _available_rooms = []
+                                    _names = []
+                                    for room in room_list:
+                                        _availableYn = room['resveAt']
+                                        _cancelYn = room['canclYn']
+                                        if _availableYn == 'Y' and _cancelYn == 'Y':
+                                            code = room['fcltyCode'][2:4]
+                                            if str(code) in room_want:
+                                                _available_rooms.append(room)
+                                                _names.append(str(room['fcltyNm']))
+
+                                    print(site_text + ' 예약가능 : ' + str(_names))
+
+                                    if len(_available_rooms) == 0:
+                                        print('조건에 부합하는 대상이 존재하지 않습니다.')
+                                    _isDone = False
+                                    for room in _available_rooms:
+                                        code = room['fcltyCode'][2:4]
+                                        if str(code) in room_pick:
+                                            target_facility = str(int(faciltyNo) + int(code))
+                                            response = get_facility(from_date, to_date, target_facility, faciltyCode, cookie_dict)
+                                            if response['status_code'] == 200:
+                                                _isDone = True
+                                                print('###################임시점유 완료 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+                                                temp_hold = True
+                                                begin = False
+                                            else:
+                                                print('임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+
+                                    if not _isDone:
+                                        room = _available_rooms[len(_available_rooms) - 1]
+                                        code = room['fcltyCode'][2:4]
+                                        target_facility = str(int(faciltyNo) + int(code))
+                                        response = get_facility(from_date, to_date, target_facility, faciltyCode, cookie_dict)
+                                        if response['status_code'] == 200:
+                                            _isDone = True
+                                            print('###################임시점유 완료 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+                                            temp_hold = True
+                                            begin = False
+                                        else:
+                                            print('임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+
         except Exception as ex:
-            driver1.refresh()
+            print(ex)
+            #driver.refresh()
             continue
 
 
-def captcha(cookie, thread_name):
-    #테서렉트 로드
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Users\psm07\AppData\Local\tesseract.exe'
+def check_available(year, month, date):
+    # 예약 파라미터 세팅
+    url = "https://www.campingkorea.or.kr/user/reservation/ND_selectFcltyCalendarDetail.do"
+    dict_data = {
+        'trrsrtCode': '1000',
+        'q_year': str(year),
+        'q_month': str(month),
+        'qDay': str(date)
+    }
+    response = ''
+    while response == '':
+        try:
+            response = requests.post(url=url, data=dict_data)
 
-    _pass = False
-    captcha_code = ''
-    while not _pass:
-        # 이미지 로드
-        url = "https://www.campingkorea.or.kr/bbs/bbs_gdlibrary.inc.php"
-        response = requests.post(url=url, cookies=cookie, verify=False)
+            dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                         'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+            if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                return {**dict_meta, **response.json()}
+            else:  # 문자열 형태인 경우
+                return {**dict_meta, **{'text': response.text}}
+        except requests.exceptions.RequestException as ex:
+            time.sleep(10)
+            continue
 
-        if response.status_code == 200:
-            filename = rid + "_captcha.png"
-            with open(filename, 'wb') as f:
-                f.write(response.content)
-            image = Image.open(filename)
-            image = cv2.imread(filename)
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-            captcha_code = pytesseract.image_to_string(gray, lang='eng', config='--psm 9 -c page_separator=""')
-            #print(pytesseract.image_to_string(image, lang='eng', config='--psm 9 -c page_separator=""'))
-            _pass = True
-    return captcha_code
+
+def reservation_list(from_date, to_date, faciltyNo, faciltyCode, cookies):
+    # 예약 파라미터 세팅
+    url = "https://www.campingkorea.or.kr/user/reservation/ND_selectChildFcltyList.do"
+    dict_data = {
+        'trrsrtCode': '1000',
+        'fcltyCode': faciltyNo,
+        'resveNoCode': faciltyCode,
+        'resveBeginDe': from_date,
+        'resveEndDe': to_date
+    }
+
+    response = ''
+    while response == '':
+        try:
+            response = requests.post(url=url, data=dict_data, cookies=cookies, verify=False)
+
+            dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                         'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+            if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                return {**dict_meta, **response.json()}
+            else:  # 문자열 형태인 경우
+                return {**dict_meta, **{'text': response.text}}
+        except requests.exceptions.RequestException as ex:
+            time.sleep(10)
+            continue
+
+#자리선점
+def get_facility(from_date, to_date, faciltyNo, faciltyCode, cookies):
+    # 예약 파라미터 세팅
+    url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
+    dict_data = {
+        'trrsrtCode': '1000',
+        'fcltyCode': faciltyNo,
+        'resveNoCode': faciltyCode,
+        'resveBeginDe': from_date,
+        'resveEndDe': to_date
+    }
+
+    response = ''
+    while response == '':
+        try:
+            response = requests.post(url=url, data=dict_data, cookies=cookies, verify=False)
+
+            dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                         'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+            if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                return {**dict_meta, **response.json()}
+            else:  # 문자열 형태인 경우
+                return {**dict_meta, **{'text': response.text}}
+        except requests.exceptions.RequestException as ex:
+            time.sleep(10)
+            continue
 
 
 
