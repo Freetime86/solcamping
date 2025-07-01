@@ -44,7 +44,7 @@ room_exception = []
 #앞열 5~13
 #취사장 가까운 열 1~4
 #room_want = ['115']
-room_want = [27]
+room_want = ['27']
 room_pick = []
 
 sel_year_list = ['2025']
@@ -110,6 +110,7 @@ site_text = ''
 faciltyNo = ''
 faciltyCode = ''
 text_code = ''
+final_data = {}
 site = '6'
 if site == '1':
     site_text = '든바다'
@@ -182,7 +183,7 @@ def main(dataset):
     pre_msg = ''
     pre_target = ''
     pos_msg = ''
-    global approve, target_facility
+    global approve, target_facility, final_data
     _checker = False
 
     _roomstr = ''
@@ -260,7 +261,11 @@ def main(dataset):
                         response = delete_reserve(cookie_dict)
                         if response['status_code'] == 200:
                             temp_hold = False
-                            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + '취소 재 점유를 시도합니다.')
+                            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 취소 후 다시 점유를 시도합니다.')
+                            response = get_facility(final_data['from_date'], final_data['to_date'], final_data['target_facility'], final_data['faciltyCode'], final_data['cookie_dict'])
+                            if response['status_code'] != 200:
+                                print('재 점유 실패')
+
 
                 if not temp_hold or begin or not test:
                     start_time = time.time()
@@ -323,6 +328,13 @@ def main(dataset):
                                         if str(name) in room_pick:
                                             if text_code != '':
                                                 target_facility = str(room['fcltyCode'])
+                                            final_data = {
+                                                'from_date': from_date,
+                                                'to_date': to_date,
+                                                'target_facility': target_facility,
+                                                'faciltyCode': faciltyCode,
+                                                'cookie_dict': cookie_dict
+                                            }
                                             response = get_facility(from_date, to_date, target_facility, faciltyCode, cookie_dict)
                                             if response['status_code'] == 200:
                                                 _isDone = True
@@ -336,11 +348,17 @@ def main(dataset):
                                                     site_text) + str(room['fcltyNm']))
                                                 temp_hold = False
 
-                                    if not _isDone and len(_available_rooms) > 0:
+                                    if not _isDone and len(_available_rooms) > 0 and len(room_pick) == 0:
                                         room = _available_rooms[len(_available_rooms) - 1]
                                         target_facility = str(room['fcltyCode'])
-                                        response = get_facility(from_date, to_date, target_facility, faciltyCode,
-                                                                cookie_dict)
+                                        final_data = {
+                                            'from_date': from_date,
+                                            'to_date': to_date,
+                                            'target_facility': target_facility,
+                                            'faciltyCode': faciltyCode,
+                                            'cookie_dict': cookie_dict
+                                        }
+                                        response = get_facility(from_date, to_date, target_facility, faciltyCode, cookie_dict)
                                         if response['status_code'] == 200:
                                             _isDone = True
                                             new_message = '###################임시점유 완료 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm'])
