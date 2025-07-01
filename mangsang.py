@@ -34,7 +34,7 @@ delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 test = True
 room_exception = []
-room_want = ['103', '105', '107', '108', '113', '114', '117', '118']
+#room_want = ['103', '105', '107', '108', '113', '114', '117', '118']
 #2인실 ['104' ,'105', '107', '108', '113', '114', '117', '118']
 #4인실 ['102', '103', '109', '111', '116', '120', '121', '122', '123']
 #6인실 ['112', '115', '119']
@@ -44,13 +44,13 @@ room_want = ['103', '105', '107', '108', '113', '114', '117', '118']
 #앞열 5~13
 #취사장 가까운 열 1~4
 #room_want = ['115']
-#room_want = ['05', '06', '07', '08', '09', '10', '11', '12', '13']
+room_want = ['27']
 room_pick = []
 
 sel_year_list = ['2025']
 sel_month_list = ['07']
-sel_date_list = ['03']
-site = '3'
+sel_date_list = ['21']
+site = '6'
 
 continue_work = False
 trying = False
@@ -176,11 +176,13 @@ def main(dataset):
     begin = True
     temp_hold = False
     time_message = ''
+    result_msg = ''
     chk_start_time = time.time()
     new_run_cnt = 0
     pre_msg = ''
     pre_target = ''
-    global approve
+    pos_msg = ''
+    global approve, target_facility
     _checker = False
 
     print('감시 모드 시작')
@@ -222,7 +224,7 @@ def main(dataset):
     cookie_dict = {}
     for cookie in _cookies:
         cookie_dict[cookie['name']] = cookie['value']
-
+    delete_reserve(cookie_dict)
     while True:
         try:
             if not first_message:
@@ -247,10 +249,13 @@ def main(dataset):
                             print(message)
                         else:
                             time_message = message
-
-                if (elapsed_time >= 240 and temp_hold) or begin or not test:
-                    temp_hold = False
+                if elapsed_time >= 280:
+                    response = delete_reserve(cookie_dict)
+                    if response['status_code'] == 200:
+                        temp_hold = False
+                if not temp_hold or begin or not test:
                     start_time = time.time()
+                    begin = False
                     for year in sel_year_list:
                         for month in sel_month_list:
                             for date in sel_date_list:
@@ -268,7 +273,11 @@ def main(dataset):
                                     room_list = response['value']['childFcltyList']
                                     _isPass = True
                                 else:
-                                    print('점유 불가 ' + response['message'])
+                                    temp_hold = False
+                                    new_msg = '점유 불가 ' + response['message']
+                                    if pos_msg != new_msg:
+                                        print('점유 불가 ' + response['message'])
+                                        pos_msg = new_msg
 
                                 if _isPass:
                                     text_msg = ''
@@ -287,13 +296,17 @@ def main(dataset):
                                                 text_msg = '예약이 이미 마감되었습니다.'
                                             if _cancelYn == 'Y':
                                                 text_msg = '취소 예약이라 대기 중 입니다. 최초 체크 시간: ' + str(datetime.now().strftime('%Y-%m-%d %H:%M'))
+                                            temp_hold = False
 
                                     if len(_available_rooms) == 0:
                                         if pre_msg[0:16] != text_msg[0:16]:
                                             print(text_msg)
                                             pre_msg = text_msg
                                     else:
-                                        print(site_text + ' 예약가능 : ' + str(_names))
+                                        text_msg = site_text + ' 예약가능 : ' + str(_names)
+                                        if pre_msg != text_msg:
+                                            print(site_text + ' 예약가능 : ' + str(_names))
+                                            pre_msg = text_msg
 
                                     _isDone = False
                                     for room in _available_rooms:
@@ -305,13 +318,15 @@ def main(dataset):
                                                                     cookie_dict)
                                             if response['status_code'] == 200:
                                                 _isDone = True
-                                                print('###################임시점유 완료 ' + str(from_date) + '~' + str(
-                                                    to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+                                                new_message = '###################임시점유 완료 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm'])
+                                                if result_msg != new_message:
+                                                    print(new_message)
+                                                    result_msg = new_message
                                                 temp_hold = True
-                                                begin = False
                                             else:
                                                 print('임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(
                                                     site_text) + str(room['fcltyNm']))
+                                                temp_hold = False
 
                                     if not _isDone and len(_available_rooms) > 0:
                                         room = _available_rooms[len(_available_rooms) - 1]
@@ -320,13 +335,15 @@ def main(dataset):
                                                                 cookie_dict)
                                         if response['status_code'] == 200:
                                             _isDone = True
-                                            print('###################임시점유 완료 ' + str(from_date) + '~' + str(
-                                                to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+                                            new_message = '###################임시점유 완료 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm'])
+                                            if result_msg != new_message:
+                                                print(new_message)
+                                                result_msg = new_message
                                             temp_hold = True
-                                            begin = False
                                         else:
                                             print('임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(
                                                 site_text) + str(room['fcltyNm']))
+                                            temp_hold = False
 
         except Exception as ex:
             print(ex)
@@ -402,6 +419,27 @@ def get_facility(from_date, to_date, faciltyNo, faciltyCode, cookies):
     while response == '':
         try:
             response = requests.post(url=url, data=dict_data, cookies=cookies, verify=False)
+
+            dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                         'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+            if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                return {**dict_meta, **response.json()}
+            else:  # 문자열 형태인 경우
+                return {**dict_meta, **{'text': response.text}}
+        except requests.exceptions.RequestException as ex:
+            time.sleep(10)
+            continue
+
+
+#자리선점
+def delete_reserve(cookies):
+    # 예약 파라미터 세팅
+    url = "https://www.campingkorea.or.kr/user/reservation/ND_deletePreOcpcInfo.do"
+
+    response = ''
+    while response == '':
+        try:
+            response = requests.post(url=url, cookies=cookies, verify=False)
 
             dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
                          'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
