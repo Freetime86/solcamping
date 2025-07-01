@@ -348,7 +348,7 @@ def main(dataset):
                                                     site_text) + str(room['fcltyNm']))
                                                 temp_hold = False
 
-                                    if not _isDone and len(_available_rooms) > 0 and len(room_pick) == 0:
+                                    if not _isDone and len(_available_rooms) > 0:
                                         room = _available_rooms[len(_available_rooms) - 1]
                                         target_facility = str(room['fcltyCode'])
                                         final_data = {
