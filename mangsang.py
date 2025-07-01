@@ -29,13 +29,13 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
-period = 3  # 연박 수
+period = 1  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 test = True
 room_exception = []
-#room_want = ['112', '115', '119', '101', '110', '106', '102', '103', '109', '111', '116', '120', '121', '122', '123']
-#2인실 ['104' ,'105', '107', '108', '113', '114, '117', '118']
+room_want = ['103', '105', '107', '108', '113', '114', '117', '118']
+#2인실 ['104' ,'105', '107', '108', '113', '114', '117', '118']
 #4인실 ['102', '103', '109', '111', '116', '120', '121', '122', '123']
 #6인실 ['112', '115', '119']
 #8인실 ['101', '110']
@@ -43,18 +43,19 @@ room_exception = []
 #자동차야영장 1~41번까지
 #앞열 5~13
 #취사장 가까운 열 1~4
-room_want = ['05', '06', '07', '08', '09', '10', '11', '12', '13']
+#room_want = ['115']
+#room_want = ['05', '06', '07', '08', '09', '10', '11', '12', '13']
 room_pick = []
 
 sel_year_list = ['2025']
 sel_month_list = ['07']
-sel_date_list = ['31']
-site = '6'
+sel_date_list = ['03']
+site = '3'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 1  # 사용자 정보 세팅
+user_type = 0  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -109,42 +110,52 @@ dataset = {"reservated": False}
 site_text = ''
 faciltyNo = ''
 faciltyCode = ''
+text_code = ''
 if site == '1':
     site_text = '든바다'
     faciltyNo = '1300'
     faciltyCode = 'MA'
+    text_code = ''
 elif site == '2':
     site_text = '난바다'
     faciltyNo = '1400'
     faciltyCode = 'MB'
+    text_code = 'NG'
 elif site == '3':
     site_text = '허허바다'
     faciltyNo = '1500'
     faciltyCode = 'MB'
+    text_code = 'HE'
 elif site == '4':
     site_text = '전통한옥'
     faciltyNo = '1100'
     faciltyCode = 'HA'
+    text_code = ''
 elif site == '5':
     site_text = '캐라반'
     faciltyNo = '1700'
     faciltyCode = 'BA'
+    text_code = ''
 elif site == '6':
     site_text = '자동차캠핑장'
     faciltyNo = '1600'
     faciltyCode = 'RR'
+    text_code = ''
 elif site == '7':
     site_text = '글램핑'  #2인
     faciltyNo = '1801'
     faciltyCode = 'LB'
+    text_code = ''
 elif site == '8':
     site_text = '글램핑'  #4인
     faciltyNo = '1802'
     faciltyCode = 'LA'
+    text_code = ''
 elif site == '9':
     site_text = '캐빈하우스'
     faciltyNo = '1200'
     faciltyCode = 'CH'
+    text_code = ''
 else:
     print('사이트 선택 오류! 시스템 종료')
     exit()
@@ -160,7 +171,6 @@ class Worker(threading.Thread):
 
 
 def main(dataset):
-
     first_message = False
     start_time = time.time()
     begin = True
@@ -168,6 +178,8 @@ def main(dataset):
     time_message = ''
     chk_start_time = time.time()
     new_run_cnt = 0
+    pre_msg = ''
+    pre_target = ''
     global approve
     _checker = False
 
@@ -229,7 +241,7 @@ def main(dataset):
                 if test:
                     if temp_hold:
                         elapsed_time = time.time() - start_time  # 경과된 시간 계산
-                        message = '임시점유 대기 시간 ' + str(int(elapsed_time/60)) + '분 대기 중'
+                        message = '임시점유 대기 시간 ' + str(int(elapsed_time / 60)) + '분 대기 중'
                         if time_message != message:
                             time_message = message
                             print(message)
@@ -245,7 +257,10 @@ def main(dataset):
                                 from_date = (datetime.strptime(year + month + date, '%Y%m%d')).strftime('%Y-%m-%d')
                                 to_date = (datetime.strptime(year + month + date, '%Y%m%d') + timedelta(days=int(period))).strftime('%Y-%m-%d')
 
-                                print(str(from_date) + ' ~ ' + str(to_date) + ' / ' + str(site_text) + ' 예약 시도 중')
+                                new_target = str(from_date) + ' ~ ' + str(to_date) + ' / ' + str(site_text) + ' 예약 시도 중'
+                                if pre_target != new_target:
+                                    print(new_target)
+                                    pre_target = new_target
                                 response = reservation_list(from_date, to_date, faciltyNo, faciltyCode, cookie_dict)
                                 room_list = []
                                 _isPass = False
@@ -256,47 +271,62 @@ def main(dataset):
                                     print('점유 불가 ' + response['message'])
 
                                 if _isPass:
+                                    text_msg = ''
                                     _available_rooms = []
                                     _names = []
                                     for room in room_list:
                                         _availableYn = room['resveAt']
                                         _cancelYn = room['canclYn']
                                         if _availableYn == 'Y' and _cancelYn == 'Y':
-                                            code = room['fcltyCode'][2:4]
-                                            if str(code) in room_want:
+                                            name = str(room['fcltyNm']).replace('호', '').replace('번', '')   #naming으로 처리하여 식별하기
+                                            if str(name) in room_want:
                                                 _available_rooms.append(room)
                                                 _names.append(str(room['fcltyNm']))
-
-                                    print(site_text + ' 예약가능 : ' + str(_names))
+                                        else:
+                                            if _availableYn != 'Y':
+                                                text_msg = '예약이 이미 마감되었습니다.'
+                                            if _cancelYn == 'Y':
+                                                text_msg = '취소 예약이라 대기 중 입니다. 최초 체크 시간: ' + str(datetime.now().strftime('%Y-%m-%d %H:%M'))
 
                                     if len(_available_rooms) == 0:
-                                        print('조건에 부합하는 대상이 존재하지 않습니다.')
+                                        if pre_msg[0:16] != text_msg[0:16]:
+                                            print(text_msg)
+                                            pre_msg = text_msg
+                                    else:
+                                        print(site_text + ' 예약가능 : ' + str(_names))
+
                                     _isDone = False
                                     for room in _available_rooms:
-                                        code = room['fcltyCode'][2:4]
-                                        if str(code) in room_pick:
-                                            target_facility = str(int(faciltyNo) + int(code))
-                                            response = get_facility(from_date, to_date, target_facility, faciltyCode, cookie_dict)
+                                        name = str(room['fcltyNm']).replace('호', '').replace('번', '')
+                                        if str(name) in room_pick:
+                                            if text_code != '':
+                                                target_facility = str(room['fcltyCode'])
+                                            response = get_facility(from_date, to_date, target_facility, faciltyCode,
+                                                                    cookie_dict)
                                             if response['status_code'] == 200:
                                                 _isDone = True
-                                                print('###################임시점유 완료 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+                                                print('###################임시점유 완료 ' + str(from_date) + '~' + str(
+                                                    to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
                                                 temp_hold = True
                                                 begin = False
                                             else:
-                                                print('임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+                                                print('임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(
+                                                    site_text) + str(room['fcltyNm']))
 
-                                    if not _isDone:
+                                    if not _isDone and len(_available_rooms) > 0:
                                         room = _available_rooms[len(_available_rooms) - 1]
-                                        code = room['fcltyCode'][2:4]
-                                        target_facility = str(int(faciltyNo) + int(code))
-                                        response = get_facility(from_date, to_date, target_facility, faciltyCode, cookie_dict)
+                                        target_facility = str(room['fcltyCode'])
+                                        response = get_facility(from_date, to_date, target_facility, faciltyCode,
+                                                                cookie_dict)
                                         if response['status_code'] == 200:
                                             _isDone = True
-                                            print('###################임시점유 완료 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+                                            print('###################임시점유 완료 ' + str(from_date) + '~' + str(
+                                                to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
                                             temp_hold = True
                                             begin = False
                                         else:
-                                            print('임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm']))
+                                            print('임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(
+                                                site_text) + str(room['fcltyNm']))
 
         except Exception as ex:
             print(ex)
@@ -355,6 +385,7 @@ def reservation_list(from_date, to_date, faciltyNo, faciltyCode, cookies):
             time.sleep(10)
             continue
 
+
 #자리선점
 def get_facility(from_date, to_date, faciltyNo, faciltyCode, cookies):
     # 예약 파라미터 세팅
@@ -381,7 +412,6 @@ def get_facility(from_date, to_date, faciltyNo, faciltyCode, cookies):
         except requests.exceptions.RequestException as ex:
             time.sleep(10)
             continue
-
 
 
 for i in range(machine):
