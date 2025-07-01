@@ -44,7 +44,7 @@ room_exception = []
 #앞열 5~13
 #취사장 가까운 열 1~4
 #room_want = ['115']
-room_want = ['27']
+room_want = [27]
 room_pick = []
 
 sel_year_list = ['2025']
@@ -54,7 +54,7 @@ sel_date_list = ['21']
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 0  # 사용자 정보 세팅
+user_type = 1  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -185,8 +185,13 @@ def main(dataset):
     global approve, target_facility
     _checker = False
 
+    _roomstr = ''
+    if len(room_want) == 0:
+        _roomstr = 'ALL'
+    else:
+        _roomstr = room_want
     print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 감시 모드 시작')
-    print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 입력정보 ' + str(site_text) + ' / ' + str(room_want))
+    print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 입력정보 ' + str(site_text) + ' / ' + str(_roomstr))
 
     if test:
         while not _checker:
@@ -255,7 +260,7 @@ def main(dataset):
                         response = delete_reserve(cookie_dict)
                         if response['status_code'] == 200:
                             temp_hold = False
-                            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 재 점유를 시도합니다.')
+                            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + '취소 재 점유를 시도합니다.')
 
                 if not temp_hold or begin or not test:
                     start_time = time.time()
@@ -292,7 +297,7 @@ def main(dataset):
                                         _cancelYn = room['canclYn']
                                         if _availableYn == 'Y' and _cancelYn == 'Y':
                                             name = str(room['fcltyNm']).replace('호', '').replace('번', '')   #naming으로 처리하여 식별하기
-                                            if str(name) in room_want:
+                                            if str(name) in room_want or len(room_want) == 0:
                                                 _available_rooms.append(room)
                                                 _names.append(str(room['fcltyNm']))
                                         else:
@@ -349,7 +354,7 @@ def main(dataset):
                                             temp_hold = False
 
         except Exception as ex:
-            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + ex)
+            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + str(ex))
             #driver.refresh()
             continue
 
