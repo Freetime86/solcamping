@@ -44,12 +44,13 @@ room_exception = []
 #앞열 5~13
 #취사장 가까운 열 1~4
 #room_want = ['115']
-room_want = ['27']
+#room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
+room_want = ['110']
 room_pick = []
 
 sel_year_list = ['2025']
 sel_month_list = ['07']
-sel_date_list = ['21']
+sel_date_list = ['12']
 
 continue_work = False
 trying = False
@@ -111,7 +112,7 @@ faciltyNo = ''
 faciltyCode = ''
 text_code = ''
 final_data = {}
-site = '6'
+site = '2'
 if site == '1':
     site_text = '든바다'
     faciltyNo = '1300'
