@@ -314,7 +314,7 @@ def main(DATASET):
                                     else:
                                         DATASET = remove_temp(DATASET)
                                         message(DATASET,
-                                                str('점유 불가' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
+                                                str('점유 불가 ' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
 
             # TIMING 예약
             # elif not DATASET['MONITOR']:
