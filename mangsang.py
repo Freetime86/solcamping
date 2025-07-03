@@ -34,23 +34,36 @@ delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 test = True
 room_exception = []
-#room_want = ['103', '105', '107', '108', '113', '114', '117', '118']
-#2인실 ['104' ,'105', '107', '108', '113', '114', '117', '118']
-#4인실 ['102', '103', '109', '111', '116', '120', '121', '122', '123']
+room_want = ['101', '109', '113', '106', '115']
+#든바다
+#2인실 ['104','105', '107', '108', '113', '114', '117', '118']
+#4인실 ['120', '121', '122', '123', '103', '109', '116', '102', '111']
 #6인실 ['112', '115', '119']
 #8인실 ['101', '110']
 #10인실 ['106']
+#난바다
+#4인실 ['103', '104', '107', '108', '111', '112']
+#6인실 ['105', '102', '110', '114']
+#8인실 ['101', '109', '113']
+#10인실 ['106', '115']
+#허허바다
+#2인실 ['104','105', '107', '108', '113', '114', '117', '118']
+#4인실 ['106', '107', '104', '103']
+#6인실 ['105']
+#8인실 ['102']
+#10인실 ['101', '108']
+
 #자동차야영장 1~41번까지
 #앞열 5~13
 #취사장 가까운 열 1~4
 #room_want = ['115']
 #room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
-room_want = ['110']
+room_want = []
 room_pick = []
 
 sel_year_list = ['2025']
-sel_month_list = ['07']
-sel_date_list = ['12']
+sel_month_list = ['08']
+sel_date_list = ['01']
 
 continue_work = False
 trying = False
@@ -184,8 +197,9 @@ def main(dataset):
     pre_msg = ''
     pre_target = ''
     pos_msg = ''
-    global approve, target_facility, final_data
+    global get_facility, final_data
     _checker = False
+    approve = False
 
     _roomstr = ''
     if len(room_want) == 0:
@@ -203,16 +217,22 @@ def main(dataset):
                     for date in sel_date_list:
                         result = check_available(year, month, date)
                         if result.get('status_code') != 200:
+                            print('output data ' + str(year) + str(month) + str(date))
                             print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 통신 실패 재점검')
                         else:
-                            _list = result.get('value').split('|^|')
-                            for type in _list:
-                                if not '예약완료' in type and site_text in type:
-                                    _checker = True
-                                    approve = True
-                                    if not temp_hold:
-                                        print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 예약 가능 활성화 확인 시스템 기동 시작')
-                                    break
+                            if result.get('value') is not None:
+                                _list = result.get('value').split('|^|')
+                                for type in _list:
+                                    if not '예약완료' in type and site_text in type:
+                                        _checker = True
+                                        approve = True
+                                        if not temp_hold:
+                                            print(
+                                                str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 예약 가능 활성화 확인 시스템 기동 시작')
+                                        break
+                            else:
+                                print('value key error / ' + year + month + date)
+                                time.sleep(10)
 
     driver = webdriver.Chrome(options=options)
     url = "https://www.campingkorea.or.kr/login/BD_loginForm.do"
@@ -226,7 +246,8 @@ def main(dataset):
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "mBtn2"))).click()
     # 팝업 보지않기 제거
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "jsBtnClose2")))
-
+    if not test:
+        driver.get("https://www.campingkorea.or.kr/user/reservation/BD_reservation.do")
     _cookies = driver.get_cookies()
     cookie_dict = {}
     for cookie in _cookies:
@@ -246,89 +267,132 @@ def main(dataset):
             elif new_run_cnt == 0:
                 new_run_cnt = 1
 
-            if approve:
-                elapsed_time = 0
-                if test:
-                    elapsed_time = time.time() - start_time
-                    #if temp_hold:
-                    #    elapsed_time = time.time() - start_time  # 경과된 시간 계산
-                    #    message = '임시점유 대기 시간 ' + str(int(elapsed_time / 60)) + '분 대기 중'
-                    #    if time_message != message:
-                    #        time_message = message
-                    #        print(message)
-                    #    else:
-                    #        time_message = message
-                    if elapsed_time >= 280:
-                        response = delete_reserve(cookie_dict)
-                        if response['status_code'] == 200:
-                            temp_hold = False
-                            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 취소 후 다시 점유를 시도합니다.')
-                            response = get_facility(final_data['from_date'], final_data['to_date'], final_data['target_facility'], final_data['faciltyCode'], final_data['cookie_dict'])
-                            if response['status_code'] != 200:
-                                print('재 점유 실패')
+            date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 10:55:00'
+            date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
 
+            now = datetime.now()
 
-                if not temp_hold or begin or not test:
-                    start_time = time.time()
-                    begin = False
-                    for year in sel_year_list:
-                        for month in sel_month_list:
-                            for date in sel_date_list:
-                                from_date = (datetime.strptime(year + month + date, '%Y%m%d')).strftime('%Y-%m-%d')
-                                to_date = (datetime.strptime(year + month + date, '%Y%m%d') + timedelta(days=int(period))).strftime('%Y-%m-%d')
-
-                                new_target = str(from_date) + ' ~ ' + str(to_date) + ' / ' + str(site_text) + ' 예약 시도 중'
-                                if pre_target != new_target:
-                                    print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + new_target)
-                                    pre_target = new_target
-                                response = reservation_list(from_date, to_date, faciltyNo, faciltyCode, cookie_dict)
-                                room_list = []
-                                _isPass = False
-                                if response['status_code'] == 200 and response['value'] is not None:
-                                    room_list = response['value']['childFcltyList']
-                                    _isPass = True
-                                else:
+            if (date_dt_begin < now) or test:
+                if approve or not test:
+                    if temp_hold:
+                        elapsed_time = time.time() - start_time
+                        #if temp_hold:
+                        #    elapsed_time = time.time() - start_time  # 경과된 시간 계산
+                        #    message = '임시점유 대기 시간 ' + str(int(elapsed_time / 60)) + '분 대기 중'
+                        #    if time_message != message:
+                        #        time_message = message
+                        #        print(message)
+                        #    else:
+                        #        time_message = message
+                        if elapsed_time >= 560 and temp_hold:
+                            print('점유초기화')
+                            response = delete_reserve(cookie_dict)
+                            if response['status_code'] == 200:
+                                temp_hold = False
+                                print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 취소 후 다시 점유를 시도합니다.')
+                                response = get_facility(final_data['from_date'], final_data['to_date'],
+                                                        final_data['target_facility'], final_data['faciltyCode'],
+                                                        final_data['cookie_dict'])
+                                temp_hold = True
+                                if response['status_code'] != 200:
                                     temp_hold = False
-                                    new_msg = '점유 불가 ' + response['message']
-                                    if pos_msg != new_msg:
-                                        print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + new_msg)
-                                        pos_msg = new_msg
+                                    print('재 점유 실패')
 
-                                if _isPass:
-                                    text_msg = ''
-                                    _available_rooms = []
-                                    _names = []
-                                    for room in room_list:
-                                        _availableYn = room['resveAt']
-                                        _cancelYn = room['canclYn']
-                                        if _availableYn == 'Y' and _cancelYn == 'Y':
-                                            name = str(room['fcltyNm']).replace('호', '').replace('번', '')   #naming으로 처리하여 식별하기
-                                            if str(name) in room_want or len(room_want) == 0:
-                                                _available_rooms.append(room)
-                                                _names.append(str(room['fcltyNm']))
-                                        else:
-                                            if _availableYn != 'Y':
-                                                text_msg = '예약이 이미 마감되었습니다.'
-                                            if _cancelYn == 'Y':
-                                                text_msg = '취소 예약이라 대기 중 입니다. 최초 체크 시간: ' + str(datetime.now().strftime('%Y-%m-%d %H:%M'))
-                                            temp_hold = False
 
-                                    if len(_available_rooms) == 0:
-                                        if pre_msg[0:16] != text_msg[0:16]:
-                                            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + text_msg)
-                                            pre_msg = text_msg
+                    if not temp_hold or begin:
+                        start_time = time.time()
+                        begin = False
+                        for year in sel_year_list:
+                            for month in sel_month_list:
+                                for date in sel_date_list:
+                                    from_date = (datetime.strptime(year + month + date, '%Y%m%d')).strftime('%Y-%m-%d')
+                                    to_date = (datetime.strptime(year + month + date, '%Y%m%d') + timedelta(
+                                        days=int(period))).strftime('%Y-%m-%d')
+
+                                    new_target = str(from_date) + ' ~ ' + str(to_date) + ' / ' + str(site_text) + ' 예약 시도 중'
+                                    if pre_target != new_target:
+                                        print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + new_target)
+                                        pre_target = new_target
+                                    response = reservation_list(from_date, to_date, faciltyNo, faciltyCode, cookie_dict)
+                                    room_list = []
+                                    _isPass = False
+                                    if response['status_code'] == 200 and response['value'] is not None:
+                                        room_list = response['value']['childFcltyList']
+                                        _isPass = True
                                     else:
-                                        text_msg = site_text + ' 예약가능 : ' + str(_names)
-                                        if pre_msg != text_msg:
-                                            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + site_text + ' 예약가능 : ' + str(_names))
-                                            pre_msg = text_msg
+                                        temp_hold = False
+                                        new_msg = '점유 불가 ' + response['message']
+                                        if pos_msg != new_msg:
+                                            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + new_msg)
+                                            pos_msg = new_msg
 
-                                    _isDone = False
-                                    for room in _available_rooms:
-                                        name = str(room['fcltyNm']).replace('호', '').replace('번', '')
-                                        if str(name) in room_pick:
-                                            if text_code != '':
-                                                target_facility = str(room['fcltyCode'])
+                                    if _isPass:
+                                        text_msg = ''
+                                        _available_rooms = []
+                                        _names = []
+                                        for room in room_list:
+                                            _availableYn = room['resveAt']
+                                            _cancelYn = room['canclYn']
+                                            if _availableYn == 'Y' and _cancelYn == 'Y':
+                                                name = str(room['fcltyNm']).replace('호', '').replace('번',
+                                                                                                     '')  #naming으로 처리하여 식별하기
+                                                if str(name) in room_want or len(room_want) == 0:
+                                                    _available_rooms.append(room)
+                                                    _names.append(str(room['fcltyNm']))
+                                            else:
+                                                if _availableYn != 'Y':
+                                                    text_msg = '예약이 이미 마감되었습니다.'
+                                                if _cancelYn == 'Y':
+                                                    text_msg = '취소 예약이라 대기 중 입니다. 최초 체크 시간: ' + str(
+                                                        datetime.now().strftime('%Y-%m-%d %H:%M'))
+                                                temp_hold = False
+
+                                        if len(_available_rooms) == 0:
+                                            if pre_msg[0:16] != text_msg[0:16]:
+                                                print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + text_msg)
+                                                pre_msg = text_msg
+                                        else:
+                                            text_msg = site_text + ' 예약가능 : ' + str(_names)
+                                            if pre_msg != text_msg:
+                                                print(str(datetime.now().strftime(
+                                                    '%Y-%m-%d %H:%M')) + ' ' + site_text + ' 예약가능 : ' + str(_names))
+                                                pre_msg = text_msg
+
+                                        _isDone = False
+                                        for room in _available_rooms:
+                                            name = str(room['fcltyNm']).replace('호', '').replace('번', '')
+                                            if str(name) in room_pick:
+                                                if text_code != '':
+                                                    target_facility = str(room['fcltyCode'])
+                                                final_data = {
+                                                    'from_date': from_date,
+                                                    'to_date': to_date,
+                                                    'target_facility': target_facility,
+                                                    'faciltyCode': faciltyCode,
+                                                    'cookie_dict': cookie_dict
+                                                }
+                                                response = get_facility(from_date, to_date, target_facility, faciltyCode,
+                                                                        cookie_dict)
+                                                if response['status_code'] == 200:
+                                                    _isDone = True
+                                                    new_message = '###################임시점유 완료 ' + str(
+                                                        from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(
+                                                        room['fcltyNm'])
+                                                    if result_msg != new_message:
+                                                        print(str(datetime.now().strftime(
+                                                            '%Y-%m-%d %H:%M')) + ' ' + new_message)
+                                                        result_msg = new_message
+                                                    temp_hold = True
+                                                else:
+                                                    print(
+                                                        str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 임시점유 실패 ' + str(
+                                                            from_date) + '~' + str(to_date) + ' / ' + str(
+                                                            site_text) + str(room['fcltyNm']))
+                                                    temp_hold = False
+
+                                        if not _isDone and len(_available_rooms) > 0:
+                                            room = _available_rooms[len(_available_rooms) - 1]
+                                            target_facility = str(room['fcltyCode'])
                                             final_data = {
                                                 'from_date': from_date,
                                                 'to_date': to_date,
@@ -336,41 +400,22 @@ def main(dataset):
                                                 'faciltyCode': faciltyCode,
                                                 'cookie_dict': cookie_dict
                                             }
-                                            response = get_facility(from_date, to_date, target_facility, faciltyCode, cookie_dict)
+                                            response = get_facility(from_date, to_date, target_facility, faciltyCode,
+                                                                    cookie_dict)
                                             if response['status_code'] == 200:
                                                 _isDone = True
-                                                new_message = '###################임시점유 완료 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm'])
+                                                new_message = '###################임시점유 완료 ' + str(from_date) + '~' + str(
+                                                    to_date) + ' / ' + str(site_text) + str(room['fcltyNm'])
                                                 if result_msg != new_message:
-                                                    print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + new_message)
+                                                    print(
+                                                        str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + new_message)
                                                     result_msg = new_message
                                                 temp_hold = True
                                             else:
-                                                print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(
+                                                print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 임시점유 실패 ' + str(
+                                                    from_date) + '~' + str(to_date) + ' / ' + str(
                                                     site_text) + str(room['fcltyNm']))
                                                 temp_hold = False
-
-                                    if not _isDone and len(_available_rooms) > 0:
-                                        room = _available_rooms[len(_available_rooms) - 1]
-                                        target_facility = str(room['fcltyCode'])
-                                        final_data = {
-                                            'from_date': from_date,
-                                            'to_date': to_date,
-                                            'target_facility': target_facility,
-                                            'faciltyCode': faciltyCode,
-                                            'cookie_dict': cookie_dict
-                                        }
-                                        response = get_facility(from_date, to_date, target_facility, faciltyCode, cookie_dict)
-                                        if response['status_code'] == 200:
-                                            _isDone = True
-                                            new_message = '###################임시점유 완료 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(site_text) + str(room['fcltyNm'])
-                                            if result_msg != new_message:
-                                                print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + new_message)
-                                                result_msg = new_message
-                                            temp_hold = True
-                                        else:
-                                            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' 임시점유 실패 ' + str(from_date) + '~' + str(to_date) + ' / ' + str(
-                                                site_text) + str(room['fcltyNm']))
-                                            temp_hold = False
 
         except Exception as ex:
             print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' ' + str(ex))
