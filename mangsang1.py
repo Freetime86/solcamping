@@ -9,9 +9,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from user_agent import generate_user_agent, generate_navigator
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
+import pygetwindow as gw
 import pyautogui as py
+import pywinauto
+from pywinauto.keyboard import send_keys
+from pywinauto import Desktop
 import numpy as np
 import cv2
+import win32gui
+import win32con
 import requests
 import time
 import json
@@ -29,7 +35,7 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
-period = 2  # 연박 수
+period = 3  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 room_exception = []
@@ -60,16 +66,16 @@ room_want = []
 room_selt = []
 
 sel_year_list = ['2025']
-sel_month_list = ['08']
-sel_date_list = ['03']
+sel_month_list = ['07']
+sel_date_list = ['31']
 site = '6'
 
 continue_work = False
 
 current_room = '0'
-user_type = 5  # 사용자 정보 세팅
+user_type = 4  # 사용자 정보 세팅
 MODE_LIVE = False
-MODE_SPOT = True
+MODE_SPOT = False
 
 rpwd = ''
 rid = ''
@@ -128,6 +134,7 @@ DATASET = {
     'CANCELING_ROOMS': [],
     'FINAL_ROOM_NAME': [],
     'ROOM_NAMES': [],
+    'TIME_DELAY': 0,
     'CYCLE_ERR_CNT': 0
 }
 
@@ -202,27 +209,40 @@ def main(DATASET):
 
     # 변수
 
+    windows = Desktop(backend="uia").windows(title_re="data;,")
+    for w in windows:
+        try:
+            print(f"닫는 중: {w.window_text()}")
+            w.close()  # 윈도우 닫기 시도
+        except Exception as e:
+            print(f"닫기 실패: {w.window_text()} - {e}")
+
     DATASET['LOGIN_BROWSER'] = webdriver.Chrome(options=options)
+    all_windows = Desktop(backend="uia").windows(title_re="data:,")
+    DATASET['MY_WINDOW'] = all_windows[len(all_windows) - 1].handle  # 첫 번째 창 핸들
     DATASET = login(DATASET)
+
 
     DATASET['ERROR_CODE'] = 'delete_reserve'
 
-    CLEAR = False
-    while not CLEAR:
-        response = delete_reserve(DATASET)
-        if response['status_code'] == 200:
-            DATASET = message(DATASET, '임시 점유 정보 CLEAR')
-            CLEAR = True
-        else:
-            error(DATASET)
+    #CLEAR = False
+    #while not CLEAR:
+    #    response = delete_reserve(DATASET)
+    #    if response['status_code'] == 200:
+    #        DATASET = message(DATASET, '임시 점유 정보 CLEAR')
+    #        CLEAR = True
+    #    else:
+    #        error(DATASET)
 
     while True:
 
-        ELAPSED_TIME = time.time() - DATASET['LOGIN_TIME']  # 로그인 후 경과 시간 계산
-        if ELAPSED_TIME >= 1800 and not DATASET['TEMPORARY_HOLD']:
-            DATASET = relogin(DATASET)
+        #ELAPSED_TIME = time.time() - DATASET['LOGIN_TIME']  # 로그인 후 경과 시간 계산
+        #if ELAPSED_TIME >= 1800 and not DATASET['TEMPORARY_HOLD']:
+        #    DATASET = relogin(DATASET)
 
         try:
+
+            time.sleep(DATASET['TIME_DELAY'])
             # 실시간 감시 모드
             if DATASET['MONITOR']:
 
@@ -262,6 +282,9 @@ def main(DATASET):
 
                             # 임시 점유시 처리
                             if DATASET['TEMPORARY_HOLD']:
+
+                                DATASET = direct_link(DATASET)
+
                                 elapsed_time = time.time() - DATASET['START_TIME']
                                 if elapsed_time >= 550:
                                     # 기 임시 점유건 전부 제거
@@ -287,8 +310,7 @@ def main(DATASET):
                                 else:
                                     message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
                                         DATASET['FINAL_ROOM_NAME']) + ' ' + str(DATASET['FROM_DATE']) + ' ' + str(
-                                        DATASET['PERIOD']) + '박 임시점유 대기 중 (' + str(
-                                        int(elapsed_time / 60)) + ')분 지났습니다.')
+                                        DATASET['PERIOD']) + '박 임시점유 대기 중 (' + str(int(elapsed_time / 60)) + ')분 지났습니다.')
 
                             # 임시 점유가 없으면 처리
                             elif not DATASET['TEMPORARY_HOLD']:
@@ -306,12 +328,17 @@ def main(DATASET):
                                         DATASET['resveNoCode'] = DATASET['resveNoCodeList'][index]
                                         DATASET['ERROR_CODE'] = 'reservation_list'
                                         DATASET['RESULT'] = reservation_list(DATASET)
-                                        if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
-                                            DATASET = reservationList_filter(DATASET)
-                                        elif DATASET['RESULT']['status_code'] != 200:
-                                            error(DATASET)
-                                        elif DATASET['RESULT']['status_code'] == 200:
-                                            DATASET['AVAILABLE_TEXT_MSG'] = ''
+
+                                        if not 'login' in str(DATASET['RESULT']):
+                                            if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
+                                                DATASET = reservationList_filter(DATASET)
+                                            elif DATASET['RESULT']['status_code'] != 200:
+                                                error(DATASET)
+                                            elif DATASET['RESULT']['status_code'] == 200:
+                                                DATASET['AVAILABLE_TEXT_MSG'] = ''
+                                        else:
+                                            DATASET = relogin(DATASET)
+                                            DATASET['RESULT']['message'] = '다시 로그인을 하여 재 시작합니다.'
 
                                     if len(DATASET['AVAILABLE_ROOMS']) == 0:
                                         DATASET = remove_temp(DATASET)
@@ -327,13 +354,17 @@ def main(DATASET):
                                 else:
                                     DATASET['ERROR_CODE'] = 'reservation_list'
                                     DATASET['RESULT'] = reservation_list(DATASET)
-                                    if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
-                                        DATASET = reservationList_filter(DATASET)
-                                    elif DATASET['RESULT']['status_code'] != 200:
-                                        error(DATASET)
+                                    if not 'login' in str(DATASET['RESULT']):
+                                        if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
+                                            DATASET = reservationList_filter(DATASET)
+                                        elif DATASET['RESULT']['status_code'] != 200:
+                                            error(DATASET)
+                                        else:
+                                            DATASET = remove_temp(DATASET)
+                                            message(DATASET,str('점유 불가 ' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
                                     else:
-                                        DATASET = remove_temp(DATASET)
-                                        message(DATASET,str('점유 불가 ' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
+                                        DATASET = relogin(DATASET)
+                                        DATASET['RESULT']['message'] = '다시 로그인을 하여 재 시작합니다.'
 
             # TIMING 예약
             elif not DATASET['MONITOR']:
@@ -386,12 +417,17 @@ def main(DATASET):
                                             DATASET['resveNoCode'] = DATASET['resveNoCodeList'][index]
                                             DATASET['ERROR_CODE'] = 'reservation_list'
                                             DATASET['RESULT'] = reservation_list(DATASET)
-                                            if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
-                                                DATASET = reservationList_filter(DATASET)
-                                            elif DATASET['RESULT']['status_code'] != 200:
-                                                error(DATASET)
-                                            elif DATASET['RESULT']['status_code'] == 200:
-                                                DATASET['AVAILABLE_TEXT_MSG'] = ''
+                                            if not 'login' in str(DATASET['RESULT']):
+                                                if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
+                                                    DATASET = reservationList_filter(DATASET)
+                                                elif DATASET['RESULT']['status_code'] != 200:
+                                                    error(DATASET)
+                                                elif DATASET['RESULT']['status_code'] == 200:
+                                                    DATASET['AVAILABLE_TEXT_MSG'] = ''
+                                            else:
+                                                DATASET = relogin(DATASET)
+                                                DATASET['RESULT']['message'] = '다시 로그인을 하여 재 시작합니다.'
+
 
                                         if len(DATASET['AVAILABLE_ROOMS']) == 0:
                                             DATASET = remove_temp(DATASET)
@@ -408,13 +444,17 @@ def main(DATASET):
                                     else:
                                         DATASET['ERROR_CODE'] = 'reservation_list'
                                         DATASET['RESULT'] = reservation_list(DATASET)
-                                        if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
-                                            DATASET = reservationList_filter(DATASET)
-                                        elif DATASET['RESULT']['status_code'] != 200:
-                                            error(DATASET)
+                                        if not 'login' in str(DATASET['RESULT']):
+                                            if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
+                                                DATASET = reservationList_filter(DATASET)
+                                            elif DATASET['RESULT']['status_code'] != 200:
+                                                error(DATASET)
+                                            else:
+                                                DATASET = remove_temp(DATASET)
+                                                message(DATASET, str('점유 불가 ' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
                                         else:
-                                            DATASET = remove_temp(DATASET)
-                                            message(DATASET, str('점유 불가 ' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
+                                            DATASET = relogin(DATASET)
+                                            DATASET['RESULT']['message'] = '다시 로그인을 하여 재 시작합니다.'
 
 
 
@@ -464,12 +504,16 @@ def reservation_list(data):
     while response == '':
         try:
             response = requests.post(url=url, data=dict_data, cookies=data['COOKIE'], verify=False)
-
-            dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
-                         'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
-            if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                return {**dict_meta, **response.json()}
+            dict_meta = {}
+            if not 'login' in response.text:
+                dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                             'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+                if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                    return {**dict_meta, **response.json()}
+                else:  # 문자열 형태인 경우
+                    return {**dict_meta, **{'text': response.text}}
             else:  # 문자열 형태인 경우
+                message(data, '로그인 TIMEOUT 발생, 재로그인 시도')
                 return {**dict_meta, **{'text': response.text}}
         except requests.exceptions.RequestException as ex:
             time.sleep(10)
@@ -487,7 +531,6 @@ def get_facility(data):
         'resveBeginDe': str(data['FROM_DATE']),
         'resveEndDe': str(data['TO_DATE'])
     }
-    print(dict_data)
     response = ''
     while response == '':
         try:
@@ -513,6 +556,45 @@ def delete_reserve(data):
     while response == '':
         try:
             response = requests.post(url=url, cookies=data['COOKIE'], verify=False)
+
+            dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                         'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+            if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                return {**dict_meta, **response.json()}
+            else:  # 문자열 형태인 경우
+                return {**dict_meta, **{'text': response.text}}
+        except requests.exceptions.RequestException as ex:
+            time.sleep(10)
+            continue
+
+    #다이렉트 접근 TRACKING 정보 입력
+def insertTracking(data):
+    # 예약 파라미터 세팅
+    url = "https://www.campingkorea.or.kr/component/anallyze/ND_insertTracking.do"
+    dict_data = {
+        'userId':'58.87.60.213|' + str(int(round(float(time.time()), 3) * 1000)),
+        'domnNm': 'www.campingkorea.or.kr',
+        'userMenuCode': 'resveReqst01',
+        'url': 'https://www.campingkorea.or.kr/user/reservation/BD_reservationReq.do',
+        'transrCours': 'https://www.campingkorea.or.kr/user/reservation/BD_reservation.do',
+        'userAgent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+        'rsoltnAr': '2560',
+        'rsoltnHg': '1440',
+        'scrinColorCo': '24',
+        'pgeSj': '온라인 예약하기 : HOME > 온라인예약 > 온라인 예약하기',
+        'frstConectrAt': 'N',
+        'searchEngineInflowAt': 'N',
+        'pgeViewCo': '13',
+        'frstConectHourAt': 'N',
+        'frstConectDeAt': 'N',
+        'frstConectWeekAt': 'N',
+        'frstConectMtAt': 'N',
+        'againVisitPd': '0'
+    }
+    response = ''
+    while response == '':
+        try:
+            response = requests.post(url=url, data=dict_data, cookies=data['COOKIE'], verify=False)
 
             dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
                          'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
@@ -585,6 +667,7 @@ def relogin(data):
     time.sleep(0.5)
     exit_tag = driver.find_elements(By.CLASS_NAME, "util")
     exit_tag[0].find_elements(By.CSS_SELECTOR, "a")[0].click()
+    data['MESSAGE'] = ''
     data = login(data)
     return data
 
@@ -618,11 +701,13 @@ def reservationList_filter(data):
                     data['CANCEL_ROOMS'].append(data['ROOM'])
                     data['CANCELING_ROOMS'].append(str(data['ROOM']['fcltyNm']))
                     data = remove_temp(data)
-
-        if MODE_SPOT:
+        
+        #SPOT 모드
+        if MODE_SPOT and (len(data['AVAILABLE_ROOMS']) > 0 or len(data['CANCEL_ROOMS']) > 0):
             NO_AVAILABLE = True
             while NO_AVAILABLE:
                 for room in data['AVAILABLE_ROOMS']:
+                    message(data, '취소 대상 대기 중.. ' + str(room['fcltyNm']))
                     data['FINAL_ROOM_NAME'] = str(room['fcltyNm'])
                     data['fcltyCode'] = str(room['fcltyCode'])
                     data['resveNoCode'] = str(room['resveNoCode'])
@@ -630,6 +715,7 @@ def reservationList_filter(data):
                     response = get_facility(data)
                     if response['status_code'] == 200:
                         data['TEMPORARY_HOLD'] = True
+                        data = direct_link(data)
                         DATASET['START_TIME'] = time.time()
                     else:
                         if NO_AVAILABLE:
@@ -638,6 +724,7 @@ def reservationList_filter(data):
                 if data['TEMPORARY_HOLD']:
                     break
                 for room in data['CANCEL_ROOMS']:
+                    message(data, '취소 대상 대기 중.. ' + str(room['fcltyNm']))
                     data['FINAL_ROOM_NAME'] = str(room['fcltyNm'])
                     data['fcltyCode'] = str(room['fcltyCode'])
                     data['resveNoCode'] = str(room['resveNoCode'])
@@ -645,7 +732,9 @@ def reservationList_filter(data):
                     response = get_facility(data)
                     if response['status_code'] == 200:
                         data['TEMPORARY_HOLD'] = True
+                        data = direct_link(data)
                         DATASET['START_TIME'] = time.time()
+                        message(data, '임시 점유 완료 ' + str(room['fcltyNm']))
                     else:
                         if NO_AVAILABLE:
                             NO_AVAILABLE = False
@@ -697,6 +786,36 @@ def find_want_rooms(data):
     else:
         DATASET['TEMPORARY_HOLD'] = False
         error(DATASET)
+    return data
+
+
+def direct_link(data):
+    # DIRECT 화면이동
+    data['RESULT'] = insertTracking(data)
+    html = '''
+                                    <form id="postForm" method="POST" action="https://www.campingkorea.or.kr/user/reservation/BD_reservationReq.do">
+                                      <input type="hidden" name="trrsrtCode" value="1000">
+                                      <input type="hidden" name="q_trrsrtCd" value="">
+                                      <input type="hidden" name="q_year" value=''' + '"' + data['year'] + '"' + '''>
+                                      <input type="hidden" name="q_month" value=''' + '"' + data['month'] + '"' + '''>
+                                      <input type="hidden" name="flag" value="Y">
+                                      <input type="hidden" name="resveBeginDe" value=''' + '"' + data['FROM_DATE'] + '"' + '''>
+                                      <input type="hidden" name="stayngPd" value="">
+                                      <input type="hidden" name="resveEndDe" value=''' + '"' + data['TO_DATE'] + '"' + '''>
+                                      <input type="hidden" name="answer" value="">
+                                    </form>
+                                    <script>
+                                      document.getElementById('postForm').submit();
+                                    </script>
+                                    '''
+    data['LOGIN_BROWSER'].get("data:text/html;charset=utf-8," + html)
+    time.sleep(3)
+    # VK_RETURN은 Enter 키
+    win32gui.PostMessage(data['MY_WINDOW'], win32con.WM_KEYDOWN, win32con.VK_RETURN, 0)
+    time.sleep(0.05)
+    win32gui.PostMessage(data['MY_WINDOW'], win32con.WM_KEYUP, win32con.VK_RETURN, 0)
+    # 사실 상 매크로 종료.
+    time.sleep(300)
     return data
 
 
