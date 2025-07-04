@@ -75,7 +75,7 @@ continue_work = False
 current_room = '0'
 user_type = 4  # 사용자 정보 세팅
 MODE_LIVE = False
-MODE_SPOT = False
+MODE_SPOT = False   #SPOT 모드는 재예약할 떄 사용하는 FUNCTION 취소중 건 뚫을 때도 사용
 
 rpwd = ''
 rid = ''
@@ -120,7 +120,7 @@ else:
     exit()
 
 DATASET = {
-    'MONITOR': True,
+    'MODE_LIVE': True,
     'TEMPORARY_HOLD': False,
     'trrsrtCode': '1000',
     'ROOM_WANT': room_want,
@@ -244,7 +244,7 @@ def main(DATASET):
 
             time.sleep(DATASET['TIME_DELAY'])
             # 실시간 감시 모드
-            if DATASET['MONITOR']:
+            if DATASET['MODE_LIVE']:
                 for year in sel_year_list:
                     for month in sel_month_list:
                         for date in sel_date_list:
@@ -340,9 +340,10 @@ def main(DATASET):
                                         DATASET['RESULT']['message'] = '다시 로그인을 하여 재 시작합니다.'
 
             # TIMING 예약
-            elif not DATASET['MONITOR']:
+            elif not DATASET['MODE_LIVE']:
 
-                START_TIME = datetime.now().strftime("%Y-%m-%d") + ' 10:59:30'
+                START_TIME = datetime.now().strftime("%Y-%m-%d") + ' 10:55:30'
+                RESERVATION_TIME = datetime.now().strftime("%Y-%m-%d") + ' 11:00:05'
 
                 START_TIMER = datetime.strptime(START_TIME, '%Y-%m-%d %H:%M:%S')
                 CURRENT_TIMER = datetime.now()
@@ -357,6 +358,10 @@ def main(DATASET):
 
                                 # 임시 점유시 처리
                                 if DATASET['TEMPORARY_HOLD']:
+
+                                    if RESERVATION_TIME > CURRENT_TIMER:
+                                        DATASET = direct_link(DATASET)
+
                                     elapsed_time = time.time() - DATASET['START_TIME']
                                     if elapsed_time >= 550:
                                         # 기 임시 점유건 전부 제거
@@ -364,11 +369,15 @@ def main(DATASET):
                                         #response = delete_reserve(DATASET)
                                         if response['status_code'] == 200:
                                             DATASET = message(DATASET, '임시 점유 정보 CLEAR 및 재 점유')
-                                            DATASET['ERROR_CODE'] = 'get_facility'
-                                            response = get_facility(DATASET)
-                                            if response['status_code'] == 200:
-                                                DATASET['TEMPORARY_HOLD'] = True
-                                                DATASET['START_TIME'] = time.time()
+                                            DATASET['RE_TRIED'] = False
+                                            while not DATASET['RE_TRIED']:
+                                                DATASET['ERROR_CODE'] = 'get_facility'
+                                                response = get_facility(DATASET)
+                                                if response['status_code'] == 200:
+                                                    if elapsed_time >= 630:
+                                                        DATASET['RE_TRIED'] = True
+                                                        DATASET['TEMPORARY_HOLD'] = True
+                                                        DATASET['START_TIME'] = time.time()
                                             else:
                                                 error(DATASET)
                                         else:
