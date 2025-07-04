@@ -66,15 +66,15 @@ room_want = []
 room_selt = []
 
 sel_year_list = ['2025']
-sel_month_list = ['07']
-sel_date_list = ['31']
-site = '2'
+sel_month_list = ['08']
+sel_date_list = ['04']
+site = '6'
 
 continue_work = False
 
 current_room = '0'
-user_type = 4  # 사용자 정보 세팅
-MODE_LIVE = False
+user_type = 2  # 사용자 정보 세팅
+MODE_LIVE = True
 MODE_SPOT = False   #SPOT 모드는 재예약할 떄 사용하는 FUNCTION 취소중 건 뚫을 때도 사용
 
 rpwd = ''
@@ -120,7 +120,7 @@ else:
     exit()
 
 DATASET = {
-    'MODE_LIVE': True,
+    'MODE_LIVE': MODE_LIVE,
     'TEMPORARY_HOLD': False,
     'trrsrtCode': '1000',
     'ROOM_WANT': room_want,
