@@ -68,7 +68,7 @@ room_selt = []
 sel_year_list = ['2025']
 sel_month_list = ['07']
 sel_date_list = ['31']
-site = '6'
+site = '2'
 
 continue_work = False
 
@@ -245,34 +245,6 @@ def main(DATASET):
             time.sleep(DATASET['TIME_DELAY'])
             # 실시간 감시 모드
             if DATASET['MONITOR']:
-
-                # _isTarget = False
-                # while not _isTarget:
-                #    for year in sel_year_list:
-                #        for month in sel_month_list:
-                #            for date in sel_date_list:
-                #                DATASET['year'] = str(year)
-                #                DATASET['month'] = str(month)
-                #                DATASET['date'] = str(date)
-                #                DATASET['ERROR_CODE'] = 'check_available'
-                #                DATASET['RESULT'] = check_available(DATASET)
-                #                if DATASET['RESULT'].get('status_code') != 200:
-                #                    DATASET = message(DATASET, str(DATASET['RESULT']))
-                #                    DATASET = error(DATASET)
-                #                else:
-                #                    DATASET['ERROR_CODE'] = 'if DATASET[' + 'RESULT].get(' + 'value' + ') is not None'
-                #                    if DATASET['RESULT'].get('value', None) is not None:
-                #                        _list = DATASET['RESULT'].get('value').split('|^|')
-                #                        for _roomType in _list:
-                #                            if not '예약완료' in _roomType and str(DATASET['SITE_TEXT']) in _roomType:
-                #                                DATASET = message(DATASET, '예약 리스트 활성화 확인')
-                #                                _isTarget = True
-                #                    else:
-                #                        error(DATASET)
-                #                        message(DATASET, '10초 후 계속 진행됩니다...'
-                #                                         '' + str(DATASET['RESULT']))
-                #                        time.sleep(10)
-
                 for year in sel_year_list:
                     for month in sel_month_list:
                         for date in sel_date_list:
@@ -283,6 +255,7 @@ def main(DATASET):
                             # 임시 점유시 처리
                             if DATASET['TEMPORARY_HOLD']:
 
+                                #사실 상 종료 TEST 기간.
                                 DATASET = direct_link(DATASET)
 
                                 elapsed_time = time.time() - DATASET['START_TIME']
@@ -572,12 +545,12 @@ def insertTracking(data):
     # 예약 파라미터 세팅
     url = "https://www.campingkorea.or.kr/component/anallyze/ND_insertTracking.do"
     dict_data = {
-        'userId':'58.87.60.213|' + str(int(round(float(time.time()), 3) * 1000)),
+        'userId': '58.87.60.213|' + str(int(round(float(time.time()), 3) * 1000)),
         'domnNm': 'www.campingkorea.or.kr',
         'userMenuCode': 'resveReqst01',
         'url': 'https://www.campingkorea.or.kr/user/reservation/BD_reservationReq.do',
         'transrCours': 'https://www.campingkorea.or.kr/user/reservation/BD_reservation.do',
-        'userAgent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+        'userAgent': str(generate_user_agent(os='win', device_type='desktop')),
         'rsoltnAr': '2560',
         'rsoltnHg': '1440',
         'scrinColorCo': '24',
