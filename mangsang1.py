@@ -29,7 +29,7 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
-period = 2  # 연박 수
+period = 1  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 room_exception = []
@@ -55,13 +55,14 @@ room_exception = []
 # 취사장 가까운 열 1~4
 # room_want = ['115']
 # room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
-room_want = ['101', '110', '109', '113', '106', '115', '102', '108']
+#room_want = ['101', '110', '109', '113', '106', '115', '102', '108']
+room_want = []
 room_selt = []
 
 sel_year_list = ['2025']
 sel_month_list = ['07']
-sel_date_list = ['18']
-site = '10'
+sel_date_list = ['12']
+site = '6'
 
 continue_work = False
 trying = False
@@ -306,15 +307,13 @@ def main(DATASET):
                                 else:
                                     DATASET['ERROR_CODE'] = 'reservation_list'
                                     DATASET['RESULT'] = reservation_list(DATASET)
-                                    if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT'][
-                                        'value'] is not None:
+                                    if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
                                         DATASET = reservationList_filter(DATASET)
                                     elif DATASET['RESULT']['status_code'] != 200:
                                         error(DATASET)
                                     else:
                                         DATASET = remove_temp(DATASET)
-                                        message(DATASET,
-                                                str('점유 불가 ' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
+                                        message(DATASET,str('점유 불가 ' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
 
             # TIMING 예약
             # elif not DATASET['MONITOR']:
@@ -441,6 +440,7 @@ def login(data):
     # wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "jsBtnClose2")))
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "banner")))
     _bannerList = driver.find_elements(By.CLASS_NAME, "banner")
+    time.sleep(1)
     for banner in _bannerList:
         banner.find_element(By.TAG_NAME, 'button').click()
 
@@ -463,10 +463,12 @@ def relogin(data):
     wait = WebDriverWait(driver, 1000)
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "banner")))
     _bannerList = driver.find_elements(By.CLASS_NAME, "banner")
+    time.sleep(1)
     for banner in _bannerList:
         banner.find_element(By.TAG_NAME, 'button').click()
 
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "util")))
+    time.sleep(0.5)
     exit_tag = driver.find_elements(By.CLASS_NAME, "util")
     exit_tag[0].find_elements(By.CSS_SELECTOR, "a")[0].click()
     data = login(data)
@@ -481,30 +483,30 @@ def reservationList_filter(data):
         data['ROOM_NAMES'] = []
 
     data['CANCELING_ROOMS'] = []
-
+    data['AVAILABLE_TEXT_MSG'] = ''
     for data['ROOM'] in room_list:
         data['AVAILABLE_YN'] = str(data['ROOM']['resveAt'])
         data['CANCEL_YN'] = str(data['ROOM']['canclYn'])
-        if data['AVAILABLE_YN'] == 'Y' and data['CANCEL_YN'] == 'Y':
-            data['ROOM_NAME'] = str(data['ROOM']['fcltyNm']).replace('호', '').replace('번', '')  # naming으로 처리하여 식별하기
-            if str(data['ROOM_NAME']) in data['ROOM_WANT'] or (
-                    len(data['ROOM_WANT']) == 1 and data['ROOM_WANT'][0] == 'ALL'):
-                data['AVAILABLE_ROOMS'].append(data['ROOM'])
-                data['ROOM_NAMES'].append(str(data['ROOM']['fcltyNm']))
-        else:
-            if data['AVAILABLE_YN'] == 'Y' and data['CANCEL_YN'] == 'N':  # 가능하지만 취소 N 상태 Y는 취소아님 활성화임
-                data['CANCELING_ROOMS'].append(str(data['ROOM']['fcltyNm']))
-            if data['AVAILABLE_YN'] != 'Y':
-                data['AVAILABLE_TEXT_MSG'] = '예약이 이미 마감되었습니다.'
+
+        #AVAILABLE Y 예약가능 N 불가능 // CANCEL Y 취소완료 여부 Y 취소완료 여부 N
+        if data['AVAILABLE_YN'] == 'Y':
             if data['CANCEL_YN'] == 'Y':
-                data['AVAILABLE_TEXT_MSG'] = '취소 예약이라 대기 중 입니다. 최초 체크 시간: ' + str(
+                data['ROOM_NAME'] = str(data['ROOM']['fcltyNm']).replace('호', '').replace('번', '')  # naming으로 처리하여 식별하기
+                if str(data['ROOM_NAME']) in data['ROOM_WANT'] or (
+                        len(data['ROOM_WANT']) == 1 and data['ROOM_WANT'][0] == 'ALL'):
+                    data['AVAILABLE_ROOMS'].append(data['ROOM'])
+                    data['ROOM_NAMES'].append(str(data['ROOM']['fcltyNm']))
+            elif data['CANCEL_YN'] == 'N':
+                data['AVAILABLE_TEXT_MSG'] = '예약 가능상태 이나 취소중인 건 입니다. 최초 체크 시간: ' + str(
                     datetime.now().strftime('%Y-%m-%d %H:%M'))
-            # 예약 가능한 방이 없기 때문에 임시 점유는 점유 되어 있으면 해제한다. 신규 시도를 위한
+                data['CANCELING_ROOMS'].append(str(data['ROOM']['fcltyNm']))
+                data = remove_temp(data)
+        if data['AVAILABLE_TEXT_MSG'] == '':
             data = remove_temp(data)
+            data['AVAILABLE_TEXT_MSG'] = '예약 가능한 대상이 없습니다. 최초 체크 시간: ' + str(datetime.now().strftime('%Y-%m-%d %H:%M'))
     if data['SITE'] != '10':
         if len(data['AVAILABLE_ROOMS']) == 0:
-            message(DATASET, str(data['CANCELING_ROOMS']) + ' ' + str(data['FINAL_ROOM_NAME']) + ' ' + data[
-                'AVAILABLE_TEXT_MSG'])
+            message(DATASET, str(data['CANCELING_ROOMS']) + ' ' + str(data['FINAL_ROOM_NAME']) + ' ' + data['AVAILABLE_TEXT_MSG'])
         else:
             message(DATASET, data['SITE_TEXT'] + ' 예약가능 : ' + str(data['ROOM_NAMES']))
             data = find_want_rooms(data)
