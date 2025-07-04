@@ -29,7 +29,7 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
-period = 1  # 연박 수
+period = 2  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 room_exception = []
@@ -60,14 +60,16 @@ room_want = []
 room_selt = []
 
 sel_year_list = ['2025']
-sel_month_list = ['07']
-sel_date_list = ['12']
+sel_month_list = ['08']
+sel_date_list = ['03']
 site = '6'
 
 continue_work = False
-trying = False
+
 current_room = '0'
 user_type = 5  # 사용자 정보 세팅
+MODE_LIVE = False
+MODE_SPOT = False
 
 rpwd = ''
 rid = ''
@@ -203,6 +205,17 @@ def main(DATASET):
     DATASET['LOGIN_BROWSER'] = webdriver.Chrome(options=options)
     DATASET = login(DATASET)
 
+    DATASET['ERROR_CODE'] = 'delete_reserve'
+
+    CLEAR = False
+    while not CLEAR:
+        response = delete_reserve(DATASET)
+        if response['status_code'] == 200:
+            DATASET = message(DATASET, '임시 점유 정보 CLEAR')
+            CLEAR = True
+        else:
+            error(DATASET)
+
     while True:
 
         ELAPSED_TIME = time.time() - DATASET['LOGIN_TIME']  # 로그인 후 경과 시간 계산
@@ -252,18 +265,25 @@ def main(DATASET):
                                 elapsed_time = time.time() - DATASET['START_TIME']
                                 if elapsed_time >= 550:
                                     # 기 임시 점유건 전부 제거
-                                    DATASET['ERROR_CODE'] = 'delete_reserve'
-                                    response = delete_reserve(DATASET)
-                                    if response['status_code'] == 200:
-                                        DATASET = message(DATASET, '임시 점유 정보 CLEAR 및 재 점유')
+                                    #DATASET['ERROR_CODE'] = 'delete_reserve'
+                                    #response = delete_reserve(DATASET)
+                                    #if response['status_code'] == 200:
+                                        #DATASET = message(DATASET, '임시 점유 정보 CLEAR 및 재 점유')
+                                    
+                                    #제 예약 시 취소를 하지 않고 계속 조지기
+                                    DATASET['RE_TRIED'] = False
+                                    while not DATASET['RE_TRIED']:
                                         DATASET['ERROR_CODE'] = 'get_facility'
                                         response = get_facility(DATASET)
                                         if response['status_code'] == 200:
-                                            DATASET['TEMPORARY_HOLD'] = True
+                                            if elapsed_time >= 630:
+                                                DATASET['RE_TRIED'] = True
+                                                DATASET['TEMPORARY_HOLD'] = True
+                                                DATASET['START_TIME'] = time.time()
                                         else:
                                             error(DATASET)
-                                    else:
-                                        error(DATASET)
+                                    #else:
+                                    #    error(DATASET)
                                 else:
                                     message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
                                         DATASET['FINAL_ROOM_NAME']) + ' ' + str(DATASET['FROM_DATE']) + ' ' + str(
@@ -316,7 +336,85 @@ def main(DATASET):
                                         message(DATASET,str('점유 불가 ' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
 
             # TIMING 예약
-            # elif not DATASET['MONITOR']:
+            elif not DATASET['MONITOR']:
+
+                START_TIME = datetime.now().strftime("%Y-%m-%d") + ' 10:59:30'
+
+                START_TIMER = datetime.strptime(START_TIME, '%Y-%m-%d %H:%M:%S')
+                CURRENT_TIMER = datetime.now()
+
+                if START_TIMER < CURRENT_TIMER:
+                    for year in sel_year_list:
+                        for month in sel_month_list:
+                            for date in sel_date_list:
+                                DATASET['year'] = str(year)
+                                DATASET['month'] = str(month)
+                                DATASET['date'] = str(date)
+
+                                # 임시 점유시 처리
+                                if DATASET['TEMPORARY_HOLD']:
+                                    elapsed_time = time.time() - DATASET['START_TIME']
+                                    if elapsed_time >= 550:
+                                        # 기 임시 점유건 전부 제거
+                                        #DATASET['ERROR_CODE'] = 'delete_reserve'
+                                        #response = delete_reserve(DATASET)
+                                        if response['status_code'] == 200:
+                                            DATASET = message(DATASET, '임시 점유 정보 CLEAR 및 재 점유')
+                                            DATASET['ERROR_CODE'] = 'get_facility'
+                                            response = get_facility(DATASET)
+                                            if response['status_code'] == 200:
+                                                DATASET['TEMPORARY_HOLD'] = True
+                                                DATASET['START_TIME'] = time.time()
+                                            else:
+                                                error(DATASET)
+                                        else:
+                                            error(DATASET)
+                                    else:
+                                        message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
+                                            DATASET['FINAL_ROOM_NAME']) + ' ' + str(DATASET['FROM_DATE']) + ' ' + str(
+                                            DATASET['PERIOD']) + '박 임시점유 대기 중 (' + str(
+                                            int(elapsed_time / 60)) + ')분 지났습니다.')
+
+                                # 임시 점유가 없으면 처리
+                                elif not DATASET['TEMPORARY_HOLD']:
+                                    DATASET['FROM_DATE'] = (datetime.strptime(DATASET['year'] + DATASET['month'] + DATASET['date'],'%Y%m%d')).strftime('%Y-%m-%d')
+                                    DATASET['TO_DATE'] = (datetime.strptime(DATASET['year'] + DATASET['month'] + DATASET['date'],'%Y%m%d') + timedelta(days=int(period))).strftime('%Y-%m-%d')
+
+                                    if DATASET['SITE'] == '10':
+                                        for index in range(len(DATASET['faciltyNoList'])):
+                                            DATASET['faciltyNo'] = DATASET['faciltyNoList'][index]
+                                            DATASET['resveNoCode'] = DATASET['resveNoCodeList'][index]
+                                            DATASET['ERROR_CODE'] = 'reservation_list'
+                                            DATASET['RESULT'] = reservation_list(DATASET)
+                                            if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
+                                                DATASET = reservationList_filter(DATASET)
+                                            elif DATASET['RESULT']['status_code'] != 200:
+                                                error(DATASET)
+                                            elif DATASET['RESULT']['status_code'] == 200:
+                                                DATASET['AVAILABLE_TEXT_MSG'] = ''
+
+                                        if len(DATASET['AVAILABLE_ROOMS']) == 0:
+                                            DATASET = remove_temp(DATASET)
+                                            message(DATASET, DATASET['FINAL_TYPE_NAME'] + ' ' + str(
+                                                DATASET['CANCELING_ROOMS']) + ' 취소 대기 중... / 시스템 메시지 : ' + str(
+                                                DATASET['RESULT']['message']))
+
+                                        if DATASET['SITE'] == '10':
+                                            if len(DATASET['AVAILABLE_ROOMS']) > 0:
+                                                message(DATASET,
+                                                        DATASET['SITE_TEXT'] + ' 예약가능 : ' + str(DATASET['ROOM_NAMES']))
+                                                DATASET = find_want_rooms(DATASET)
+
+                                    else:
+                                        DATASET['ERROR_CODE'] = 'reservation_list'
+                                        DATASET['RESULT'] = reservation_list(DATASET)
+                                        if DATASET['RESULT']['status_code'] == 200 and DATASET['RESULT']['value'] is not None:
+                                            DATASET = reservationList_filter(DATASET)
+                                        elif DATASET['RESULT']['status_code'] != 200:
+                                            error(DATASET)
+                                        else:
+                                            DATASET = remove_temp(DATASET)
+                                            message(DATASET, str('점유 불가 ' + DATASET['RESULT']['message']) + ' 예약 가능대상 확인 중...')
 
 
 
@@ -431,18 +529,25 @@ def login(data):
     driver = data['LOGIN_BROWSER']
     url = "https://www.campingkorea.or.kr/login/BD_loginForm.do"
     driver.get(url)
-    driver.maximize_window()
 
     wait = WebDriverWait(driver, 1000)
     wait.until(EC.visibility_of_element_located((By.ID, "userId"))).send_keys(rid)
     wait.until(EC.visibility_of_element_located((By.ID, "userPassword"))).send_keys(rpwd)
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "mBtn2"))).click()
-    # wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "jsBtnClose2")))
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "banner")))
-    _bannerList = driver.find_elements(By.CLASS_NAME, "banner")
-    time.sleep(1)
-    for banner in _bannerList:
-        banner.find_element(By.TAG_NAME, 'button').click()
+    CHECK_LOAD = False
+    _bannerList = []
+    while not CHECK_LOAD:
+        try:
+            _bannerList = driver.find_elements(By.CLASS_NAME, "banner")
+            isDone = driver.find_elements(By.CLASS_NAME, 'jsBtnClose2')
+            if len(isDone) == len(_bannerList):
+                CHECK_LOAD = True
+                for banner in _bannerList:
+                    banner.find_element(By.TAG_NAME, 'button').click()
+        except Exception:
+            CHECK_LOAD = False
+            continue
 
     DATASET['LOGIN_TIME'] = time.time()
 
@@ -462,10 +567,19 @@ def relogin(data):
 
     wait = WebDriverWait(driver, 1000)
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "banner")))
-    _bannerList = driver.find_elements(By.CLASS_NAME, "banner")
-    time.sleep(1)
-    for banner in _bannerList:
-        banner.find_element(By.TAG_NAME, 'button').click()
+    CHECK_LOAD = False
+    _bannerList = []
+    while not CHECK_LOAD:
+        try:
+            _bannerList = driver.find_elements(By.CLASS_NAME, "banner")
+            isDone = driver.find_elements(By.CLASS_NAME, 'jsBtnClose2')
+            if len(isDone) == len(_bannerList):
+                CHECK_LOAD = True
+                for banner in _bannerList:
+                    banner.find_element(By.TAG_NAME, 'button').click()
+        except Exception:
+            CHECK_LOAD = False
+            continue
 
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "util")))
     time.sleep(0.5)
@@ -497,10 +611,48 @@ def reservationList_filter(data):
                     data['AVAILABLE_ROOMS'].append(data['ROOM'])
                     data['ROOM_NAMES'].append(str(data['ROOM']['fcltyNm']))
             elif data['CANCEL_YN'] == 'N':
-                data['AVAILABLE_TEXT_MSG'] = '예약 가능상태 이나 취소중인 건 입니다. 최초 체크 시간: ' + str(
-                    datetime.now().strftime('%Y-%m-%d %H:%M'))
-                data['CANCELING_ROOMS'].append(str(data['ROOM']['fcltyNm']))
-                data = remove_temp(data)
+                data['ROOM_NAME'] = str(data['ROOM']['fcltyNm']).replace('호', '').replace('번', '')  # naming으로 처리하여 식별하기
+                if str(data['ROOM_NAME']) in data['ROOM_WANT'] or (len(data['ROOM_WANT']) == 1 and data['ROOM_WANT'][0] == 'ALL'):
+                    data['AVAILABLE_TEXT_MSG'] = '예약 가능상태 이나 취소중인 건 입니다. 최초 체크 시간: ' + str(datetime.now().strftime('%Y-%m-%d %H:%M'))
+                    data['CANCEL_ROOMS'].append(data['ROOM'])
+                    data['CANCELING_ROOMS'].append(str(data['ROOM']['fcltyNm']))
+                    data = remove_temp(data)
+
+        if MODE_SPOT:
+            NO_AVAILABLE = True
+            while NO_AVAILABLE:
+                for room in data['AVAILABLE_ROOMS']:
+                    data['FINAL_ROOM_NAME'] = str(room['fcltyNm'])
+                    data['fcltyCode'] = str(room['fcltyCode'])
+                    data['resveNoCode'] = str(room['resveNoCode'])
+                    data['ERROR_CODE'] = 'spot get_facility'
+                    response = get_facility(data)
+                    if response['status_code'] == 200:
+                        data['TEMPORARY_HOLD'] = True
+                        DATASET['START_TIME'] = time.time()
+                    else:
+                        if NO_AVAILABLE:
+                            NO_AVAILABLE = False
+                        error(data)
+                if data['TEMPORARY_HOLD']:
+                    break
+                for room in data['CANCEL_ROOMS']:
+                    data['FINAL_ROOM_NAME'] = str(room['fcltyNm'])
+                    data['fcltyCode'] = str(room['fcltyCode'])
+                    data['resveNoCode'] = str(room['resveNoCode'])
+                    data['ERROR_CODE'] = 'spot get_facility'
+                    response = get_facility(data)
+                    if response['status_code'] == 200:
+                        data['TEMPORARY_HOLD'] = True
+                        DATASET['START_TIME'] = time.time()
+                    else:
+                        if NO_AVAILABLE:
+                            NO_AVAILABLE = False
+                        error(data)
+                if data['TEMPORARY_HOLD']:
+                    break
+
+
         if data['AVAILABLE_TEXT_MSG'] == '':
             data = remove_temp(data)
             data['AVAILABLE_TEXT_MSG'] = '예약 가능한 대상이 없습니다. 최초 체크 시간: ' + str(datetime.now().strftime('%Y-%m-%d %H:%M'))
@@ -540,6 +692,7 @@ def find_want_rooms(data):
     response = get_facility(data)
     if response['status_code'] == 200:
         DATASET['TEMPORARY_HOLD'] = True
+        DATASET['START_TIME'] = time.time()
     else:
         DATASET['TEMPORARY_HOLD'] = False
         error(DATASET)
