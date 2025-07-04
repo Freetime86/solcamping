@@ -69,7 +69,7 @@ continue_work = False
 current_room = '0'
 user_type = 5  # 사용자 정보 세팅
 MODE_LIVE = False
-MODE_SPOT = False
+MODE_SPOT = True
 
 rpwd = ''
 rid = ''
@@ -597,6 +597,7 @@ def reservationList_filter(data):
         data['ROOM_NAMES'] = []
 
     data['CANCELING_ROOMS'] = []
+    data['CANCEL_ROOMS'] = []
     data['AVAILABLE_TEXT_MSG'] = ''
     for data['ROOM'] in room_list:
         data['AVAILABLE_YN'] = str(data['ROOM']['resveAt'])
