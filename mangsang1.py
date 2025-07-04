@@ -74,7 +74,7 @@ continue_work = False
 
 current_room = '0'
 user_type = 2  # 사용자 정보 세팅
-MODE_LIVE = True
+MODE_LIVE = False
 MODE_SPOT = False   #SPOT 모드는 재예약할 떄 사용하는 FUNCTION 취소중 건 뚫을 때도 사용
 
 rpwd = ''
@@ -223,8 +223,7 @@ def main(DATASET):
     DATASET = login(DATASET)
 
 
-    DATASET['ERROR_CODE'] = 'delete_reserve'
-
+    #DATASET['ERROR_CODE'] = 'delete_reserve'
     #CLEAR = False
     #while not CLEAR:
     #    response = delete_reserve(DATASET)
@@ -343,12 +342,14 @@ def main(DATASET):
             elif not DATASET['MODE_LIVE']:
 
                 START_TIME = datetime.now().strftime("%Y-%m-%d") + ' 10:55:30'
+                END_TIME = datetime.now().strftime("%Y-%m-%d") + ' 11:30:00'
                 RESERVATION_TIME = datetime.now().strftime("%Y-%m-%d") + ' 11:00:05'
 
                 START_TIMER = datetime.strptime(START_TIME, '%Y-%m-%d %H:%M:%S')
+                END_TIME = datetime.strptime(START_TIME, '%Y-%m-%d %H:%M:%S')
                 CURRENT_TIMER = datetime.now()
 
-                if START_TIMER < CURRENT_TIMER:
+                if START_TIMER < CURRENT_TIMER < END_TIME:
                     for year in sel_year_list:
                         for month in sel_month_list:
                             for date in sel_date_list:
@@ -437,7 +438,9 @@ def main(DATASET):
                                         else:
                                             DATASET = relogin(DATASET)
                                             DATASET['RESULT']['message'] = '다시 로그인을 하여 재 시작합니다.'
-
+                
+                else:
+                    DATASET = message(DATASET, '예약 시간이 되지 않아 대기 중 입니다.')
 
 
         except Exception as ex:
