@@ -68,7 +68,7 @@ room_selt = ['106']
 sel_year_list = ['2025']
 sel_month_list = ['08']
 sel_date_list = ['09']
-site = '2'
+site = '10'
 
 continue_work = False
 
@@ -271,7 +271,7 @@ def main(DATASET):
                                 DATASET['CURRENT_PROCESS'] = 'TEMPORARY_HOLD TRUE'
 
                                 elapsed_time = time.time() - DATASET['START_TIME']
-                                if elapsed_time >= 580:
+                                if elapsed_time >= 540:
                                     DATASET['RE_TRIED'] = False
                                     while not DATASET['RE_TRIED']:
                                         DATASET['ERROR_CODE'] = 'get_facility'
@@ -374,7 +374,7 @@ def main(DATASET):
                                     DATASET['CURRENT_PROCESS'] = 'TEMPORARY_HOLD TRUE'
 
                                     elapsed_time = time.time() - DATASET['START_TIME']
-                                    if elapsed_time >= 580:
+                                    if elapsed_time >= 540:
                                         DATASET['RE_TRIED'] = False
                                         while not DATASET['RE_TRIED']:
                                             DATASET['ERROR_CODE'] = 'get_facility'
