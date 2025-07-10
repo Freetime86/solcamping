@@ -115,6 +115,10 @@ elif user_type == 6:
     user_name = '윤민주'
     rpwd = 'cca1174848'
     rid = 'jsy3038'
+elif user_type == 7:
+    user_name = '김형민'
+    rpwd = 'ttasik99'
+    rid = 'zhffktk2ek!'
 else:
     print('User type이 없습니다. 종료합니다')
     exit()
