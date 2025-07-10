@@ -357,8 +357,8 @@ def main(DATASET):
             # TIMING 예약
             elif not DATASET['MODE_LIVE']:
                 DATASET['CURRENT_PROCESS'] = 'MODE_LIVE FALSE'
-                START_TIMER = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 07:51:10', '%Y-%m-%d %H:%M:%S')
-                END_TIME = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 23:59:00', '%Y-%m-%d %H:%M:%S')
+                START_TIMER = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 10:49:10', '%Y-%m-%d %H:%M:%S')
+                END_TIME = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 12:30:00', '%Y-%m-%d %H:%M:%S')
                 CURRENT_TIMER = datetime.now()
 
                 if START_TIMER < CURRENT_TIMER < END_TIME:
