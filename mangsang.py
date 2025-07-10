@@ -92,35 +92,42 @@ if user_type == 0:
     user_name = '조수윤'
     rpwd = 'CJSWOsla86!@123'
     rid = 'jsy3033'
+    rphone = '01024863033'
 elif user_type == 1:
     user_name = '권혁인'
     rpwd = 'khi831883!'
     rid = 'sochi007'
+    rphone = '01020569536'
 elif user_type == 2:
     user_name = '김계자'
     rpwd = 'cjswosla86'
     rid = 'psm07051'
+    rphone = '01056947788'
 elif user_type == 3:
     user_name = '박응순'
     rpwd = 'cjswosla86'
     rid = 'parksi'
-    rphone = '01054627488'
+    rphone = '0102165418'
 elif user_type == 4:
     user_name = '박현정'
     rpwd = 'khi831883!'
     rid = 'fpahs414'
+    rphone = '01020569536'
 elif user_type == 5:
     user_name = '박상민'
     rpwd = 'CJSWOsla86!@'
     rid = 'psm0705'
+    rphone = '01024863038'
 elif user_type == 6:
     user_name = '윤민주'
     rpwd = 'cca1174848'
     rid = 'jsy3038'
+    rphone = '01048983777'
 elif user_type == 7:
     user_name = '김형민'
-    rpwd = 'ttasik99'
-    rid = 'zhffktk2ek!'
+    rpwd = 'zhffktk2ek!'
+    rid = 'ttasik99'
+    rphone = '01091251464'
 else:
     print('User type이 없습니다. 종료합니다')
     exit()
