@@ -35,7 +35,7 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
-period = 2  # 연박 수
+period = 1  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 room_exception = []
@@ -61,14 +61,14 @@ room_exception = []
 # 취사장 가까운 열 1~4
 # room_want = ['115']
 # room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
-room_want = ['101', '110', '106', '109', '113', '115']
-#room_want = []
+#room_want = ['101', '110', '106', '109', '113', '115']
+room_want = []
 room_selt = []
 
 sel_year_list = ['2025']
-sel_month_list = ['08']
-sel_date_list = ['08']
-site = '10'
+sel_month_list = ['07']
+sel_date_list = ['22']
+site = '6'
 
 continue_work = False
 
@@ -107,7 +107,7 @@ elif user_type == 3:
     user_name = '박응순'
     rpwd = 'cjswosla86'
     rid = 'parksi'
-    rphone = '0102165418'
+    rphone = '01021635418'
 elif user_type == 4:
     user_name = '박현정'
     rpwd = 'khi831883!'
@@ -351,7 +351,7 @@ def main(DATASET):
             # TIMING 예약
             elif not DATASET['MODE_LIVE']:
                 DATASET['CURRENT_PROCESS'] = 'MODE_LIVE FALSE'
-                START_TIMER = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 09:49:10', '%Y-%m-%d %H:%M:%S')
+                START_TIMER = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 10:36:10', '%Y-%m-%d %H:%M:%S')
                 END_TIME = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 12:30:00', '%Y-%m-%d %H:%M:%S')
                 CURRENT_TIMER = datetime.now()
 
@@ -983,8 +983,11 @@ def error(DATASET):
     return DATASET
 
 def temporary_hold(DATASET):
+
+    OPEN_TIME = datetime.now().strftime("%Y-%m-%d") + ' 11:00:15'
+    OPEN_TIMER = datetime.strptime(OPEN_TIME, '%Y-%m-%d %H:%M:%S')
+
     DATASET['CURRENT_PROCESS'] = 'TEMPORARY_HOLD TRUE'
-    DATASET['CURRENT_PROCESS'] = 'MODE_LIVE FALSE'
     START_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') - timedelta(
         seconds=10)
     END_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=30)
@@ -998,7 +1001,7 @@ def temporary_hold(DATASET):
                 if DATASET['RESULT']['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
                     DATASET['TEMPORARY_HOLD'] = True
                     DATASET['RE_TRIED'] = True
-                    if DATASET['FINAL_RESERVE']:
+                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER < OPEN_TIMER or DATASET['MODE_LIVE']):
                         DATASET = final_reservation(DATASET)
                         if DATASET['RESULT']['status_code'] == 200:
                             message(DATASET, str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
