@@ -35,7 +35,7 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
-period = 1  # 연박 수
+period = 2  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 room_exception = []
@@ -63,12 +63,12 @@ room_exception = []
 # room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
 #room_want = ['109']
 room_want = []
-room_selt = ['35']
+room_selt = ['106']
 
 sel_year_list = ['2025']
-sel_month_list = ['07']
-sel_date_list = ['22']
-site = '6'
+sel_month_list = ['08']
+sel_date_list = ['09']
+site = '2'
 
 continue_work = False
 
@@ -357,7 +357,7 @@ def main(DATASET):
             # TIMING 예약
             elif not DATASET['MODE_LIVE']:
                 DATASET['CURRENT_PROCESS'] = 'MODE_LIVE FALSE'
-                START_TIMER = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 10:49:10', '%Y-%m-%d %H:%M:%S')
+                START_TIMER = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 09:49:10', '%Y-%m-%d %H:%M:%S')
                 END_TIME = datetime.strptime(datetime.now().strftime("%Y-%m-%d") + ' 12:30:00', '%Y-%m-%d %H:%M:%S')
                 CURRENT_TIMER = datetime.now()
 
@@ -381,6 +381,7 @@ def main(DATASET):
                                             response = get_facility(DATASET)
                                             if response['status_code'] == 200 and 'rsltMsg' in response:
                                                 if response['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
+                                                    print('dwdsdsdsdssdtest 완료')
                                                     DATASET['TEMPORARY_HOLD'] = True
                                                     DATASET['RE_TRIED'] = True
                                                     DATASET['START_TIME'] = time.time()
