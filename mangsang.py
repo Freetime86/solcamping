@@ -35,7 +35,7 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
-period = 3  # 연박 수
+period = 1  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 room_exception = []
@@ -62,18 +62,18 @@ room_exception = []
 # room_want = ['115']
 # room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
 #room_want = ['101', '110', '106', '109', '113', '115']
-room_want = ['109']
-room_selt = []
+room_want = ['101']
+room_selt = ['101']
 
 sel_year_list = ['2025']
 sel_month_list = ['08']
-sel_date_list = ['10']
+sel_date_list = ['11']
 site = '2'
 
 continue_work = False
 
 current_room = '0'
-user_type = 5  # 사용자 정보 세팅
+user_type = 3  # 사용자 정보 세팅
 MODE_LIVE = False  # 실시간 감시 여부 (취소표 잡을 때 사용)
 MODE_SPOT = True  # SPOT 모드는 재예약할 떄 사용하는 FUNCTION 취소중 건 뚫을 때도 사용
 FINAL_RESERVE = True    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
@@ -1005,7 +1005,7 @@ def temporary_hold(DATASET):
     START_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') - timedelta(seconds=10)
     END_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=30)
     CURRENT_TIMER = datetime.now()
-    if START_TIMER < CURRENT_TIMER < END_TIMER:
+    if (START_TIMER < CURRENT_TIMER < END_TIMER) or (CURRENT_TIMER > OPEN_TIMER):
         DATASET['RE_TRIED'] = False
         while not DATASET['RE_TRIED']:
             DATASET['ERROR_CODE'] = 'get_facility'
@@ -1014,7 +1014,7 @@ def temporary_hold(DATASET):
                 if DATASET['RESULT']['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
                     DATASET['TEMPORARY_HOLD'] = True
                     DATASET['RE_TRIED'] = True
-                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER < OPEN_TIMER or DATASET['MODE_LIVE']):
+                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER > OPEN_TIMER or DATASET['MODE_LIVE']):
                         DATASET = final_reservation(DATASET)
                         if DATASET['RESULT']['status_code'] == 200:
                             message(DATASET, str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
@@ -1025,6 +1025,13 @@ def temporary_hold(DATASET):
                             DATASET['FINAL_ROOM_NAME']) + ' ' + str(DATASET['FROM_DATE']) + ' ' + str(
                             DATASET['PERIOD']) + '박 재 점유 되었습니다. ' + str(
                             DATASET['RESULT']['preocpcBeginDt']) + ' ~ ' + str(DATASET['RESULT']['preocpcEndDt']))
+                else:
+                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER > OPEN_TIMER or DATASET['MODE_LIVE']):
+                        DATASET = final_reservation(DATASET)
+                        if DATASET['RESULT']['status_code'] == 200:
+                            message(DATASET, str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
+                            DATASET['FINAL_ROOM_NAME']) + ' 예약이 완료되었습니다. ')
+                            exit('예약 완료 시스템 종료')
 
             else:
                 error(DATASET)
