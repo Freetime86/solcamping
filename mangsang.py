@@ -62,22 +62,22 @@ room_exception = []
 # room_want = ['115']
 # room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
 #room_want = ['101', '110', '106', '109', '113', '115']
-room_want = ['101']
-room_selt = ['101']
+room_want = []
+room_selt = []
 
 sel_year_list = ['2025']
 sel_month_list = ['08']
 sel_date_list = ['11']
-site = '2'
+site = '6'
 
 continue_work = False
 
 current_room = '0'
-user_type = 3  # 사용자 정보 세팅
-MODE_LIVE = False  # 실시간 감시 여부 (취소표 잡을 때 사용)
+user_type = 1  # 사용자 정보 세팅
+MODE_LIVE = True  # 실시간 감시 여부 (취소표 잡을 때 사용)
 MODE_SPOT = True  # SPOT 모드는 재예약할 떄 사용하는 FUNCTION 취소중 건 뚫을 때도 사용
 FINAL_RESERVE = True    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
-ONLY_CHECK = False    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
+ONLY_CHECK = True    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
 
 rpwd = ''
 rid = ''
