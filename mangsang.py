@@ -1017,13 +1017,13 @@ def temporary_hold(DATASET):
     OPEN_TIMER = datetime.strptime(OPEN_TIME, '%Y-%m-%d %H:%M:%S')
 
     DATASET['CURRENT_PROCESS'] = 'TEMPORARY_HOLD TRUE'
-    START_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') - timedelta(seconds=5)
+    START_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') - timedelta(seconds=1)
     END_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=9999)
     CURRENT_TIMER = datetime.now()
     if (START_TIMER <= CURRENT_TIMER <= END_TIMER) or (CURRENT_TIMER >= OPEN_TIMER):
         DATASET['RE_TRIED'] = False
+        DATASET['ERROR_CODE'] = 'RE_TRIED get_facility'
         while not DATASET['RE_TRIED']:
-            DATASET['ERROR_CODE'] = 'get_facility'
             DATASET = get_facility(DATASET)
             if DATASET['RESULT']['status_code'] == 200 and 'rsltMsg' in DATASET['RESULT']:
                 if DATASET['RESULT']['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
@@ -1046,6 +1046,11 @@ def temporary_hold(DATASET):
                             message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
                             DATASET['FINAL_ROOM_NAME']) + ' 예약이 완료되었습니다. ')
                             exit('예약 완료 시스템 종료')
+                        else:
+                            message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
+                                DATASET['FINAL_ROOM_NAME']) + ' ' + str(DATASET['FROM_DATE']) + ' ' + str(
+                                DATASET['PERIOD']) + '박 점유 실패 재 예약 중..  ' + str(
+                                DATASET['RESULT']['preocpcBeginDt']) + ' ~ ' + str(DATASET['RESULT']['preocpcEndDt']))
                     else:
                         message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
                             DATASET['FINAL_ROOM_NAME']) + ' ' + str(DATASET['FROM_DATE']) + ' ' + str(
