@@ -37,7 +37,7 @@ global try_cnt
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
 period = 2  # 연박 수
-delay = 1
+
 night_delay = 5  # 모니터링 리프레시 속도
 room_exception = []
 # 든바다
@@ -73,11 +73,13 @@ sel_date_list = ['13']
 site = '2'
 
 current_room = '0'
-user_type = 3  # 사용자 정보 세팅
-MODE_LIVE = True  # 실시간 감시 여부 (취소표 잡을 때 사용)
+user_type = 3           # 사용자 정보 세팅
+MODE_LIVE = True        # 실시간 감시 여부 (취소표 잡을 때 사용)
 FINAL_RESERVE = True    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
-MODE_SPOT = False        # 지정 사이트만 강제 집중적으로 반복
-ONLY_CHECK = False    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
+MODE_SPOT = False       # 지정 사이트만 강제 집중적으로 반복
+ONLY_CHECK = False      # 예약 가능 대상만 체크
+MODE_ALWS = True        # 항상 최종예약 오픈, 시간에 관계없이 최종예약을 한다. (주의 미리 선점하려는 사이트는 최종예약이 안됨으로 필히 OFF할것)
+DELAY = 2               # 임시점유 상태의 갱신 주기 속도 새벽엔 느리게 권장
 
 rpwd = ''
 rid = ''
@@ -150,6 +152,7 @@ else:
 
 DATASET = {
     'MODE_LIVE': MODE_LIVE,
+    'MODE_ALWS': MODE_ALWS,
     'MODE_SPOT': MODE_SPOT,
     'TEMPORARY_HOLD': False,
     'FINAL_RESERVE': FINAL_RESERVE,
@@ -165,7 +168,7 @@ DATASET = {
     'CANCELING_ROOMS': [],
     'FINAL_ROOM_NAME': [],
     'ROOM_NAMES': [],
-    'TIME_DELAY': 0,
+    'TIME_DELAY': DELAY,
     'MULTI_HOUR': 0,
     'CYCLE_ERR_CNT': 0,
     'CURRENT_PROCESS': 'BEGIN',
@@ -440,9 +443,9 @@ def main(DATASET):
 
         except Exception as ex:
             print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' EXCEPTION!!' + str(ex))
-            error(DATASET)
             print('ERROR PROCESS = ' + str(DATASET['CURRENT_PROCESS']))
-            DATASET = relogin(DATASET)
+            error(DATASET)
+            #DATASET = relogin(DATASET)
             continue
 
 
@@ -1038,7 +1041,7 @@ def temporary_hold(DATASET):
             if DATASET['RESULT']['status_code'] == 200 and 'rsltMsg' in DATASET['RESULT']:
                 if DATASET['RESULT']['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
                     DATASET['RE_TRIED'] = True
-                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER >= OPEN_TIMER or DATASET['MODE_LIVE']):
+                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER >= OPEN_TIMER or DATASET['MODE_ALWS']):
                         DATASET = final_reservation(DATASET)
                         if DATASET['RESULT']['status_code'] == 200:
                             message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
@@ -1050,7 +1053,7 @@ def temporary_hold(DATASET):
                             DATASET['PERIOD']) + '박 재 점유 되었습니다. ' + str(
                             DATASET['RESULT']['preocpcBeginDt']) + ' ~ ' + str(DATASET['RESULT']['preocpcEndDt']))
                 else:
-                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER >= OPEN_TIMER or DATASET['MODE_LIVE']):
+                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER >= OPEN_TIMER or DATASET['MODE_ALWS']):
                         DATASET = final_reservation(DATASET)
                         if DATASET['RESULT']['status_code'] == 200:
                             message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
