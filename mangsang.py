@@ -65,7 +65,7 @@ room_selt = []
 # room_want = ['115']
 # room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
 #room_want = ['101', '110', '106', '109', '113', '115']
-room_want = ['106']
+room_want = ['106', '115']
 room_selt = []
 
 sel_year_list = ['2025']
@@ -1017,10 +1017,10 @@ def temporary_hold(DATASET):
     OPEN_TIMER = datetime.strptime(OPEN_TIME, '%Y-%m-%d %H:%M:%S')
 
     DATASET['CURRENT_PROCESS'] = 'TEMPORARY_HOLD TRUE'
-    START_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') - timedelta(seconds=0)
-    END_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=60)
+    START_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') - timedelta(seconds=2)
+    END_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=120)
     CURRENT_TIMER = datetime.now()
-    if (START_TIMER < CURRENT_TIMER < END_TIMER) or (CURRENT_TIMER > OPEN_TIMER):
+    if (START_TIMER <= CURRENT_TIMER <= END_TIMER) or (CURRENT_TIMER >= OPEN_TIMER):
         DATASET['RE_TRIED'] = False
         while not DATASET['RE_TRIED']:
             DATASET['ERROR_CODE'] = 'get_facility'
@@ -1029,7 +1029,7 @@ def temporary_hold(DATASET):
                 if DATASET['RESULT']['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
                     DATASET['TEMPORARY_HOLD'] = True
                     DATASET['RE_TRIED'] = True
-                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER > OPEN_TIMER or DATASET['MODE_LIVE']):
+                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER >= OPEN_TIMER or DATASET['MODE_LIVE']):
                         DATASET = final_reservation(DATASET)
                         if DATASET['RESULT']['status_code'] == 200:
                             message(DATASET, str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
@@ -1041,14 +1041,18 @@ def temporary_hold(DATASET):
                             DATASET['PERIOD']) + '박 재 점유 되었습니다. ' + str(
                             DATASET['RESULT']['preocpcBeginDt']) + ' ~ ' + str(DATASET['RESULT']['preocpcEndDt']))
                 else:
-                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER > OPEN_TIMER or DATASET['MODE_LIVE']):
+                    if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER >= OPEN_TIMER or DATASET['MODE_LIVE']):
                         DATASET = final_reservation(DATASET)
                         if DATASET['RESULT']['status_code'] == 200:
                             message(DATASET, str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
                             DATASET['FINAL_ROOM_NAME']) + ' 예약이 완료되었습니다. ')
                             exit('예약 완료 시스템 종료')
+                    else:
+                        message(DATASET, '재예약 송신 중')
 
             else:
+                DATASET['ERROR_CODE'] = 'retry get_facility'
+                DATASET = get_facility(DATASET)
                 error(DATASET)
     else:
         message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
