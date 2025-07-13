@@ -820,9 +820,9 @@ def reservationList_filter(DATASET):
                     DATASET = remove_temp(DATASET)
 
     if len(DATASET['AVAILABLE_ROOMS']) > 0:
-        message(DATASET, '예약가능 ' + str(DATASET['ROOM_NAMES']))
+        message(DATASET, '예약가능 대상 ' + str(DATASET['ROOM_NAMES']))
     if len(DATASET['CANCEL_ROOMS']) > 0:
-        message(DATASET, '취소 중 예약가능 ' + str(DATASET['CANCELING_ROOMS']))
+        message(DATASET, '취소 중 예약가능 대상 ' + str(DATASET['CANCELING_ROOMS']))
     # SPOT 모드
     if DATASET['ONLY_CHECK']:
         exit('가능 대상 체크, 시스템종료')
@@ -1047,7 +1047,10 @@ def temporary_hold(DATASET):
                             DATASET['FINAL_ROOM_NAME']) + ' 예약이 완료되었습니다. ')
                             exit('예약 완료 시스템 종료')
                     else:
-                        message(DATASET, '재예약 송신 중')
+                        message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + str(
+                            DATASET['FINAL_ROOM_NAME']) + ' ' + str(DATASET['FROM_DATE']) + ' ' + str(
+                            DATASET['PERIOD']) + '박 재 예약 송신 중... ' + str(
+                            DATASET['RESULT']['preocpcBeginDt']) + ' ~ ' + str(DATASET['RESULT']['preocpcEndDt']))
 
             else:
                 DATASET['ERROR_CODE'] = 'retry get_facility'
