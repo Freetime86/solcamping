@@ -1027,7 +1027,6 @@ def temporary_hold(DATASET):
             DATASET = get_facility(DATASET)
             if DATASET['RESULT']['status_code'] == 200 and 'rsltMsg' in DATASET['RESULT']:
                 if DATASET['RESULT']['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
-                    DATASET['TEMPORARY_HOLD'] = True
                     DATASET['RE_TRIED'] = True
                     if DATASET['FINAL_RESERVE'] and (CURRENT_TIMER >= OPEN_TIMER or DATASET['MODE_LIVE']):
                         DATASET = final_reservation(DATASET)
