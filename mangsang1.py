@@ -36,7 +36,7 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 5  # 머신 시작 간격
-period = 1  # 연박 수
+period = 2  # 연박 수
 delay = 1
 night_delay = 5  # 모니터링 리프레시 속도
 room_exception = []
@@ -65,20 +65,19 @@ room_selt = []
 # room_want = ['115']
 # room_want = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13']
 #room_want = ['101', '110', '106', '109', '113', '115']
-room_want = ['118']
-room_selt = []
+room_selt = ['115']
 
 sel_year_list = ['2025']
 sel_month_list = ['08']
 sel_date_list = ['13']
-site = '1'
+site = '2'
 
 current_room = '0'
-user_type = 6  # 사용자 정보 세팅
+user_type = 3  # 사용자 정보 세팅
 MODE_LIVE = True  # 실시간 감시 여부 (취소표 잡을 때 사용)
 FINAL_RESERVE = True    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
 MODE_SPOT = False        # 지정 사이트만 강제 집중적으로 반복
-ONLY_CHECK = True    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
+ONLY_CHECK = False    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
 
 rpwd = ''
 rid = ''
@@ -818,9 +817,9 @@ def reservationList_filter(DATASET):
                     DATASET = remove_temp(DATASET)
 
     if len(DATASET['AVAILABLE_ROOMS']) > 0:
-        message(DATASET, '예약가능 대상 ' + str(DATASET['ROOM_NAMES']))
+        message(DATASET, '선택 대상 -> ' + str(DATASET['ROOM_SELT']) + ' /// 선점 예약가능 대상 -> ' + str(DATASET['ROOM_NAMES']) + ' 실시간 매칭 대상을 확인 합니다..')
     if len(DATASET['CANCEL_ROOMS']) > 0:
-        message(DATASET, '취소 중 예약가능 대상 ' + str(DATASET['CANCELING_ROOMS']))
+        message(DATASET, '선택 대상 -> ' + str(DATASET['ROOM_SELT']) + ' /// 취소 예약가능 대상 -> ' + str(DATASET['ROOM_NAMES']) + ' 실시간 매칭 대상을 확인 합니다..')
     # SPOT 모드
     if DATASET['ONLY_CHECK']:
         exit('가능 대상 체크, 시스템종료')
@@ -902,7 +901,7 @@ def reservationList_filter(DATASET):
             if DATASET['TEMPORARY_HOLD']:
                 break
             else:
-                message(DATASET, RESULT_MSG)
+                #message(DATASET, RESULT_MSG)
                 break
 
         if DATASET['AVAILABLE_TEXT_MSG'] == '':
