@@ -69,17 +69,15 @@ room_want = []
 room_selt = []
 
 sel_year_list = ['2025']
-sel_month_list = ['08']
-sel_date_list = ['12']
-site = '2'
-
-continue_work = False
+sel_month_list = ['07']
+sel_date_list = ['25']
+site = '6'
 
 current_room = '0'
-user_type = 9  # 사용자 정보 세팅
+user_type = 2  # 사용자 정보 세팅
 MODE_LIVE = True  # 실시간 감시 여부 (취소표 잡을 때 사용)
 MODE_SPOT = True  # SPOT 모드는 재예약할 떄 사용하는 FUNCTION 취소중 건 뚫을 때도 사용
-FINAL_RESERVE = True    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
+FINAL_RESERVE = False    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
 ONLY_CHECK = False    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
 
 rpwd = ''
@@ -855,36 +853,38 @@ def reservationList_filter(DATASET):
                     if NO_AVAILABLE:
                         NO_AVAILABLE = False
                     error(DATASET)
-            for room in DATASET['CANCEL_ROOMS']:
-                DATASET['FINAL_ROOM_NAME'] = str(room['fcltyNm'])
-                DATASET['fcltyCode'] = str(room['fcltyCode'])
-                DATASET['resveNoCode'] = str(room['resveNoCode'])
-                DATASET['ERROR_CODE'] = 'spot get_facility'
-                DATASET = get_facility(DATASET)
-                if DATASET['RESULT']['status_code'] == 200 and 'rsltMsg' in DATASET['RESULT']:
-                    if DATASET['RESULT']['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
-                        DATASET['TEMPORARY_HOLD'] = True
-                        break
-                        #if DATASET['FINAL_RESERVE']:
-                        #    DATASET = final_reservation(DATASET)
-                        #    if DATASET['RESULT']['status_code'] == 200:
-                        #        message(DATASET, str(room['fcltyNm']) + ' 예약이 완료되었습니다. ')
-                        #        exit('예약 완료 시스템 종료')
-                        #else:
-                        #    message(DATASET, '임시 점유 완료 ' + str(room['fcltyNm']))
-                        #    break
-                    elif DATASET['RESULT']['resveNo'] != '':
-                        message(DATASET, str(room['fcltyNm']) + ' 이미 점유 중 계속 진행합니다. ')
-                        DATASET['TEMPORARY_HOLD'] = True
-                        break
+
+            if not DATASET['TEMPORARY_HOLD']:
+                for room in DATASET['CANCEL_ROOMS']:
+                    DATASET['FINAL_ROOM_NAME'] = str(room['fcltyNm'])
+                    DATASET['fcltyCode'] = str(room['fcltyCode'])
+                    DATASET['resveNoCode'] = str(room['resveNoCode'])
+                    DATASET['ERROR_CODE'] = 'spot get_facility'
+                    DATASET = get_facility(DATASET)
+                    if DATASET['RESULT']['status_code'] == 200 and 'rsltMsg' in DATASET['RESULT']:
+                        if DATASET['RESULT']['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
+                            DATASET['TEMPORARY_HOLD'] = True
+                            break
+                            #if DATASET['FINAL_RESERVE']:
+                            #    DATASET = final_reservation(DATASET)
+                            #    if DATASET['RESULT']['status_code'] == 200:
+                            #        message(DATASET, str(room['fcltyNm']) + ' 예약이 완료되었습니다. ')
+                            #        exit('예약 완료 시스템 종료')
+                            #else:
+                            #    message(DATASET, '임시 점유 완료 ' + str(room['fcltyNm']))
+                            #    break
+                        elif DATASET['RESULT']['resveNo'] != '':
+                            message(DATASET, str(room['fcltyNm']) + ' 이미 점유 중 계속 진행합니다. ')
+                            DATASET['TEMPORARY_HOLD'] = True
+                            break
+                        else:
+                            message(DATASET, '취소 건 강제 선점 중 ' + str(room['fcltyNm']))
+                            DATASET['TEMPORARY_HOLD'] = True
+                            break
                     else:
-                        message(DATASET, '취소 건 강제 선점 중 ' + str(room['fcltyNm']))
-                        DATASET['TEMPORARY_HOLD'] = True
-                        break
-                else:
-                    if NO_AVAILABLE:
-                        NO_AVAILABLE = False
-                    error(DATASET)
+                        if NO_AVAILABLE:
+                            NO_AVAILABLE = False
+                        error(DATASET)
             if DATASET['TEMPORARY_HOLD']:
                 break
 
