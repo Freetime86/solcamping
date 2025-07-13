@@ -1017,13 +1017,15 @@ def temporary_hold(DATASET):
     OPEN_TIMER = datetime.strptime(OPEN_TIME, '%Y-%m-%d %H:%M:%S')
 
     DATASET['CURRENT_PROCESS'] = 'TEMPORARY_HOLD TRUE'
-    START_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') - timedelta(seconds=1)
+    START_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=0)
     END_TIMER = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=9999)
     CURRENT_TIMER = datetime.now()
-    if (START_TIMER <= CURRENT_TIMER <= END_TIMER) or (CURRENT_TIMER >= OPEN_TIMER):
+    #if (START_TIMER <= CURRENT_TIMER <= END_TIMER) or (CURRENT_TIMER >= OPEN_TIMER):
+    if START_TIMER <= CURRENT_TIMER <= END_TIMER:
         DATASET['RE_TRIED'] = False
         DATASET['ERROR_CODE'] = 'RE_TRIED get_facility'
         while not DATASET['RE_TRIED']:
+            print(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'))
             DATASET = get_facility(DATASET)
             if DATASET['RESULT']['status_code'] == 200 and 'rsltMsg' in DATASET['RESULT']:
                 if DATASET['RESULT']['rsltMsg'] == '선택하신 시설이 선점되었습니다.':
