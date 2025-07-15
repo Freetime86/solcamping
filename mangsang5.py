@@ -16,10 +16,10 @@ DATASET = ms.dataset()
 
 
 # 시스템 설정 최소 값 1
-DATASET['BOT_NUMBER'] = 3
+DATASET['BOT_NUMBER'] = 5
 
 # 사용자 설정 USER_NO : 최종예약자, PING_PONG_1 = 첫번째 홀더, PING_PONG_2 두번째 홀더
-DATASET['USER_NO'] = '03'
+DATASET['USER_NO'] = '11'
 DATASET['PIN_PONG_1'] = '00'
 DATASET['PIN_PONG_2'] = '01'
 
@@ -32,8 +32,8 @@ DATASET['MODE_ALWS'] = False  # 임시점유 상태의 갱신 주기 속도 새�
 DATASET['DELAY'] = 0  # 임시점유 상태의 갱신 주기 속도 새벽엔 느리게 권장
 
 # 숙박 설정
-DATASET['SELECT_DATE'] = ['2025-08-14', '2025-08-15']   # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
-DATASET['PERIOD'] = 2  # 연박 수
+DATASET['SELECT_DATE'] = ['2025-08-15']   # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
+DATASET['PERIOD'] = 1  # 연박 수
 # 01:든바다, 02:난바다, 03:허허바다, 04:전통한옥, 05:캐라반, 06:자동차야영장, 07:글램핑A 08:글램핑B, 09:캐빈하우스
 DATASET['ROOM_FACILITY'] = ['01']
 # 인실정보 적용 2인실, 4인실, 6인실, 8인실, 10인실  없을 경우 PASS 자동차야영장 등등은 없음.
