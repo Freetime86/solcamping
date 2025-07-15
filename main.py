@@ -9,7 +9,7 @@ import pyautogui as py
 import numpy as np
 from PIL import Image
 import cv2
-from playsound import playsound
+#from playsound import playsound
 from datetime import datetime
 from selenium.common.exceptions import NoSuchElementException
 import time
@@ -78,7 +78,7 @@ def main():
                                 # driver.close()
                                 # main()
                                 while True:
-                                    playsound('done.mp3')
+                                    #playsound('done.mp3')
                                     pass
             driver.refresh()
             time.sleep(delay)
