@@ -11,7 +11,7 @@ import pytesseract
 # 기초 데이터 PARSING
 options = Options()
 options.add_experimental_option("detach", True)
-#options.add_argument("headless")  # 크롬창 숨기기
+options.add_argument("headless")  # 크롬창 숨기기
 DATASET = ms.dataset()
 
 
@@ -39,7 +39,9 @@ DATASET['ROOM_FACILITY'] = ['01']
 # 인실정보 적용 2인실, 4인실, 6인실, 8인실, 10인실  없을 경우 PASS 자동차야영장 등등은 없음.
 DATASET['ROOM_RANGE'] = ['2']
 # 선호 방 번호 (선호 대상이 없을 경우 그 외 대상을 선택하도록 함)
-DATASET['ROOM_WANTS'] = ['118']
+DATASET['ROOM_WANTS'] = ['ALL']
+# 제외 대상 설정
+DATASET['ROOM_EXPT'] = ['112']
 
 # 시스템 기본 수행작업 필수
 if not mangsang_data.check(DATASET):

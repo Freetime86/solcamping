@@ -71,7 +71,7 @@ room_selt = []
 sel_year_list = ['2025']
 sel_month_list = ['08']
 sel_date_list = ['15']
-site = '2'
+site = '1'
 
 current_room = '0'
 user_type = 11           # 사용자 정보 세팅

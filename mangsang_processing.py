@@ -59,6 +59,7 @@ def main(DATASET):
                 while True:
                     DATASET = message(DATASET, ' 임시 점유 홀드 프로세스 기동 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_TYPE_NAME']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
                     if 'preocpcEndDt' in DATASET['RESULT']:
+                        message2(DATASET, '점유 시간 ' + DATASET['RESULT']['preocpcBeginDt'] + ' ~ ' + DATASET['RESULT']['preocpcEndDt'])
                         if DATASET['RESULT']['preocpcEndDt'] is not None:
                             DATASET = get_facility(DATASET)
                             DATASET['CURRENT_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'], '%Y-%m-%d')
@@ -68,11 +69,13 @@ def main(DATASET):
                             if DATASET['RESULT']['status_code'] == 200:
                                 if 'message' in DATASET['RESULT']:
                                     print(DATASET, DATASET['RESULT']['message'])
-                                    if DATASET['RESULT']['message'] != '예약이 불가능한 시설입니다.':
+                                    RESULT_TXT = DATASET['RESULT']['message']
+                                    if '예약이 불가능한 시설입니다.' not in RESULT_TXT or '잠시후 시도해 주시거나 다시 신청해 주세요.' not in RESULT_TXT or '이미 완료된 예약입니다.' not in RESULT_TXT:
                                         message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
                                         #DATASET['SELECT_DATE'].pop('FINAL_RESVEBEGINDE', None)
                                         DATASET['TEMPORARY_HOLD'] = False
                                         exit()
+
 
             if not DATASET['TEMPORARY_HOLD']:
                 for target_type_list in DATASET['TARGET_LIST']:
@@ -81,7 +84,7 @@ def main(DATASET):
                         type_no_txt = type_no
                         if len(type_no) == 5:
                             type_no_txt = type_no[2:5]
-                        if type_no_txt in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL':
+                        if (type_no_txt in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no_txt not in DATASET['ROOM_EXPT']:
                             for begin_date in DATASET['SELECT_DATE']:
                                 end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(days=DATASET['PERIOD'])).strftime("%Y-%m-%d")
                                 if not DATASET['TEMPORARY_HOLD']:
@@ -336,6 +339,14 @@ def message(DATASET, text):
     if DATASET['MESSAGE'] != text:
         print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' ' + str(text))
         DATASET['MESSAGE'] = text
+    return DATASET
+
+
+def message2(DATASET, text):
+    DATASET['CURRENT_PROCESS'] = 'message2'
+    if DATASET['MESSAGE2'] != text:
+        print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' ' + str(text))
+        DATASET['MESSAGE2'] = text
     return DATASET
 
 
