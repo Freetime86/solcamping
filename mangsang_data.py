@@ -1,12 +1,60 @@
+from datetime import datetime, timedelta
+
 def check(DATASET):
-    result = True
     if DATASET['BOT_NUMBER'] < 1:
-        print('봇 지정 수 확인')
-        result = False
-    if  len(DATASET['ROOM_WANTS']) < 1:
-        print('룸 선호 정보 확인 (최소 1개의 데이터는 유지 할 것)')
-        result = False
-    return result
+        print('현재 작업자 수(' + str(DATASET['BOT_NUMBER']) + ') 작업자 배정 수를 확인하세요.')
+        return False
+
+    if int(DATASET['PERIOD']) == 0 or int(DATASET['PERIOD']) > 3:
+        print('연박 수 지정이 잘못되었습니다. 최소/최대 1~3박 까지만 지정 가능합니다.')
+        return False
+
+    for _date in DATASET['SELECT_DATE']:
+        try:
+            datetime.strptime(_date, "%Y-%m-%d")
+        except ValueError:
+            print('(' + str(_date) + ')' + ' 날짜 형식이 잘못되었습니다. 올바른 방식은 yyyy-mm-dd 입니다.')
+            return False
+        _to_date = int((datetime.strptime(_date, '%Y-%m-%d') + timedelta(days=DATASET['PERIOD']-1)).strftime("%Y%m%d"))
+        _t_date = int(_date.replace('-', '', 2))
+
+        error_date = []
+        for _str_date in DATASET['SELECT_DATE']:
+            int_date = int(_str_date.replace('-', '', 2))
+            if _t_date != int_date and _t_date < int_date <= _to_date:
+                error_date.append(_str_date)
+        if len(error_date) > 0:
+            print('(' + str(_date) + ')' + ' 현재 날짜의 연박 수 [' + str(DATASET['PERIOD']) + '] (' + str(error_date).replace("'", '',999).replace('[', '').replace(']', '') + ') 가 지정 날짜에 포함되어 있습니다.')
+            return False
+
+    if len(DATASET['ROOM_FACILITY']) < 1:
+        print('시설 타입 정보가 없습니다.')
+    else:
+        for _facility in DATASET['ROOM_FACILITY']:
+            if not _facility.isdigit() and len(_facility) != 2:
+                print('(' + str(_facility) + ')' + ' 시설 타입 정보가 잘못되었습니다.')
+                return False
+            if _facility in ['01', '02', '03'] and len(DATASET['ROOM_RANGE']) == 0:
+                print('든바다, 난바다, 허허바다의 경우 인실을 지정해야 합니다.')
+                return False
+            elif _facility not in ['01', '02', '03'] and len(DATASET['ROOM_RANGE']) > 0:
+                print('현재 시설은 인실 지정이 불가한 시설입니다.')
+                return False
+                
+    for _range in DATASET['ROOM_RANGE']:
+        if not _range.isdigit():
+            print('(' + str(_range) + ') 인실 정보가 잘못되었습니다. 숫자만 입력 가능 합니다.')
+            return False
+
+    for _want in DATASET['ROOM_WANTS']:
+        if not _want.isdigit() and _want != 'ALL':
+            print('선호 대상 정보가 잘못되었습니다. (전체를 선택하려면 ALL 로 지정해주세요.')
+            return False
+    for _expt in DATASET['ROOM_EXPT']:
+        if not _expt.isdigit():
+            print('(' + str(_expt) + ') 제외 대상 정보가 잘못되었습니다. 숫자만 입력 가능 합니다.')
+            return False
+    return True
 
 
 def convert(DATASET):
@@ -20,6 +68,9 @@ def convert(DATASET):
     DATASET['PINGPONG_USER1'] = DATASET['USER_INFO'][PINGPONG_NO_1]
     DATASET['PINGPONG_USER2'] = DATASET['USER_INFO'][PINGPONG_NO_2]
 
+    if len(DATASET['ROOM_WANTS']) == 0:
+        DATASET['ROOM_WANTS'].append('ALL')
+
     for index in FACILITY_LIST:
         _target = DATASET['FACILITY_INFO'][index]
         _target_max_list = []
@@ -32,12 +83,14 @@ def convert(DATASET):
                 _target_max_list.append(_fcltyInfo[0])
                 _target_no_list.append(_fcltyInfo[1])
                 _target_ty_list.append(_fcltyInfo[2])
-            _target['TARGET_MAX_CNT'] = _target_max_list
+            if len(_target_max_list) == 0:
+                _target_max_list.append('ALL')
+            else:
+                _target['TARGET_MAX_CNT'] = _target_max_list
             _target['TARGET_NO'] = _target_no_list
             _target['TARGET_TYPE'] = _target_ty_list
-        DATASET['TARGET_LIST'].append(_target)
 
-        if DATASET['ROOM_RANGE'] == 0:
+        if len(DATASET['ROOM_RANGE']) == 0:
             _range_list = get_facility_no(_target, 0)
             for _row in _range_list:
                 _fcltyInfo = _row.split('|')
@@ -47,6 +100,7 @@ def convert(DATASET):
             _target['TARGET_MAX_CNT'] = _target_max_list
             _target['TARGET_NO'] = _target_no_list
             _target['TARGET_TYPE'] = _target_ty_list
+        DATASET['TARGET_LIST'].append(_target)
     return DATASET
 
 

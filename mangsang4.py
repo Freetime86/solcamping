@@ -70,16 +70,16 @@ room_selt = []
 
 sel_year_list = ['2025']
 sel_month_list = ['08']
-sel_date_list = ['15']
-site = '1'
+sel_date_list = ['16']
+site = '3'
 
 current_room = '0'
-user_type = 11           # 사용자 정보 세팅
+user_type = 3           # 사용자 정보 세팅
 MODE_LIVE = True        # 실시간 감시 여부 (취소표 잡을 때 사용)
-FINAL_RESERVE = True    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
+FINAL_RESERVE = False    # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
 MODE_SPOT = False       # 지정 사이트만 강제 집중적으로 반복
 ONLY_CHECK = True      # 예약 가능 대상만 체크
-MODE_ALWS = True       # 항상 최종예약 오픈, 시간에 관계없이 최종예약을 한다. (주의 미리 선점하려는 사이트는 최종예약이 안됨으로 필히 OFF할것)
+MODE_ALWS = False       # 항상 최종예약 오픈, 시간에 관계없이 최종예약을 한다. (주의 미리 선점하려는 사이트는 최종예약이 안됨으로 필히 OFF할것)
 DELAY = 0               # 임시점유 상태의 갱신 주기 속도 새벽엔 느리게 권장
 
 rpwd = ''

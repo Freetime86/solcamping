@@ -50,10 +50,10 @@ def _list():
                'rid': 'iseick',
                'rphone': '01041798796'
                },
-        '10': {'user_name': '강동우',
-               'rpwd': 'kdwpa8307!',
-               'rid': 'kdwpa8307',
-               'rphone': '01091179661'
+        '10': {'user_name': '',
+               'rpwd': '',
+               'rid': '',
+               'rphone': ''
                },
         '11': {'user_name': '',
                'rpwd': '',
