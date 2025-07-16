@@ -61,7 +61,6 @@ def main(DATASET):
                     if 'preocpcEndDt' in DATASET['RESULT']:
                         message2(DATASET, '점유 시간 ' + DATASET['RESULT']['preocpcBeginDt'] + ' ~ ' + DATASET['RESULT']['preocpcEndDt'])
                         if DATASET['RESULT']['preocpcEndDt'] is not None:
-                            DATASET = get_facility(DATASET)
                             DATASET['CURRENT_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'], '%Y-%m-%d')
                             if DATASET['FINAL_RESERVE'] and (DATASET['CURRENT_TIME'] >= DATASET['OPEN_TIME'] or DATASET['CURRENT_TIME'] < DATASET['LIMIT_TIME']):
                                 DATASET = message(DATASET, ' 확정 예약 진행 중... ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_TYPE_NAME']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
@@ -75,6 +74,10 @@ def main(DATASET):
                                             #DATASET['SELECT_DATE'].pop('FINAL_RESVEBEGINDE', None)
                                             DATASET['TEMPORARY_HOLD'] = False
                                             exit()
+                            else:
+                                DATASET = get_facility(DATASET)
+                        else:
+                            DATASET = get_facility(DATASET)
 
 
             if not DATASET['TEMPORARY_HOLD']:
