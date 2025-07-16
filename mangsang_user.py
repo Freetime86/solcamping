@@ -55,10 +55,10 @@ def _list():
                'rid': 'kdwpa8307',
                'rphone': '01091179661'
                },
-        '11': {'user_name': '박준호',
-               'rpwd': '!asdf1357',
-               'rid': 'trap0959',
-               'rphone': '01050256509'
+        '11': {'user_name': '',
+               'rpwd': '',
+               'rid': '',
+               'rphone': ''
                },
         '12': {'user_name': '최윤정',
                'rpwd': 'choi20023!',
