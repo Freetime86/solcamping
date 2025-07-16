@@ -78,6 +78,8 @@ def main(DATASET):
                                 DATASET = get_facility(DATASET)
                         else:
                             DATASET = get_facility(DATASET)
+                    else:
+                        DATASET = get_facility(DATASET)
 
 
             if not DATASET['TEMPORARY_HOLD']:
