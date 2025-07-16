@@ -71,7 +71,7 @@ def main(DATASET):
                                             RESULT_TXT = DATASET['RESULT']['message']
                                             if '예약이 불가능한 시설입니다.' not in RESULT_TXT or '일시적인 장애로 예약신청이 정상 완료되지 않았습니다.' not in RESULT_TXT or '이미 완료된 예약입니다.' not in RESULT_TXT:
                                                 message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
-                                                DATASET['SELECT_DATE'].pop('FINAL_RESVEBEGINDE')
+                                                DATASET['SELECT_DATE'].pop(str(DATASET['FINAL_RESVEBEGINDE']))
                                                 DATASET['TEMPORARY_HOLD'] = False
                                                 exit()
                                 else:
