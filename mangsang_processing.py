@@ -63,18 +63,18 @@ def main(DATASET):
                         if DATASET['RESULT']['preocpcEndDt'] is not None:
                             DATASET = get_facility(DATASET)
                             DATASET['CURRENT_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'], '%Y-%m-%d')
-                        if DATASET['FINAL_RESERVE'] and (DATASET['CURRENT_TIME'] >= DATASET['OPEN_TIME'] or DATASET['CURRENT_TIME'] < DATASET['LIMIT_TIME']):
-                            DATASET = message(DATASET, ' 확정 예약 진행 중... ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_TYPE_NAME']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
-                            DATASET = final_reservation(DATASET)
-                            if DATASET['RESULT']['status_code'] == 200:
-                                if 'message' in DATASET['RESULT']:
-                                    print(DATASET, DATASET['RESULT']['message'])
-                                    RESULT_TXT = DATASET['RESULT']['message']
-                                    if '예약이 불가능한 시설입니다.' not in RESULT_TXT or '일시적인 장애로 예약신청이 정상 완료되지 않았습니다.' not in RESULT_TXT or '이미 완료된 예약입니다.' not in RESULT_TXT:
-                                        message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
-                                        #DATASET['SELECT_DATE'].pop('FINAL_RESVEBEGINDE', None)
-                                        DATASET['TEMPORARY_HOLD'] = False
-                                        exit()
+                            if DATASET['FINAL_RESERVE'] and (DATASET['CURRENT_TIME'] >= DATASET['OPEN_TIME'] or DATASET['CURRENT_TIME'] < DATASET['LIMIT_TIME']):
+                                DATASET = message(DATASET, ' 확정 예약 진행 중... ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_TYPE_NAME']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
+                                DATASET = final_reservation(DATASET)
+                                if DATASET['RESULT']['status_code'] == 200:
+                                    if 'message' in DATASET['RESULT']:
+                                        print(DATASET, DATASET['RESULT']['message'])
+                                        RESULT_TXT = DATASET['RESULT']['message']
+                                        if '예약이 불가능한 시설입니다.' not in RESULT_TXT or '일시적인 장애로 예약신청이 정상 완료되지 않았습니다.' not in RESULT_TXT or '이미 완료된 예약입니다.' not in RESULT_TXT:
+                                            message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
+                                            #DATASET['SELECT_DATE'].pop('FINAL_RESVEBEGINDE', None)
+                                            DATASET['TEMPORARY_HOLD'] = False
+                                            exit()
 
 
             if not DATASET['TEMPORARY_HOLD']:
