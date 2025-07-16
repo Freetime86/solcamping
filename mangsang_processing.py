@@ -20,7 +20,6 @@ py.FAILSAFE = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def main(DATASET):
-    global OPEN_TIME, CURRENT_TIME
     if DATASET['THREAD_FLAG']:
         THREAD_FLAG = 'MAIN'
         DATASET['THREAD_FLAG'] = False
@@ -61,8 +60,9 @@ def main(DATASET):
                     if 'preocpcEndDt' in DATASET['RESULT']:
                         message2(DATASET, '점유 시간 ' + DATASET['RESULT']['preocpcBeginDt'] + ' ~ ' + DATASET['RESULT']['preocpcEndDt'])
                         if DATASET['RESULT']['preocpcEndDt'] is not None:
-                            DATASET['CURRENT_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'], '%Y-%m-%d')
-                            if DATASET['FINAL_RESERVE'] and (DATASET['CURRENT_TIME'] >= DATASET['OPEN_TIME'] or DATASET['CURRENT_TIME'] < DATASET['LIMIT_TIME']):
+                            DATASET['RESERVE_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'], '%Y-%m-%d')
+                            DATASET['LIVE_TIME'] = datetime.now()
+                            if DATASET['FINAL_RESERVE'] and (DATASET['LIVE_TIME'] >= DATASET['OPEN_TIME'] or DATASET['RESERVE_TIME'] < DATASET['LIMIT_TIME']):
                                 DATASET = message(DATASET, ' 확정 예약 진행 중... ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_TYPE_NAME']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
                                 DATASET = final_reservation(DATASET)
                                 if DATASET['RESULT']['status_code'] == 200:
