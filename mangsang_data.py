@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 def check(DATASET):
+
     if DATASET['BOT_NUMBER'] < 1:
         print('현재 작업자 수(' + str(DATASET['BOT_NUMBER']) + ') 작업자 배정 수를 확인하세요.')
         return False
