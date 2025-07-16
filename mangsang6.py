@@ -16,7 +16,7 @@ DATASET = ms.dataset()
 
 
 # 시스템 설정 최소 값 1
-DATASET['BOT_NUMBER'] = 3
+DATASET['BOT_NUMBER'] = 10
 
 # 사용자 설정 USER_NO : 최종예약자, PING_PONG_1 = 첫번째 홀더, PING_PONG_2 두번째 홀더
 DATASET['USER_NO'] = '09'
