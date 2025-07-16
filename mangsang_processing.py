@@ -53,6 +53,9 @@ def main(DATASET):
                 exit()
         DATASET = message(DATASET, '지정타입 => ' + _range + ' / 선호대상 ' + _wants + '')
 
+    if THREAD_FLAG == 'MAIN' and not DATASET['MODE_LIVE']:
+        THREAD_FLAG = 'SUB'
+
     while True:
         try:
             # MAIN SUB 프로세스 분기
@@ -76,6 +79,7 @@ def main(DATASET):
                             DATASET['LIST_FCLTYCODE'] = target_type_list['faciltyNo']
                             DATASET['LIST_RESVENOCODE'] = target_type_list['resveNoCode']
                             DATASET['LIST_TARGET_NO'] = target_type_list['TARGET_NO']
+                            DATASET['LIST_TARGET_NAME'] = target_type_list['site_name']
                             DATASET['LIST_FROM_DATE'] = begin_date
                             DATASET['LIST_TO_DATE'] = end_date
                             DATASET = reservation_list(DATASET)
@@ -90,7 +94,7 @@ def main(DATASET):
             elif THREAD_FLAG == 'SUB':
                 if DATASET['TEMPORARY_HOLD']:
                     while not DATASET['JUST_RESERVED']:
-                        DATASET = message(DATASET, ' 임시 점유 홀드 프로세스 기동 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
+                        DATASET = message(DATASET, '임시 점유 홀드 프로세스 기동 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
                             DATASET['FINAL_TYPE_NAME']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
                             DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
                         if 'preocpcEndDt' in DATASET['RESULT']:
@@ -157,8 +161,7 @@ def main(DATASET):
 
                                         DATASET = get_facility(DATASET)
                                         if DATASET['TEMPORARY_HOLD']:
-                                            DATASET = message(DATASET,
-                                                              ' 임시 점유 완료 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
+                                            DATASET = message(DATASET, '임시 점유 완료 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
                                                                   target_type_list['site_name']) + ' => ' + str(
                                                                   DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
                                                                   DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
@@ -167,7 +170,7 @@ def main(DATASET):
                                         else:
                                             #print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' 대상 SCAN 중 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(target_type_list['site_name']) + ' => ' + str(DATASET['FCLTYTYCODE']) + ' / ' + str(DATASET['FROM_DATE']) + ' ~ ' + str(DATASET['TO_DATE']))
                                             DATASET = message(DATASET,
-                                                              ' 대상 SCAN 중 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
+                                                              '대상 SCAN 중 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
                                                                   target_type_list['site_name']) + ' => ' + str(
                                                                   DATASET['FCLTYTYCODE']) + ' / ' + str(
                                                                   DATASET['FROM_DATE']) + ' ~ ' + str(
@@ -241,9 +244,9 @@ def reservation_filter(DATASET):
                     DATASET['CAN_TO_DATE_LIST'].append(str(DATASET['LIST_TO_DATE']))
                     CANCEL_NAME_LIST.append(str(target['fcltyNm']))
     if len(AVAILABLE_NAME_LIST) > 0:
-        DATASET['AVAILABLE_NAME_TXT'] = DATASET['AVAILABLE_NAME_TXT'] + '\n' + str(DATASET['LIST_FROM_DATE']) + ' ~ ' + str(DATASET['LIST_TO_DATE']) + ' => ' + str(AVAILABLE_NAME_LIST)
+        DATASET['AVAILABLE_NAME_TXT'] = DATASET['AVAILABLE_NAME_TXT'] + '\n' + str(DATASET['LIST_FROM_DATE']) + ' ~ ' + str(DATASET['LIST_TO_DATE']) + ' ' + str(DATASET['LIST_TARGET_NAME']) + ' => ' + str(AVAILABLE_NAME_LIST)
     if len(CANCEL_NAME_LIST) > 0:
-        DATASET['CANCEL_NAME_TXT'] = DATASET['CANCEL_NAME_TXT'] + '\n' + str(DATASET['LIST_FROM_DATE']) + ' ~ ' + str(DATASET['LIST_TO_DATE']) + ' => ' + str(AVAILABLE_NAME_LIST)
+        DATASET['CANCEL_NAME_TXT'] = DATASET['CANCEL_NAME_TXT'] + '\n' + str(DATASET['LIST_FROM_DATE']) + ' ~ ' + str(DATASET['LIST_TO_DATE']) + ' ' + str(DATASET['LIST_TARGET_NAME']) + ' => ' + str(AVAILABLE_NAME_LIST)
     return DATASET
 
 
