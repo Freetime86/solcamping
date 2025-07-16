@@ -58,10 +58,11 @@ def main(DATASET):
                     while True:
                         DATASET = message(DATASET, ' 임시 점유 홀드 프로세스 기동 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_TYPE_NAME']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
                         if 'preocpcEndDt' in DATASET['RESULT']:
-                            message2(DATASET, '점유 시간 ' + DATASET['RESULT']['preocpcBeginDt'] + ' ~ ' + DATASET['RESULT']['preocpcEndDt'])
+                            DATASET = message2(DATASET, '점유 시간 ' + DATASET['RESULT']['preocpcBeginDt'] + ' ~ ' + DATASET['RESULT']['preocpcEndDt'])
                             if DATASET['RESULT']['preocpcEndDt'] is not None:
                                 DATASET['RESERVE_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'], '%Y-%m-%d')
-                                DATASET['LIVE_TIME'] = datetime.now()
+                                DATASET['LIVE_TIME'] = datetime.now() + timedelta(days=30)
+                                print(str(DATASET['LIVE_TIME']) + ' // ' + str(DATASET['OPEN_TIME']))
                                 if DATASET['FINAL_RESERVE'] and (DATASET['LIVE_TIME'] >= DATASET['OPEN_TIME'] or DATASET['RESERVE_TIME'] < DATASET['LIMIT_TIME']):
                                     DATASET = message(DATASET, ' 확정 예약 진행 중... ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(DATASET['FINAL_TYPE_NAME']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
                                     DATASET = final_reservation(DATASET)
