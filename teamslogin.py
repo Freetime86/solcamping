@@ -18,6 +18,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 py.FAILSAFE = False
 options = Options()
 options.add_experimental_option("detach", True)
+options.add_argument("headless") # 크롬창 숨기기
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -33,7 +34,7 @@ def main():
     wait = WebDriverWait(driver, 300)
     wait.until(EC.visibility_of_element_located((By.ID, "i0116"))).send_keys('DT076070@mobis-partners.com')
     driver.find_element(By.ID, 'idSIButton9').click()
-    wait.until(EC.visibility_of_element_located((By.ID, "i0118"))).send_keys('CJSWOsla86!@12')
+    wait.until(EC.visibility_of_element_located((By.ID, "i0118"))).send_keys('CJSWOsla86!@1')
     driver.find_element(By.ID, 'idSIButton9').click()
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "table")))
     driver.find_elements(By.CLASS_NAME, 'table')[1].click()
