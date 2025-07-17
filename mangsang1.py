@@ -1,3 +1,4 @@
+import time
 import mangsang_setting as ms
 import mangsang_data
 import mangsang_processing
@@ -67,3 +68,4 @@ for i in range(DATASET['BOT_NUMBER']):
     DATASET['BOT_NAME'] = name
     t = Worker(DATASET)  # sub thread 생성
     t.start()
+    time.sleep(DATASET['BOT_STARTING_DELAY'])

@@ -23,15 +23,17 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def main(DATASET):
     if DATASET['THREAD_FLAG']:
         DATASET['THREAD_FLAG'] = False
+        _bot_name = DATASET['BOT_NAME']
         # 시스템 기본 수행작업 필수
         DATASET = md.convert(DATASET)
         if not md.check(DATASET):
             exit()
         DATASET = login(DATASET)
-        DATASET = mm.message(DATASET, DATASET['BOT_NAME'] + ' START!')
+        DATASET = mm.message(DATASET, _bot_name + ' START!')
         THREAD_FLAG = 'MAIN'
     elif DATASET['SECOND_THREAD_FLAG']:
         DATASET['SECOND_THREAD_FLAG'] = False
+        DATASET = mm.message(DATASET, DATASET['BOT_NAME'] + ' START!')
         THREAD_FLAG = 'SUB_MAIN'
     else:
         DATASET = mm.message(DATASET, DATASET['BOT_NAME'] + ' START!')
@@ -178,7 +180,7 @@ def main(DATASET):
                                         else:
                                             elapsed_time = time.time() - start_time  # 경과된 시간 계산
                                             if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
-                                                DATASET = mm.message2(DATASET, ' 탐색 지정 대상 ' + DATASET['RANGE_TARGETS'] + ' / ' + DATASET['SCAN_TARGETS'] + ' 임시점유 예약을 시도 합니다... / 경과 시간 : ' + str(run_cnt) + '시간')
+                                                DATASET = mm.message2(DATASET, ' 탐색 지정 대상 ' + DATASET['RANGE_TARGETS'] + ' / ' + DATASET['SCAN_TARGETS'] + ' 임시점유 예약을 시도 합니다...' + begin_date + ' ~ ' + end_date + ' / 경과 시간 : ' + str(run_cnt) + '시간')
                                                 run_cnt = run_cnt + 1
 
                                             #print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' 대상 SCAN 중 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(target_type_list['site_name']) + ' => ' + str(DATASET['FCLTYTYCODE']) + ' / ' + str(DATASET['FROM_DATE']) + ' ~ ' + str(DATASET['TO_DATE']))
