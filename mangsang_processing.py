@@ -44,7 +44,7 @@ def main(DATASET):
             break
 
     if THREAD_FLAG == 'MAIN':
-        mm.message(DATASET, '예약자 : ' + str(DATASET['CURRENT_USER']['user_name']) + ' / 유저 NO : ' + str(DATASET['USER_NO']) + ' (' + DATASET['PERIOD'] + ')박')
+        mm.message(DATASET, '예약자 : ' + str(DATASET['CURRENT_USER']['user_name']) + ' / 유저 NO : ' + str(DATASET['USER_NO']) + ' (' + str(DATASET['PERIOD']) + ')박')
         _wants = '지정안함'
         _range = '지정안함'
         if len(DATASET['ROOM_RANGE']) > 0:
