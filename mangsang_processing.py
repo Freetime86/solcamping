@@ -180,15 +180,16 @@ def main(DATASET):
                                         else:
                                             elapsed_time = time.time() - start_time  # 경과된 시간 계산
                                             if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
-                                                DATASET = mm.message2(DATASET, ' 탐색 지정 대상 ' + DATASET['RANGE_TARGETS'] + ' / ' + DATASET['SCAN_TARGETS'] + ' 임시점유 예약을 시도 합니다...' + begin_date + ' ~ ' + end_date + ' / 경과 시간 : ' + str(run_cnt) + '시간')
+                                                DATASET = mm.message2(DATASET, ' 탐색 지정 대상 ' + DATASET['RANGE_TARGETS'] + ' / ' + DATASET['SCAN_TARGETS'] + ' 임시점유 예약을 시도 합니다.. ' + begin_date + ' ~ ' + end_date + ' / 경과 시간 : ' + str(run_cnt) + '시간')
                                                 run_cnt = run_cnt + 1
 
+                                            if DATASET['SHOW_WORKS']:
                                             #print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' 대상 SCAN 중 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(target_type_list['site_name']) + ' => ' + str(DATASET['FCLTYTYCODE']) + ' / ' + str(DATASET['FROM_DATE']) + ' ~ ' + str(DATASET['TO_DATE']))
-                                            #DATASET = message(DATASET,
-                                            #                  '대상 SCAN 중 ' + copy_max_no + ' ' + str(
-                                            #                      target_type_list['site_name']) + ' => ' + str(type_no_txt) + ' / ' + str(
-                                            #                      DATASET['FROM_DATE']) + ' ~ ' + str(
-                                            #                      DATASET['TO_DATE']))
+                                                DATASET = mm.message(DATASET,
+                                                                  '대상 SCAN 중 ' + copy_max_no + ' ' + str(
+                                                                      target_type_list['site_name']) + ' => ' + str(type_no_txt) + ' / ' + str(
+                                                                      DATASET['FROM_DATE']) + ' ~ ' + str(
+                                                                      DATASET['TO_DATE']))
 
 
                                 if DATASET['TEMPORARY_HOLD']:
@@ -197,7 +198,7 @@ def main(DATASET):
                         if DATASET['TEMPORARY_HOLD']:
                             break
         except Exception as ex:
-            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' EXCEPTION!! ' + str(ex))
+            mm.message2(DATASET, ' EXCEPTION!! ====>  ' + str(ex))
             error(DATASET)
             continue
 
