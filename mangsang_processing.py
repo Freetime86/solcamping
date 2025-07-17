@@ -1,5 +1,6 @@
 import mangsang_data as md
 import mangsang_message as mm
+import mangsang_utils as mu
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
@@ -31,10 +32,6 @@ def main(DATASET):
         DATASET = login(DATASET)
         DATASET = mm.message(DATASET, _bot_name + ' START!')
         THREAD_FLAG = 'MAIN'
-    elif DATASET['SECOND_THREAD_FLAG']:
-        DATASET['SECOND_THREAD_FLAG'] = False
-        DATASET = mm.message(DATASET, DATASET['BOT_NAME'] + ' START!')
-        THREAD_FLAG = 'SUB_MAIN'
     else:
         DATASET = mm.message(DATASET, DATASET['BOT_NAME'] + ' START!')
         THREAD_FLAG = 'SUB'
@@ -98,7 +95,7 @@ def main(DATASET):
                     elif len(DATASET['CANCEL_TARGET_LIST']) > 0:
                         DATASET = mm.message3(DATASET, '', '취소중 대상 => ' + str(DATASET['CANCEL_NAME_TXT']))
 
-            elif THREAD_FLAG == 'SUB' or THREAD_FLAG == 'MAIN':
+            elif THREAD_FLAG == 'SUB' or (not DATASET['MODE_LIVE'] and THREAD_FLAG == 'MAIN'):
                 if DATASET['TEMPORARY_HOLD']:
                     while not DATASET['JUST_RESERVED']:
                         DATASET = mm.message6(DATASET, '임시 점유 홀드 프로세스 기동 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
@@ -227,12 +224,17 @@ def reservation_list(DATASET):
                         DATASET['RESERVATION_LIST'] = {**dict_meta, **response.json()}
                         if DATASET['RESERVATION_LIST']['value'] is not None:
                             DATASET = reservation_filter(DATASET)
+                        if DATASET['RESERVATION_LIST']['message']:
+                           if '예약취소 후 2시간동안 동일한 시설은 예약을 할 수 없습니다.' in DATASET['RESERVATION_LIST']['message']:
+                               new_msg = mu.replaceAll(str(DATASET['RESERVATION_LIST']['message']), '\n')
+                               print('######################진행 불가 계정 : ' + new_msg)
+                               exit()
                         return DATASET
                 else:
                     if response.status_code == 500:
                         print('통신 에러 (2개 이상의 취소 패널티 등이 원인) 시스템 종료')
             else:  # 문자열 형태인 경우
-                message(DATASET, '로그인 TIMEOUT 발생, 재로그인 시도')
+                mm.message(DATASET, '로그인 TIMEOUT 발생, 재로그인 시도')
                 DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
             return DATASET
         except requests.exceptions.RequestException as ex:
