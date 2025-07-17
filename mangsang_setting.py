@@ -12,13 +12,18 @@ def dataset():
         'MESSAGE': 'SYSTEM MAIN MSG',
         'MESSAGE2': 'SYSTEM SENCONDARY MSG',
         'MESSAGE3': 'SYSTEM THIRD MSG',
+        'MESSAGE4': 'SYSTEM FOURTH MSG',
+        'MESSAGE5': 'SYSTEM FIFTH MSG',
+        'MESSAGE6': 'SYSTEM SIXTH MSG',
+        'MESSAGE7': 'SYSTEM SEVENTH MSG',
         'THREAD_FLAG': True,
+        'SECOND_THREAD_FLAG': True,
         'AVAILABLE_TARGET_LIST': [],
         'CANCEL_TARGET_LIST': [],
         'AVAILABLE_NAME_TXT': '',
         'CANCEL_NAME_TXT': '',
         'JUST_RESERVED': False,
-        'OPEN_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + ' 11:00:00'), '%Y-%m-%d %H:%M:%S'),
+        'OPEN_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + ' 10:59:59'), '%Y-%m-%d %H:%M:%S'),
         'LIMIT_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")), '%Y-%m-%d')
 
     }

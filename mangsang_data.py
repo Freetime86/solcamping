@@ -47,10 +47,6 @@ def check(DATASET):
             print('(' + str(_range) + ') 인실 정보가 잘못되었습니다. 숫자만 입력 가능 합니다.')
             return False
 
-    for _want in DATASET['ROOM_WANTS']:
-        if not _want.isdigit() and _want != 'ALL':
-            print('선호 대상 정보가 잘못되었습니다. (전체를 선택하려면 ALL 로 지정해주세요.')
-            return False
     for _expt in DATASET['ROOM_EXPT']:
         if not _expt.isdigit():
             print('(' + str(_expt) + ') 제외 대상 정보가 잘못되었습니다. 숫자만 입력 가능 합니다.')
@@ -81,6 +77,16 @@ def convert(DATASET):
             _range_list = get_facility_no(_target, _number)
             for _row in _range_list:
                 _fcltyInfo = _row.split('|')
+                new_text = ''
+                for idx in range(len(_fcltyInfo[1])):
+                    if _fcltyInfo[1][idx].isdigit():
+                       new_text = new_text + _fcltyInfo[1][idx]
+                if new_text in DATASET['ROOM_WANTS']:
+                    DATASET['ROOM_WANTS'].remove(new_text)
+                    DATASET['ROOM_WANTS'].append(_fcltyInfo[1])
+                if new_text in DATASET['ROOM_EXPT']:
+                    DATASET['ROOM_EXPT'].remove(new_text)
+                    DATASET['ROOM_EXPT'].append(_fcltyInfo[1])
                 _target_max_list.append(_fcltyInfo[0])
                 _target_no_list.append(_fcltyInfo[1])
                 _target_ty_list.append(_fcltyInfo[2])
