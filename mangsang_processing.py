@@ -151,7 +151,8 @@ def main(DATASET):
                                         if CURRENT_TIME >= IN_RESERVED_TIME:
                                             DATASET = get_facility_relay(DATASET)
                                 else:
-                                    DATASET = get_facility_relay(DATASET)
+                                    if CURRENT_TIME >= IN_RESERVED_TIME:
+                                        DATASET = get_facility_relay(DATASET)
                             else:
                                 if CURRENT_TIME >= DATASET['STAND_BY_TIME']:
                                     DATASET['STAND_BY_TIME'] = None
