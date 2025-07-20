@@ -73,29 +73,37 @@ def convert(DATASET):
         _target_max_list = []
         _target_no_list = []
         _target_ty_list = []
-        for _number in DATASET['ROOM_RANGE']:
-            _range_list = get_facility_no(_target, _number)
-            for _row in _range_list:
-                _fcltyInfo = _row.split('|')
-                new_text = ''
-                for idx in range(len(_fcltyInfo[1])):
-                    if _fcltyInfo[1][idx].isdigit():
-                       new_text = new_text + _fcltyInfo[1][idx]
-                if new_text in DATASET['ROOM_WANTS']:
-                    DATASET['ROOM_WANTS'].remove(new_text)
-                    DATASET['ROOM_WANTS'].append(_fcltyInfo[1])
-                if new_text in DATASET['ROOM_EXPT']:
-                    DATASET['ROOM_EXPT'].remove(new_text)
-                    DATASET['ROOM_EXPT'].append(_fcltyInfo[1])
-                _target_max_list.append(_fcltyInfo[0])
-                _target_no_list.append(_fcltyInfo[1])
-                _target_ty_list.append(_fcltyInfo[2])
-            if len(_target_max_list) == 0:
-                _target_max_list.append('ALL')
-            else:
-                _target['TARGET_MAX_CNT'] = _target_max_list
-            _target['TARGET_NO'] = _target_no_list
-            _target['TARGET_TYPE'] = _target_ty_list
+
+        if index == '06':
+            new_room_List = []
+            for wants in DATASET['ROOM_WANTS']:
+                if len(wants) < 4:
+                    new_room_List.append(str(int(wants) + 1600))
+            DATASET['ROOM_WANTS'] = new_room_List
+        else:
+            for _number in DATASET['ROOM_RANGE']:
+                _range_list = get_facility_no(_target, _number)
+                for _row in _range_list:
+                    _fcltyInfo = _row.split('|')
+                    new_text = ''
+                    for idx in range(len(_fcltyInfo[1])):
+                        if _fcltyInfo[1][idx].isdigit():
+                           new_text = new_text + _fcltyInfo[1][idx]
+                    if new_text in DATASET['ROOM_WANTS']:
+                        DATASET['ROOM_WANTS'].remove(new_text)
+                        DATASET['ROOM_WANTS'].append(_fcltyInfo[1])
+                    if new_text in DATASET['ROOM_EXPT']:
+                        DATASET['ROOM_EXPT'].remove(new_text)
+                        DATASET['ROOM_EXPT'].append(_fcltyInfo[1])
+                    _target_max_list.append(_fcltyInfo[0])
+                    _target_no_list.append(_fcltyInfo[1])
+                    _target_ty_list.append(_fcltyInfo[2])
+                if len(_target_max_list) == 0:
+                    _target_max_list.append('ALL')
+                else:
+                    _target['TARGET_MAX_CNT'] = _target_max_list
+                _target['TARGET_NO'] = _target_no_list
+                _target['TARGET_TYPE'] = _target_ty_list
 
         if len(DATASET['ROOM_RANGE']) == 0:
             _range_list = get_facility_no(_target, 0)
