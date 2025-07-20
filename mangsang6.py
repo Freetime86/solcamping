@@ -17,7 +17,7 @@ DATASET = ms.dataset()
 
 
 # 시스템 설정 최소 값 1
-DATASET['BOT_NUMBER'] = 10
+DATASET['BOT_NUMBER'] = 3
 
 # 사용자 설정 USER_NO : 최종예약자, PING_PONG_1 = 첫번째 홀더, PING_PONG_2 두번째 홀더
 DATASET['USER_NO'] = '05'
@@ -25,7 +25,7 @@ DATASET['PIN_PONG_1'] = '00'
 DATASET['PIN_PONG_2'] = '01'
 
 # 감시모드 설정
-DATASET['MODE_LIVE'] = True  # 실시간 감시 여부 (취소표 잡을 때 사용)
+DATASET['MODE_LIVE'] = False  # 실시간 감시 여부 (취소표 잡을 때 사용)
 DATASET['FINAL_RESERVE'] = True  # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
 DATASET['DELAY'] = 0  # 임시점유 상태의 갱신 주기 속도 새벽엔 느리게 권장
 
