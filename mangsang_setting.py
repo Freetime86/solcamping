@@ -16,6 +16,7 @@ def dataset():
         'MESSAGE5': 'SYSTEM FIFTH MSG',
         'MESSAGE6': 'SYSTEM SIXTH MSG',
         'MESSAGE7': 'SYSTEM SEVENTH MSG',
+        'MESSAGE8': 'SYSTEM EIGHTH MSG',
         'THREAD_FLAG': True,
         'SECOND_THREAD_FLAG': True,
         'AVAILABLE_TARGET_LIST': [],
@@ -25,6 +26,8 @@ def dataset():
         'JUST_RESERVED': False,
         'BOT_STARTING_DELAY': 0,
         'SHOW_WORKS': False,
+        'CHECK_DELAY': 60,
+        'STAND_BY_TIME': None,
         'OPEN_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + ' 10:59:59'), '%Y-%m-%d %H:%M:%S'),
         'LIMIT_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")), '%Y-%m-%d')
 
