@@ -28,6 +28,7 @@ def dataset():
         'SHOW_WORKS': False,
         'CHECK_DELAY': 60,
         'STAND_BY_TIME': None,
+        'WAITING_SLOW': False,
         'OPEN_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + ' 10:59:59'), '%Y-%m-%d %H:%M:%S'),
         'LIMIT_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")), '%Y-%m-%d')
 

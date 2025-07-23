@@ -30,7 +30,8 @@ def message3(DATASET, text, text2):
         if text == '' or text2 == '':
             print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' ' + str(final_text))
         else:
-            print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' ' + str(text) + '\n' + time_str + ' ' + str(text2))
+            time_str = str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            print(time_str + ' ' + str(text) + '\n' + time_str + ' ' + str(text2))
 
     return DATASET
 

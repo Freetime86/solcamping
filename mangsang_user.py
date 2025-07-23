@@ -69,7 +69,7 @@ def _list():
                'rpwd': '',
                'rid': '',
                'rphone': '',
-               'area_code': '1006'
+               'area_code': ''
                },
         '11': {'user_name': '김은경',
                'rpwd': 'rladmsrud00',

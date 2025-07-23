@@ -1,6 +1,7 @@
 import mangsang_data as md
 import mangsang_message as mm
 import mangsang_utils as mu
+import traceback
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
@@ -128,17 +129,20 @@ def main(DATASET):
                                                         DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
                                                         DATASET['FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
                                                     if str(DATASET['FINAL_RESVEBEGINDE']) in DATASET['SELECT_DATE']:
-                                                        print('')
                                                         DATASET['SELECT_DATE'].remove(str(DATASET['FINAL_RESVEBEGINDE']))
                                                     DATASET['TEMPORARY_HOLD'] = False
                                                     DATASET['JUST_RESERVED'] = True
+                                                    if DATASET['SYSTEM_OFF']:
+                                                        exit()
                                                     DATASET = mm.message(DATASET, ' 완료된 일짜를 제외하고 다시 예약을 시작합니다.')
                                                 else:
                                                     if '예약가능 시간은' in DATASET['FINAL_RESULT']['message']:
                                                         DATASET['STAND_BY_TIME'] = datetime.strptime(
                                                             DATASET['FINAL_RESULT']['message'][26:45],
-                                                            '%Y-%m-%d %H:%M:%S') - timedelta(seconds=1)
+                                                            '%Y-%m-%d %H:%M:%S') - timedelta(seconds=5)
                                                         DATASET = mm.message7(DATASET, DATASET['FINAL_RESULT']['message'] + ' 가능 시간까지 대기상태로 진입합니다.')
+                                                    elif '일시적인 장애로' in DATASET['FINAL_RESULT']['message'] or '비정상적인 접근' in DATASET['FINAL_RESULT']['message']:
+                                                        DATASET = get_facility_relay(DATASET)
                                                     else:
                                                         DATASET['TEMPORARY_HOLD'] = False
                                                         mm.message(DATASET, DATASET['FINAL_RESULT']['message'])
@@ -217,6 +221,7 @@ def main(DATASET):
                         if DATASET['TEMPORARY_HOLD']:
                             break
         except Exception as ex:
+            print(traceback.format_exc())
             mm.message(DATASET, ' EXCEPTION!! ====>  ' + str(ex))
             error(DATASET)
             continue
@@ -236,7 +241,6 @@ def reservation_list(DATASET):
     while response == '':
         try:
             response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False)
-            dict_meta = {}
             if not 'login' in response.text:
                 dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
                              'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
