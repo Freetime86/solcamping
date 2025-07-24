@@ -308,35 +308,38 @@ def get_facility(DATASET):
     while response == '':
         try:
             response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False)
-            dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
-                         'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
-            if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                result = {**dict_meta, **response.json()}
-                if result['status_code'] == 200 and result['preocpcEndDt'] is not None:
-                    DATASET['RESULT'] = {**dict_meta, **response.json()}
-                    #필요 파라메터 맵핑
-                    DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
-                    DATASET['FINAL_FCLTYCODE'] = DATASET['RESULT']['fcltyCode']
-                    DATASET['FINAL_FCLTYTYCODE'] = DATASET['RESULT']['fcltyTyCode']
-                    DATASET['FINAL_PREOCPCFCLTYCODE'] = DATASET['RESULT'][
-                        'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 DATASET['RESULT']['preocpcFcltyCode']
-                    DATASET['FINAL_RESVENOCODE'] = DATASET['RESULT']['resveNoCode']
-                    DATASET['FINAL_RESVEBEGINDE'] = DATASET['RESULT']['resveBeginDe']
-                    DATASET['FINAL_RESVEENDDE'] = DATASET['RESULT']['resveEndDe']
-                    DATASET['FINAL_RESVENO'] = DATASET['RESULT']['resveNo']
-                    DATASET['FINAL_REGISTERID'] = DATASET['registerId']  #로그인 아이디 초기값 하드코딩
-                    DATASET['FINAL_RSVCTMNM'] = DATASET['rsvctmNm']  #사용자 이름 초기값 하드코딩
-                    DATASET['FINAL_RSVCTMENCPTMBTLNUM'] = DATASET['rsvctmEncptMbtlnum']  #전화번호
-                    DATASET['FINAL_ENCPTEMGNCCTTPC'] = DATASET['encptEmgncCttpc']  #긴급전화번호
-                    DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
-                    DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
-                    DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
-                    DATASET['TEMPORARY_HOLD'] = True
-                    DATASET['JUST_RESERVED'] = False
+            if 'Content-Type' in response.headers:
+                dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                             'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+                if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                    result = {**dict_meta, **response.json()}
+                    if result['status_code'] == 200 and result['preocpcEndDt'] is not None:
+                        DATASET['RESULT'] = {**dict_meta, **response.json()}
+                        #필요 파라메터 맵핑
+                        DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
+                        DATASET['FINAL_FCLTYCODE'] = DATASET['RESULT']['fcltyCode']
+                        DATASET['FINAL_FCLTYTYCODE'] = DATASET['RESULT']['fcltyTyCode']
+                        DATASET['FINAL_PREOCPCFCLTYCODE'] = DATASET['RESULT'][
+                            'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 DATASET['RESULT']['preocpcFcltyCode']
+                        DATASET['FINAL_RESVENOCODE'] = DATASET['RESULT']['resveNoCode']
+                        DATASET['FINAL_RESVEBEGINDE'] = DATASET['RESULT']['resveBeginDe']
+                        DATASET['FINAL_RESVEENDDE'] = DATASET['RESULT']['resveEndDe']
+                        DATASET['FINAL_RESVENO'] = DATASET['RESULT']['resveNo']
+                        DATASET['FINAL_REGISTERID'] = DATASET['registerId']  #로그인 아이디 초기값 하드코딩
+                        DATASET['FINAL_RSVCTMNM'] = DATASET['rsvctmNm']  #사용자 이름 초기값 하드코딩
+                        DATASET['FINAL_RSVCTMENCPTMBTLNUM'] = DATASET['rsvctmEncptMbtlnum']  #전화번호
+                        DATASET['FINAL_ENCPTEMGNCCTTPC'] = DATASET['encptEmgncCttpc']  #긴급전화번호
+                        DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
+                        DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
+                        DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
+                        DATASET['TEMPORARY_HOLD'] = True
+                        DATASET['JUST_RESERVED'] = False
+                        return DATASET
+                else:  # 문자열 형태인 경우
+                    DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
                     return DATASET
-            else:  # 문자열 형태인 경우
-                DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
-                return DATASET
+            else:
+                print('error = > ' + str(response))
             return DATASET
         except requests.exceptions.RequestException as ex:
             continue
