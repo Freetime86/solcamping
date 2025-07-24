@@ -28,6 +28,7 @@ DATASET['PIN_PONG_2'] = '01'
 DATASET['MODE_LIVE'] = True  # 실시간 감시 여부 (취소표 잡을 때 사용)
 DATASET['FINAL_RESERVE'] = True  # 최종 예약까지 진행 이렇게 하면 잘못예약되 취소할 경우 패널티2시간이 생긴다
 DATASET['DELAY'] = 0  # 임시점유 상태의 갱신 주기 속도 새벽엔 느리게 권장
+DATASET['SYSTEM_OFF'] = False  # 1건 예약 후 시스템 종료 유무
 
 # 숙박 설정
 DATASET['SELECT_DATE'] = ['2025-08-16']   # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
