@@ -65,11 +65,11 @@ def _list():
                'rphone': '01041798796',
                'area_code': '1006'
                },
-        '10': {'user_name': '',
-               'rpwd': '',
-               'rid': '',
-               'rphone': '',
-               'area_code': ''
+        '10': {'user_name': '홍석환',
+               'rpwd': 'hwan1150^^',
+               'rid': 'hong5870',
+               'rphone': '01082853000',
+               'area_code': '1001'
                },
         '11': {'user_name': '김은경',
                'rpwd': 'rladmsrud00',
