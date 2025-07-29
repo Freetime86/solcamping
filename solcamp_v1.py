@@ -28,25 +28,25 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 1  # 머신 시작 간격
-period = 3  # 연박 수
+period = 1  # 연박 수
 delay = 0  # 모니터링 리프레시 속도
 test = True
 #room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
 #room_list = ['503']
 #room_exception = ['501', '502', '503', '505', '506', '507']
-room_exception = []
-room_want = '503'
+room_exception = ['501', '502']
+room_want = '505'
 #room_list = ['311', '312', '313', '314', '315', '316', '317', '318']
 # D 사이트
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
-sel_month_list = ['07']
-sel_date_list = ['0731']
+sel_month_list = ['08']
+sel_date_list = ['0809']
 site = 'E'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 5  # 사용자 정보 세팅
+user_type = 99999999  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -167,11 +167,18 @@ elif user_type == 999999:
     area2 = '포항'
 elif user_type == 9999999:
     user_name = '윤지영'
-    user_phone = '0102165418'
+    user_phone = '01021635418'
     email = 'freechalee111'
     domain = 'gmail.com'
     area1 = '경상남도'
     area2 = '창원'
+elif user_type == 99999999:
+    user_name = '이응'
+    user_phone = '01098132996'
+    email = 'dongamillo'
+    domain = 'naver.com'
+    area1 = '경기도'
+    area2 = '부천'
 
 dataset = {"reservated": False}
 
