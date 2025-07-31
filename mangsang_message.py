@@ -51,6 +51,7 @@ def message5(DATASET, text):
     if DATASET['MESSAGE5'] != text:
         DATASET['MESSAGE5'] = text
         print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' ' + str(text))
+        DATASET['TRY_RESERVE'] = False
     return DATASET
 
 

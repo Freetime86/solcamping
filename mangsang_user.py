@@ -83,10 +83,10 @@ def _list():
                'rphone': '01048983777',
                'area_code': '1006'
                },
-        '13': {'user_name': '홍석환',
-               'rpwd': 'hwan1150^^',
-               'rid': 'hong5870',
-               'rphone': '01082853000',
+        '13': {'user_name': '김보경',
+               'rpwd': 'bk05051314!',
+               'rid': 'bk0309',
+               'rphone': '01046098903',
                'area_code': '1006'
                }
     }

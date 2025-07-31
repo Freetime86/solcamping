@@ -17,6 +17,7 @@ def dataset():
         'MESSAGE6': 'SYSTEM SIXTH MSG',
         'MESSAGE7': 'SYSTEM SEVENTH MSG',
         'MESSAGE8': 'SYSTEM EIGHTH MSG',
+        'TRY_RESERVE': False,
         'THREAD_FLAG': True,
         'SECOND_THREAD_FLAG': True,
         'AVAILABLE_TARGET_LIST': [],
