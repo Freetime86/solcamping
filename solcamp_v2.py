@@ -7,7 +7,7 @@ from PIL import Image
 from datetime import datetime
 from user_agent import generate_user_agent, generate_navigator
 from bs4 import BeautifulSoup
-from urllib.request import urlopen
+import time
 import pyautogui as py
 import numpy as np
 import cv2
@@ -28,24 +28,25 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 1  # 머신 시작 간격
-period = 3  # 연박 수
+period = 1  # 연박 수
 delay = 0  # 모니터링 리프레시 속도
 test = False
 #room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
 #room_list = ['503']
-room_exception = ['501', '502']
-room_want = '503'
+#room_exception = ['501', '502', '503', '505', '506', '507']
+room_exception = []
+room_want = ''
 #room_list = ['311', '312', '313', '314', '315', '316', '317', '318']
 # D 사이트
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
-sel_month_list = ['05']
-sel_date_list = ['0503']
-site = 'E'
+sel_month_list = ['08']
+sel_date_list = ['0814']
+site = 'D'
 
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 8  # 사용자 정보 세팅
+user_type = 5  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -166,11 +167,18 @@ elif user_type == 999999:
     area2 = '포항'
 elif user_type == 9999999:
     user_name = '윤지영'
-    user_phone = '0102165418'
+    user_phone = '01021635418'
     email = 'freechalee111'
     domain = 'gmail.com'
     area1 = '경상남도'
     area2 = '창원'
+elif user_type == 99999999:
+    user_name = '이응'
+    user_phone = '01098132996'
+    email = 'dongamillo'
+    domain = 'naver.com'
+    area1 = '경기도'
+    area2 = '부천'
 
 dataset = {"reservated": False}
 
@@ -211,11 +219,15 @@ def main(dataset):
     conn = ''
     area = ''
     checkin = ''
+    start_time = time.time()
+    run_cnt = 0
 
     while True:
         if not first_message:
             print('WORKING... : ' + str(thread_name) + ' 예약 중')
             first_message = True
+
+        elapsed_time = time.time() - start_time  # 경과된 시간 계산
 
         date_str_begin = datetime.now().strftime("%Y-%m-%d") + ' 09:59:57'
         date_str_end = datetime.now().strftime("%Y-%m-%d") + ' 10:00:30'
@@ -223,6 +235,13 @@ def main(dataset):
         date_dt_begin = datetime.strptime(date_str_begin, '%Y-%m-%d %H:%M:%S')
         date_dt_end = datetime.strptime(date_str_end, '%Y-%m-%d %H:%M:%S')
         now = datetime.now()
+
+        if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
+            print(str(datetime.now().strftime('%Y-%m-%d %H:%M')) + ' / 경과 시간 : ' + str(run_cnt) + '시간')
+            run_cnt = run_cnt + 1
+        elif run_cnt == 0:
+            print('시작 시간 : ' + str(date_dt_begin))
+            run_cnt = 1
 
         userAgent = generate_user_agent(os='win', device_type='desktop')
 
@@ -345,7 +364,7 @@ def main(dataset):
                                                 'resPeriod': str(period),
                                                 'actFile': 'reservation',
                                                 'actMode': 'Entryin',
-                                                room_key: '4',
+                                                room_key: '1',
                                                 'CAPTCHA_TEXT': dict_meta.get('captcha')
                                             }
                                             while continue_work:
