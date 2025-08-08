@@ -42,8 +42,10 @@ def main(DATASET):
             break
 
     if THREAD_FLAG == 'MAIN':
-        mm.message(DATASET, '예약자 : ' + str(DATASET['CURRENT_USER']['user_name']) + ' / 유저 NO:' + str(DATASET['USER_NO']) + ' (' + str(DATASET['PERIOD']) + ')박')
-        mm.message(DATASET, '아이디 : ' + str(DATASET['CURRENT_USER']['rid']) + ' / 패스워드 : ' + str(DATASET['CURRENT_USER']['rpwd']))
+        mm.message(DATASET, '예약자 : ' + str(DATASET['CURRENT_USER']['user_name']) + ' / 유저 NO:' + str(
+            DATASET['USER_NO']) + ' (' + str(DATASET['PERIOD']) + ')박')
+        mm.message(DATASET,
+                   '아이디 : ' + str(DATASET['CURRENT_USER']['rid']) + ' / 패스워드 : ' + str(DATASET['CURRENT_USER']['rpwd']))
         _wants = '지정안함'
         _range = '지정안함'
         if len(DATASET['ROOM_RANGE']) > 0:
@@ -51,7 +53,8 @@ def main(DATASET):
         if len(DATASET['ROOM_WANTS']) > 0:
             _wants = str(DATASET['ROOM_WANTS'])
         for target in DATASET['TARGET_LIST']:
-            DATASET = mm.message(DATASET, '입력정보 ' + str(target['site_name']) + ' => 탐색 범위 : ' + str(target['TARGET_NO']))
+            DATASET = mm.message(DATASET,
+                                 '입력정보 ' + str(target['site_name']) + ' => 탐색 범위 : ' + str(target['TARGET_NO']))
             if not len(target['TARGET_NO']) == len(target['TARGET_TYPE']):
                 print('대상 번호와 코드가 일치하지 않습니다.')
                 exit()
@@ -79,7 +82,8 @@ def main(DATASET):
                 DATASET['CANCEL_NAME_TXT'] = ''
                 for target_type_list in DATASET['TARGET_LIST']:
                     for begin_date in DATASET['SELECT_DATE']:
-                        end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(days=DATASET['PERIOD'])).strftime("%Y-%m-%d")
+                        end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(
+                            days=DATASET['PERIOD'])).strftime("%Y-%m-%d")
                         if not DATASET['TEMPORARY_HOLD']:
                             DATASET['LIST_TRRSRTCODE'] = target_type_list['trrsrtCode']
                             DATASET['LIST_FCLTYCODE'] = target_type_list['faciltyNo']
@@ -91,7 +95,8 @@ def main(DATASET):
                             DATASET = reservation_list(DATASET)
                 if len(DATASET['AVAILABLE_TARGET_LIST']) > 0 or len(DATASET['CANCEL_TARGET_LIST']) > 0:
                     if len(DATASET['AVAILABLE_TARGET_LIST']) > 0 and len(DATASET['CANCEL_TARGET_LIST']) > 0:
-                        DATASET = mm.message3(DATASET, '가능 대상 => ' + str(DATASET['AVAILABLE_NAME_TXT']), '취소중 대상 => ' + str(DATASET['CANCEL_NAME_TXT']))
+                        DATASET = mm.message3(DATASET, '가능 대상 => ' + str(DATASET['AVAILABLE_NAME_TXT']),
+                                              '취소중 대상 => ' + str(DATASET['CANCEL_NAME_TXT']))
                     elif len(DATASET['AVAILABLE_TARGET_LIST']) > 0:
                         DATASET = mm.message3(DATASET, '가능 대상 => ' + str(DATASET['AVAILABLE_NAME_TXT']), '')
                     elif len(DATASET['CANCEL_TARGET_LIST']) > 0:
@@ -102,72 +107,86 @@ def main(DATASET):
                     while not DATASET['JUST_RESERVED']:
                         if 'preocpcEndDt' in DATASET['RESULT']:
                             if DATASET['RESULT']['preocpcEndDt'] is not None:
-                                DATASET = mm.message5(DATASET, '점유 시간 ' + DATASET['RESULT']['preocpcBeginDt'] + ' ~ ' + DATASET['RESULT']['preocpcEndDt'])
+                                DATASET = mm.message5(DATASET, '점유 시간 ' + DATASET['RESULT']['preocpcBeginDt'] + ' ~ ' +
+                                                      DATASET['RESULT']['preocpcEndDt'])
                                 CURRENT_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                                 CURRENT_TIME = datetime.strptime(CURRENT_TIME_STR, '%Y-%m-%d %H:%M:%S')
-                                IN_RESERVED_TIME = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') - timedelta(seconds=10)
-                                if CURRENT_TIME >= IN_RESERVED_TIME or DATASET['STAND_BY_TIME'] is None:
-                                    if DATASET['STAND_BY_TIME'] is None:
-                                        DATASET['RESERVE_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'], '%Y-%m-%d')
-                                        DATASET['LIVE_TIME'] = datetime.now() + timedelta(days=30)
-                                        if DATASET['FINAL_RESERVE'] and (
-                                                DATASET['LIVE_TIME'] >= DATASET['OPEN_TIME'] or DATASET['RESERVE_TIME'] <
-                                                DATASET['LIMIT_TIME']):
-                                            if not DATASET['TRY_RESERVE']:
-                                                DATASET = mm.message(DATASET,
-                                                                  ' 확정 예약 진행 중... ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
-                                                                      DATASET['FINAL_TYPE_NAME']) + ' => ' + str(
-                                                                      DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
-                                                                      DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
-                                                                      DATASET['FINAL_RESVEENDDE']))
-                                                DATASET = final_reservation(DATASET)
-                                                if DATASET['FINAL_RESULT']['status_code'] == 200:
-                                                    if 'message' in DATASET['FINAL_RESULT']:
-                                                        RESULT_TXT = DATASET['FINAL_RESULT']['message']
-                                                        if RESULT_TXT == '예약신청이 정상적으로 완료되었습니다.':
-                                                            DATASET = mm.message(DATASET, '[' + str(DATASET['FINAL_TYPE_NAME']) + '] ' + DATASET[
-                                                                'TARGET_MAX_CNT'] + ' ' + str(
-                                                                DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
-                                                                DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
-                                                                DATASET['FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
-                                                            if str(DATASET['FINAL_RESVEBEGINDE']) in DATASET['SELECT_DATE']:
-                                                                DATASET['SELECT_DATE'].remove(str(DATASET['FINAL_RESVEBEGINDE']))
-                                                            DATASET['TEMPORARY_HOLD'] = False
-                                                            DATASET['JUST_RESERVED'] = True
-                                                            if DATASET['SYSTEM_OFF']:
-                                                                exit()
-                                                            DATASET = mm.message(DATASET, ' 완료된 일짜를 제외하고 다시 예약을 시작합니다.')
-                                                        else:
-                                                            if '예약가능 시간은' in DATASET['FINAL_RESULT']['message']:
-                                                                DATASET['STAND_BY_TIME'] = datetime.strptime(
-                                                                    DATASET['FINAL_RESULT']['message'][26:45],
-                                                                    '%Y-%m-%d %H:%M:%S') - timedelta(seconds=2)
-                                                                DATASET = mm.message7(DATASET, DATASET['FINAL_RESULT']['message'] + ' 가능 시간까지 대기상태로 진입합니다.')
-                                                            elif '일시적인 장애로' in DATASET['FINAL_RESULT']['message'] or '비정상적인 접근' in DATASET['FINAL_RESULT']['message'] or '예약이 불가능한' in DATASET['FINAL_RESULT']['message']:
-                                                                DATASET = mm.message6(DATASET, '(' + DATASET['FINAL_RESULT']['message'] + ') 다음과 같은 사유로 예약시도를 계속 합니다.')
-                                                                DATASET = get_facility_relay(DATASET)
-                                                            else:
-                                                                DATASET['TEMPORARY_HOLD'] = False
-                                                                mm.message(DATASET, DATASET['FINAL_RESULT']['message'])
-                                                                break
+                                IN_RESERVED_TIME = datetime.strptime(DATASET['RESULT']['preocpcEndDt'],
+                                                                     '%Y-%m-%d %H:%M:%S') - timedelta(seconds=10)
+                                #if CURRENT_TIME >= IN_RESERVED_TIME or DATASET['STAND_BY_TIME'] is None:
+                                if DATASET['STAND_BY_TIME'] is None:
+                                    DATASET['RESERVE_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'],
+                                                                                '%Y-%m-%d')
+                                    DATASET['LIVE_TIME'] = datetime.now() + timedelta(days=30)
+                                    if DATASET['FINAL_RESERVE'] and (
+                                            DATASET['LIVE_TIME'] >= DATASET['OPEN_TIME'] or DATASET[
+                                        'RESERVE_TIME'] <
+                                            DATASET['LIMIT_TIME']):
+                                        if not DATASET['TRY_RESERVE']:
+                                            DATASET = mm.message(DATASET,
+                                                                 ' 확정 예약 진행 중... ' + DATASET[
+                                                                     'TARGET_MAX_CNT'] + ' ' + str(
+                                                                     DATASET['FINAL_TYPE_NAME']) + ' => ' + str(
+                                                                     DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                                                                     DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
+                                                                     DATASET['FINAL_RESVEENDDE']))
+                                            DATASET = final_reservation(DATASET)
+                                            if DATASET['FINAL_RESULT']['status_code'] == 200:
+                                                if 'message' in DATASET['FINAL_RESULT']:
+                                                    RESULT_TXT = DATASET['FINAL_RESULT']['message']
+                                                    if RESULT_TXT == '예약신청이 정상적으로 완료되었습니다.':
+                                                        DATASET = mm.message(DATASET, '[' + str(
+                                                            DATASET['FINAL_TYPE_NAME']) + '] ' + DATASET[
+                                                                                 'TARGET_MAX_CNT'] + ' ' + str(
+                                                            DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                                                            DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
+                                                            DATASET[
+                                                                'FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
+                                                        if str(DATASET['FINAL_RESVEBEGINDE']) in DATASET[
+                                                            'SELECT_DATE']:
+                                                            DATASET['SELECT_DATE'].remove(
+                                                                str(DATASET['FINAL_RESVEBEGINDE']))
+                                                        DATASET['TEMPORARY_HOLD'] = False
+                                                        DATASET['JUST_RESERVED'] = True
+                                                        if DATASET['SYSTEM_OFF']:
+                                                            exit()
+                                                        DATASET = mm.message(DATASET, ' 완료된 일짜를 제외하고 다시 예약을 시작합니다.')
                                                     else:
-                                                        DATASET = final_reservation(DATASET)
+                                                        if '예약가능 시간은' in DATASET['FINAL_RESULT']['message']:
+                                                            DATASET['STAND_BY_TIME'] = datetime.strptime(
+                                                                DATASET['FINAL_RESULT']['message'][26:45],
+                                                                '%Y-%m-%d %H:%M:%S') - timedelta(seconds=2)
+                                                            DATASET = mm.message7(DATASET, DATASET['FINAL_RESULT'][
+                                                                'message'] + ' 가능 시간까지 대기상태로 진입합니다.')
+                                                        elif '일시적인 장애로' in DATASET['FINAL_RESULT'][
+                                                            'message'] or '비정상적인 접근' in DATASET['FINAL_RESULT'][
+                                                            'message'] or '예약이 불가능한' in DATASET['FINAL_RESULT'][
+                                                            'message']:
+                                                            DATASET = mm.message8(DATASET,
+                                                                                  '(' + DATASET['FINAL_RESULT'][
+                                                                                      'message'] + ') 다음과 같은 사유로 예약시도를 계속 합니다.')
+                                                            DATASET = get_facility_relay(DATASET)
+                                                        else:
+                                                            DATASET['TEMPORARY_HOLD'] = False
+                                                            mm.message(DATASET, DATASET['FINAL_RESULT']['message'])
+                                                            break
                                                 else:
-                                                    DATASET = get_facility_relay(DATASET)
-                                        else:
-                                            if CURRENT_TIME >= IN_RESERVED_TIME:
+                                                    DATASET = final_reservation(DATASET)
+                                            else:
                                                 DATASET = get_facility_relay(DATASET)
                                     else:
                                         if CURRENT_TIME >= IN_RESERVED_TIME:
                                             DATASET = get_facility_relay(DATASET)
                                 else:
-                                    if CURRENT_TIME >= DATASET['STAND_BY_TIME']:
-                                        DATASET['STAND_BY_TIME'] = None
+                                    if CURRENT_TIME >= IN_RESERVED_TIME:
+                                        DATASET = get_facility_relay(DATASET)
+                                #else:
+                                #    if CURRENT_TIME >= DATASET['STAND_BY_TIME']:
+                                #        DATASET['STAND_BY_TIME'] = None
                             else:
                                 DATASET = get_facility_relay(DATASET)
                         else:
                             DATASET = get_facility_relay(DATASET)
-
 
                 if not DATASET['TEMPORARY_HOLD']:
                     for target_type_list in DATASET['TARGET_LIST']:
@@ -178,47 +197,51 @@ def main(DATASET):
                             else:
                                 copy_max_no = target_type_list['TARGET_MAX_CNT'][idx] + '인실'
                             type_no_txt = type_no
-                            if (type_no_txt in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no_txt not in DATASET['ROOM_EXPT']:
+                            if (type_no_txt in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][
+                                0] == 'ALL') and type_no_txt not in DATASET['ROOM_EXPT']:
                                 for begin_date in DATASET['SELECT_DATE']:
                                     end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(
                                         days=DATASET['PERIOD'])).strftime("%Y-%m-%d")
+                                    CURRENT_DICT = {}
                                     if not DATASET['TEMPORARY_HOLD']:
-                                        DATASET['FCLTYCODE'] = type_no
-                                        DATASET['FCLTYTYCODE'] = target_type_list['TARGET_TYPE'][idx]
-                                        DATASET['TARGET_MAX_CNT'] = copy_max_no
-                                        DATASET['FINAL_TYPE_NAME'] = target_type_list['site_name']
-                                        DATASET['RESVENOCODE'] = target_type_list['resveNoCode']
-                                        DATASET['TRRSRTCODE'] = target_type_list['trrsrtCode']
-                                        DATASET['registerId'] = DATASET['CURRENT_USER']['rid']  # 로그인 아이디 초기값 하드코딩
-                                        DATASET['rsvctmNm'] = DATASET['CURRENT_USER']['user_name']  # 사용자 이름 초기값 하드코딩
-                                        DATASET['rsvctmEncptMbtlnum'] = DATASET['CURRENT_USER']['rphone']  # 전화번호
-                                        DATASET['encptEmgncCttpc'] = DATASET['CURRENT_USER']['rphone']  # 긴급전화번호
-                                        DATASET['FROM_DATE'] = begin_date
-                                        DATASET['TO_DATE'] = end_date
+
+                                        CURRENT_DICT['FCLTYCODE'] = type_no
+                                        CURRENT_DICT['FCLTYTYCODE'] = target_type_list['TARGET_TYPE'][idx]
+                                        CURRENT_DICT['TARGET_MAX_CNT'] = copy_max_no
+                                        CURRENT_DICT['FINAL_TYPE_NAME'] = target_type_list['site_name']
+                                        CURRENT_DICT['RESVENOCODE'] = target_type_list['resveNoCode']
+                                        CURRENT_DICT['TRRSRTCODE'] = target_type_list['trrsrtCode']
+                                        CURRENT_DICT['FROM_DATE'] = begin_date
+                                        CURRENT_DICT['TO_DATE'] = end_date
 
                                         if not DATASET['TEMPORARY_HOLD']:
-                                            DATASET = get_facility(DATASET)
+                                            DATASET = get_facility(DATASET, CURRENT_DICT)
                                             if DATASET['TEMPORARY_HOLD']:
-                                                DATASET = mm.message4(DATASET, '임시 점유 완료 ' + copy_max_no + ' ' + str(
-                                                                      target_type_list['site_name']) + ' => ' + str(
-                                                                      DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
-                                                                      DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
-                                                                      DATASET['FINAL_RESVEENDDE']))
+                                                DATASET = mm.message4(DATASET, '임시 점유 완료 ' + DATASET[
+                                                    'TARGET_MAX_CNT'] + ' ' + str(
+                                                    DATASET['RESVENOCODE']) + ' => ' + str(
+                                                    DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                                                    DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
+                                                    DATASET['FINAL_RESVEENDDE']))
                                                 break
                                             else:
                                                 elapsed_time = time.time() - start_time  # 경과된 시간 계산
                                                 if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
-                                                    DATASET = mm.message(DATASET, ' 탐색 지정 대상 ' + DATASET['RANGE_TARGETS'] + ' / ' + DATASET['SCAN_TARGETS'] + ' 임시점유 예약을 시도 합니다.. ' + begin_date + ' ~ ' + end_date + ' / 경과 시간 : ' + str(run_cnt) + '시간')
+                                                    DATASET = mm.message(DATASET, ' 탐색 지정 대상 ' + DATASET[
+                                                        'RANGE_TARGETS'] + ' / ' + DATASET[
+                                                                             'SCAN_TARGETS'] + ' 임시점유 예약을 시도 합니다.. ' + begin_date + ' ~ ' + end_date + ' / 경과 시간 : ' + str(
+                                                        run_cnt) + '시간')
                                                     run_cnt = run_cnt + 1
 
                                                 if DATASET['SHOW_WORKS']:
-                                                #print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' 대상 SCAN 중 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(target_type_list['site_name']) + ' => ' + str(DATASET['FCLTYTYCODE']) + ' / ' + str(DATASET['FROM_DATE']) + ' ~ ' + str(DATASET['TO_DATE']))
+                                                    #print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' 대상 SCAN 중 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(target_type_list['site_name']) + ' => ' + str(DATASET['FCLTYTYCODE']) + ' / ' + str(DATASET['FROM_DATE']) + ' ~ ' + str(DATASET['TO_DATE']))
                                                     DATASET = mm.message2(DATASET,
-                                                                      '대상 SCAN 중 ' + copy_max_no + ' ' + str(
-                                                                          target_type_list['site_name']) + ' => ' + str(type_no_txt) + ' / ' + str(
-                                                                          DATASET['FROM_DATE']) + ' ~ ' + str(
-                                                                          DATASET['TO_DATE']))
-
+                                                                          '대상 SCAN 중 ' + copy_max_no + ' ' + str(
+                                                                              target_type_list[
+                                                                                  'site_name']) + ' => ' + str(
+                                                                              type_no_txt) + ' / ' + str(
+                                                                              DATASET['FROM_DATE']) + ' ~ ' + str(
+                                                                              DATASET['TO_DATE']))
 
                                 if DATASET['TEMPORARY_HOLD']:
                                     break
@@ -255,10 +278,10 @@ def reservation_list(DATASET):
                         if DATASET['RESERVATION_LIST']['value'] is not None:
                             DATASET = reservation_filter(DATASET)
                         if DATASET['RESERVATION_LIST']['message']:
-                           if '예약취소 후 2시간동안 동일한 시설은 예약을 할 수 없습니다.' in DATASET['RESERVATION_LIST']['message']:
-                               new_msg = mu.replaceAll(str(DATASET['RESERVATION_LIST']['message']), '\n')
-                               print('######################진행 불가 계정 : ' + new_msg)
-                               exit()
+                            if '예약취소 후 2시간동안 동일한 시설은 예약을 할 수 없습니다.' in DATASET['RESERVATION_LIST']['message']:
+                                new_msg = mu.replaceAll(str(DATASET['RESERVATION_LIST']['message']), '\n')
+                                print('######################진행 불가 계정 : ' + new_msg)
+                                exit()
                         return DATASET
                 else:
                     if response.status_code == 500:
@@ -293,21 +316,24 @@ def reservation_filter(DATASET):
                     DATASET['CAN_TO_DATE_LIST'].append(str(DATASET['LIST_TO_DATE']))
                     CANCEL_NAME_LIST.append(str(target['fcltyNm']))
     if len(AVAILABLE_NAME_LIST) > 0:
-        DATASET['AVAILABLE_NAME_TXT'] = DATASET['AVAILABLE_NAME_TXT'] + '\n' + str(DATASET['LIST_FROM_DATE']) + ' ~ ' + str(DATASET['LIST_TO_DATE']) + ' ' + str(DATASET['LIST_TARGET_NAME']) + ' => ' + str(AVAILABLE_NAME_LIST)
+        DATASET['AVAILABLE_NAME_TXT'] = DATASET['AVAILABLE_NAME_TXT'] + '\n' + str(
+            DATASET['LIST_FROM_DATE']) + ' ~ ' + str(DATASET['LIST_TO_DATE']) + ' ' + str(
+            DATASET['LIST_TARGET_NAME']) + ' => ' + str(AVAILABLE_NAME_LIST)
     if len(CANCEL_NAME_LIST) > 0:
-        DATASET['CANCEL_NAME_TXT'] = DATASET['CANCEL_NAME_TXT'] + '\n' + str(DATASET['LIST_FROM_DATE']) + ' ~ ' + str(DATASET['LIST_TO_DATE']) + ' ' + str(DATASET['LIST_TARGET_NAME']) + ' => ' + str(AVAILABLE_NAME_LIST)
+        DATASET['CANCEL_NAME_TXT'] = DATASET['CANCEL_NAME_TXT'] + '\n' + str(DATASET['LIST_FROM_DATE']) + ' ~ ' + str(
+            DATASET['LIST_TO_DATE']) + ' ' + str(DATASET['LIST_TARGET_NAME']) + ' => ' + str(AVAILABLE_NAME_LIST)
     return DATASET
 
 
-def get_facility(DATASET):
+def get_facility(DATASET, CURRENT_DICT):
     # 예약 파라미터 세팅
     url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
     dict_data = {
-        'trrsrtCode': str(DATASET['TRRSRTCODE']),
-        'fcltyCode': str(DATASET['FCLTYCODE']),
-        'resveNoCode': str(DATASET['RESVENOCODE']),
-        'resveBeginDe': str(DATASET['FROM_DATE']),
-        'resveEndDe': str(DATASET['TO_DATE'])
+        'trrsrtCode': str(CURRENT_DICT['TRRSRTCODE']),
+        'fcltyCode': str(CURRENT_DICT['FCLTYCODE']),
+        'resveNoCode': str(CURRENT_DICT['RESVENOCODE']),
+        'resveBeginDe': str(CURRENT_DICT['FROM_DATE']),
+        'resveEndDe': str(CURRENT_DICT['TO_DATE'])
     }
     response = ''
     while response == '':
@@ -319,6 +345,21 @@ def get_facility(DATASET):
                 if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
                     result = {**dict_meta, **response.json()}
                     if result['status_code'] == 200 and result['preocpcEndDt'] is not None:
+                        DATASET['TEMPORARY_HOLD'] = True
+
+                        DATASET['FCLTYCODE'] = CURRENT_DICT['FCLTYCODE']
+                        DATASET['FCLTYTYCODE'] = CURRENT_DICT['FCLTYTYCODE']
+                        DATASET['TARGET_MAX_CNT'] = CURRENT_DICT['TARGET_MAX_CNT']
+                        DATASET['FINAL_TYPE_NAME'] = CURRENT_DICT['FINAL_TYPE_NAME']
+                        DATASET['RESVENOCODE'] = CURRENT_DICT['RESVENOCODE']
+                        DATASET['TRRSRTCODE'] = CURRENT_DICT['TRRSRTCODE']
+                        DATASET['registerId'] = DATASET['CURRENT_USER']['rid']  # 로그인 아이디 초기값 하드코딩
+                        DATASET['rsvctmNm'] = DATASET['CURRENT_USER']['user_name']  # 사용자 이름 초기값 하드코딩
+                        DATASET['rsvctmEncptMbtlnum'] = DATASET['CURRENT_USER']['rphone']  # 전화번호
+                        DATASET['encptEmgncCttpc'] = DATASET['CURRENT_USER']['rphone']  # 긴급전화번호
+                        DATASET['FROM_DATE'] = CURRENT_DICT['FROM_DATE']
+                        DATASET['TO_DATE'] = CURRENT_DICT['TO_DATE']
+
                         DATASET['RESULT'] = {**dict_meta, **response.json()}
                         #필요 파라메터 맵핑
                         DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
@@ -337,7 +378,6 @@ def get_facility(DATASET):
                         DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
                         DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
                         DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
-                        DATASET['TEMPORARY_HOLD'] = True
                         DATASET['JUST_RESERVED'] = False
                         return DATASET
                 else:  # 문자열 형태인 경우
@@ -369,6 +409,8 @@ def get_facility_relay(DATASET):
             if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
                 result = {**dict_meta, **response.json()}
                 if result['status_code'] == 200 and result['preocpcEndDt'] is not None:
+                    DATASET['TEMPORARY_HOLD'] = True
+
                     DATASET['RESULT'] = {**dict_meta, **response.json()}
                     #필요 파라메터 맵핑
                     DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
@@ -387,11 +429,16 @@ def get_facility_relay(DATASET):
                     DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
                     DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
                     DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
-                    DATASET['TEMPORARY_HOLD'] = True
                     DATASET['JUST_RESERVED'] = False
                     DATASET['STAND_BY_TIME'] = None
                 else:
-                    DATASET['TEMPORARY_HOLD'] = False
+                    DATASET = mm.message6(DATASET, ' 임시 점유 실패 예약 시도를 계속 합니다.')
+                #    CHECK_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                #    CHECK_TIME = datetime.strptime(CHECK_TIME_STR, '%Y-%m-%d %H:%M:%S')
+                #    LIMIT_TIME = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=10)
+                #    if CHECK_TIME > LIMIT_TIME:
+                #        DATASET = mm.message(DATASET, ' 임시 점유 실패 다시 탐색을 시작 합니다.')
+                #        DATASET['TEMPORARY_HOLD'] = False
                 return DATASET
             else:  # 문자열 형태인 경우
                 DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
