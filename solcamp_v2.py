@@ -46,7 +46,7 @@ site = 'D'
 continue_work = False
 trying = False
 current_room = '0'
-user_type = 0  # 사용자 정보 세팅
+user_type = 9999  # 사용자 정보 세팅
 
 user_name = ''
 user_phone = ''
@@ -330,7 +330,7 @@ def main(dataset):
                                             elif site == 'H':
                                                 loop_site_cnt = e_site_cnt  # 사이트 순환 돌릴 꺼
                                                 start_index = target_index_e
-                                                fix_room_num = 707
+                                                fix_room_num = 708
                                             url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_tracking.json'  # 솔향기 커넥션 정보 GET
                                             data = {
                                                 'actFile': 'tracking',
