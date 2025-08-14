@@ -83,11 +83,11 @@ def _list():
                'rphone': '01048983777',
                'area_code': '1006'
                },
-        '13': {'user_name': '유선경',
-               'rpwd': '12qwaszx!@',
-               'rid': 'dkdk74',
-               'rphone': '01031741769',
-               'area_code': '1006'
+        '13': {'user_name': '',
+               'rpwd': '',
+               'rid': '',
+               'rphone': '',
+               'area_code': ''
                }
     }
     return dict_data

@@ -432,7 +432,7 @@ def get_facility_relay(DATASET):
                     DATASET['JUST_RESERVED'] = False
                     DATASET['STAND_BY_TIME'] = None
                 else:
-                    DATASET = mm.message6(DATASET, ' 임시 점유 실패 예약 시도를 계속 합니다.')
+                    DATASET = mm.message(DATASET, ' 임시 점유 실패 예약 시도를 계속 합니다.')
                 #    CHECK_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 #    CHECK_TIME = datetime.strptime(CHECK_TIME_STR, '%Y-%m-%d %H:%M:%S')
                 #    LIMIT_TIME = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=10)

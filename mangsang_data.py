@@ -78,7 +78,10 @@ def convert(DATASET):
             new_room_List = []
             for wants in DATASET['ROOM_WANTS']:
                 if len(wants) < 4:
-                    new_room_List.append(str(int(wants) + 1600))
+                    if str(wants) != 'ALL':
+                        new_room_List.append(str(int(wants) + 1600))
+                    else:
+                        new_room_List.append(str(wants))
             DATASET['ROOM_WANTS'] = new_room_List
         else:
             for _number in DATASET['ROOM_RANGE']:
@@ -208,16 +211,7 @@ def get_facility_no(_target, number):
         elif number == '10':
             result = []
     elif target_code == 'BA':
-        if number == '2':
-            result = []
-        elif number == '4':
-            result = []
-        elif number == '6':
-            result = []
-        elif number == '8':
-            result = []
-        elif number == '10':
-            result = []
+        result.append('6|1700|1700')
     elif target_code == 'RR':
         for i in range(41):
             value = '0|' + str(1600 + (i + 1)) + '|MA_001'
