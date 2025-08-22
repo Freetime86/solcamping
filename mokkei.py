@@ -23,15 +23,15 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # 사이트 선택 ~ 순서는 A부터 절때 역방향이면 안됨!!
 # EX A1 ~ B1 이면 A1,2,3,4,5 ~ 와 B사이트 1번까지 랜덤 선택
 
-SITE_FROM = ['A01']
-SITE_TO = ['A59']
-START_DATE = ['20250503']
-END_DATE = ['20250506']
-RESERVATION_CNT = 1
+SITE_FROM = ['B01', 'A01']
+SITE_TO = ['B10', 'A63']
+START_DATE = ['20250927', '20250927']
+END_DATE = ['20250929', '20250929']
+RESERVATION_CNT = 2
 SUCCESS_COUNT = 99
 
 # 수시 체크 딜레이
-DELAY = 3
+DELAY = 1
 # TRUE = 수시 감시, FALSE 실시간 예약
 ALWAYS = True
 
@@ -318,34 +318,38 @@ def request_reservation(param, cookies):
         'infoType': '',
         'token': ''
     }
+    response = ''
+    while response == '':
+        try:
+            response = requests.post(url=url, data=dict_data, cookies=cookies, verify=False,
+                                     headers={
+                                         'Accept': '*/*',
+                                         'Accept-Encoding': 'gzip, deflate, br, zstd',
+                                         'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                                         'Connection': 'keep-alive',
+                                         'Content-Length': '317',
+                                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                                         'Host': 'www.cjfmc.or.kr',
+                                         'Origin': 'https://www.cjfmc.or.kr',
+                                         'Referer': 'https://www.cjfmc.or.kr/camping/cjcamp/campsite/L37844353',
+                                         'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+                                         'Sec-Ch-Ua-Mobile': '?0',
+                                         'Sec-Ch-Ua-Platform': '"Windows"',
+                                         'Sec-Fetch-Dest': 'empty',
+                                         'Sec-Fetch-Mode': 'cors',
+                                         'Sec-Fetch-Site': 'same-origin',
+                                         'User-Agent': param['UserAgent'],
+                                         'X-Requested-With': 'XMLHttpRequest'})
 
-    response = requests.post(url=url, data=dict_data, cookies=cookies, verify=False,
-                             headers={
-                                 'Accept': '*/*',
-                                 'Accept-Encoding': 'gzip, deflate, br, zstd',
-                                 'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-                                 'Connection': 'keep-alive',
-                                 'Content-Length': '317',
-                                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                                 'Host': 'www.cjfmc.or.kr',
-                                 'Origin': 'https://www.cjfmc.or.kr',
-                                 'Referer': 'https://www.cjfmc.or.kr/camping/cjcamp/campsite/L37844353',
-                                 'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-                                 'Sec-Ch-Ua-Mobile': '?0',
-                                 'Sec-Ch-Ua-Platform': '"Windows"',
-                                 'Sec-Fetch-Dest': 'empty',
-                                 'Sec-Fetch-Mode': 'cors',
-                                 'Sec-Fetch-Site': 'same-origin',
-                                 'User-Agent': param['UserAgent'],
-                                 'X-Requested-With': 'XMLHttpRequest'})
-
-    dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
-                 'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
-    if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-        return {**dict_meta, **response.json()}
-    else:  # 문자열 형태인 경우
-        return {**dict_meta, **{'text': response.text}}
-
+            dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                         'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+            if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                return {**dict_meta, **response.json()}
+            else:  # 문자열 형태인 경우
+                return {**dict_meta, **{'text': response.text}}
+        except requests.exceptions.RequestException as ex:
+            time.sleep(10)
+            continue
 
 i = 0
 for i in range(RESERVATION_CNT):
