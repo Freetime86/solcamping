@@ -38,9 +38,6 @@ def check(DATASET):
             if _facility in ['01', '02', '03'] and len(DATASET['ROOM_RANGE']) == 0:
                 print('든바다, 난바다, 허허바다의 경우 인실을 지정해야 합니다.')
                 return False
-            elif _facility not in ['01', '02', '03'] and len(DATASET['ROOM_RANGE']) > 0:
-                print('현재 시설은 인실 지정이 불가한 시설입니다.')
-                return False
                 
     for _range in DATASET['ROOM_RANGE']:
         if not _range.isdigit():
@@ -74,7 +71,17 @@ def convert(DATASET):
         _target_no_list = []
         _target_ty_list = []
 
-        if index == '06':
+        if index == '04':
+            new_room_List = []
+            for wants in DATASET['ROOM_WANTS']:
+                if len(wants) < 4:
+                    if str(wants) != 'ALL':
+                        new_room_List.append(str(int(wants) + 1100))
+                    else:
+                        new_room_List.append(str(wants))
+            DATASET['ROOM_WANTS'] = new_room_List
+
+        elif index == '06':
             new_room_List = []
             for wants in DATASET['ROOM_WANTS']:
                 if len(wants) < 4:
@@ -83,7 +90,8 @@ def convert(DATASET):
                     else:
                         new_room_List.append(str(wants))
             DATASET['ROOM_WANTS'] = new_room_List
-        else:
+        # 든바다난바다허허바다전용
+        elif index == '01' or index == '02' or index == '03':
             for _number in DATASET['ROOM_RANGE']:
                 _range_list = get_facility_no(_target, _number)
                 for _row in _range_list:
@@ -107,8 +115,7 @@ def convert(DATASET):
                     _target['TARGET_MAX_CNT'] = _target_max_list
                 _target['TARGET_NO'] = _target_no_list
                 _target['TARGET_TYPE'] = _target_ty_list
-
-        if len(DATASET['ROOM_RANGE']) == 0:
+        if index == '04' or index == '05' or index == '06':
             _range_list = get_facility_no(_target, 0)
             for _row in _range_list:
                 _fcltyInfo = _row.split('|')
@@ -119,6 +126,55 @@ def convert(DATASET):
             _target['TARGET_NO'] = _target_no_list
             _target['TARGET_TYPE'] = _target_ty_list
         DATASET['TARGET_LIST'].append(_target)
+        if index == '04':
+            _new_target_list = DATASET['TARGET_LIST'].copy()
+            for i in range(8):
+                _bind_target = {}
+                _new_seq = 0
+                for target in DATASET['TARGET_LIST']:
+                    _bind_target = target.copy()
+                    if _bind_target['site_name'] == '전통한옥':
+                        _target_no = str(1101 + i)
+                        if i == 0:
+                            del _new_target_list[_new_seq]
+                            if '4' in DATASET['ROOM_RANGE']:
+                                _bind_target['TARGET_MAX_CNT'] = [_bind_target['TARGET_MAX_CNT'][0]]
+                                _bind_target['TARGET_TYPE'] = [_bind_target['TARGET_TYPE'][0]]
+                                _bind_target['TARGET_NO'] = [_target_no]
+                                _new_target_list.append(_bind_target)
+                        else:
+                            _isPass = False
+                            #1001은 이미 초반에 입력하였다.
+                            if _target_no == '1102' and '4' in DATASET['ROOM_RANGE']:
+                                _bind_target['resveNoCode'] = 'HC'
+                                _isPass = True
+                            elif _target_no == '1103' and '4' in DATASET['ROOM_RANGE']:
+                                _bind_target['resveNoCode'] = 'HD'
+                                _isPass = True
+                            elif _target_no == '1104' and '4' in DATASET['ROOM_RANGE']:
+                                _bind_target['resveNoCode'] = 'HE'
+                                _isPass = True
+                            elif _target_no == '1105' and '4' in DATASET['ROOM_RANGE']:
+                                _bind_target['resveNoCode'] = 'HF'
+                                _isPass = True
+                            elif _target_no == '1106' and '6' in DATASET['ROOM_RANGE']:
+                                _bind_target['resveNoCode'] = 'HG'
+                                _isPass = True
+                            elif _target_no == '1107' and '6' in DATASET['ROOM_RANGE']:
+                                _bind_target['resveNoCode'] = 'HH'
+                                _isPass = True
+                            elif _target_no == '1108' and '2' in DATASET['ROOM_RANGE']:
+                                _bind_target['resveNoCode'] = 'HM'
+                                _isPass = True
+                            if _isPass:
+                                _bind_target['TARGET_MAX_CNT'] = [_bind_target['TARGET_MAX_CNT'][0]]
+                                _bind_target['TARGET_TYPE'] = [_bind_target['TARGET_TYPE'][0]]
+                                _bind_target['TARGET_NO'] = [_target_no]
+                                _new_target_list.append(_bind_target)
+                    else:
+                        _new_target_list.append(target)
+                    _new_seq = _new_seq + 1
+            DATASET['TARGET_LIST'] = _new_target_list
     return DATASET
 
 
@@ -200,16 +256,9 @@ def get_facility_no(_target, number):
             type = '10|' + type
             result = [type + 'G101' + style + 'G0', type + 'G108' + style + 'G0']
     elif target_code == 'HA':
-        if number == '2':
-            result = []
-        elif number == '4':
-            result = []
-        elif number == '6':
-            result = []
-        elif number == '8':
-            result = []
-        elif number == '10':
-            result = []
+        for i in range(8):
+            value = '0|' + str(1100 + (i + 1)) + '|KH_401'
+            result.append(value)
     elif target_code == 'BA':
         result.append('6|1700|1700')
     elif target_code == 'RR':

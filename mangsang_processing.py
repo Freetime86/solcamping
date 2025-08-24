@@ -142,10 +142,8 @@ def main(DATASET):
                                                             DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
                                                             DATASET[
                                                                 'FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
-                                                        if str(DATASET['FINAL_RESVEBEGINDE']) in DATASET[
-                                                            'SELECT_DATE']:
-                                                            DATASET['SELECT_DATE'].remove(
-                                                                str(DATASET['FINAL_RESVEBEGINDE']))
+                                                        #if str(DATASET['FINAL_RESVEBEGINDE']) in DATASET['SELECT_DATE']:
+                                                        #    DATASET['SELECT_DATE'].remove(str(DATASET['FINAL_RESVEBEGINDE']))
                                                         DATASET['TEMPORARY_HOLD'] = False
                                                         DATASET['JUST_RESERVED'] = True
                                                         if DATASET['SYSTEM_OFF']:
@@ -364,6 +362,9 @@ def get_facility(DATASET, CURRENT_DICT):
                         #필요 파라메터 맵핑
                         DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
                         DATASET['FINAL_FCLTYCODE'] = DATASET['RESULT']['fcltyCode']
+                        #한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
+                        if DATASET['FINAL_TYPE_NAME'] == '전통한옥':
+                            DATASET['FINAL_FCLTYCODE'] = CURRENT_DICT['FCLTYCODE']
                         DATASET['FINAL_FCLTYTYCODE'] = DATASET['RESULT']['fcltyTyCode']
                         DATASET['FINAL_PREOCPCFCLTYCODE'] = DATASET['RESULT'][
                             'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 DATASET['RESULT']['preocpcFcltyCode']
@@ -416,6 +417,9 @@ def get_facility_relay(DATASET):
                     DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
                     DATASET['FINAL_FCLTYCODE'] = DATASET['RESULT']['fcltyCode']
                     DATASET['FINAL_FCLTYTYCODE'] = DATASET['RESULT']['fcltyTyCode']
+                    # 한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
+                    if DATASET['FINAL_TYPE_NAME'] == '전통한옥':
+                        DATASET['FINAL_FCLTYCODE'] = CURRENT_DICT['FCLTYCODE']
                     DATASET['FINAL_PREOCPCFCLTYCODE'] = DATASET['RESULT'][
                         'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 DATASET['RESULT']['preocpcFcltyCode']
                     DATASET['FINAL_RESVENOCODE'] = DATASET['RESULT']['resveNoCode']
