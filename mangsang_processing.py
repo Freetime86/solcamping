@@ -342,8 +342,8 @@ def get_facility(DATASET, CURRENT_DICT):
                 dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
                              'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
                 if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                    result = {**dict_meta, **response.json()}
-                    if result['status_code'] == 200 and result['preocpcEndDt'] is not None:
+                    DATASET['RELAY_RESULT'] = {**dict_meta, **response.json()}
+                    if DATASET['RELAY_RESULT']['status_code'] == 200 and DATASET['RELAY_RESULT']['preocpcEndDt'] is not None:
                         DATASET['TEMPORARY_HOLD'] = True
 
                         DATASET['FCLTYCODE'] = CURRENT_DICT['FCLTYCODE']
@@ -359,7 +359,7 @@ def get_facility(DATASET, CURRENT_DICT):
                         DATASET['FROM_DATE'] = CURRENT_DICT['FROM_DATE']
                         DATASET['TO_DATE'] = CURRENT_DICT['TO_DATE']
 
-                        DATASET['RESULT'] = {**dict_meta, **response.json()}
+                        DATASET['RESULT'] = DATASET['RESULT'] = DATASET['RELAY_RESULT']
                         #필요 파라메터 맵핑
                         DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
                         DATASET['FINAL_FCLTYCODE'] = DATASET['RESULT']['fcltyCode']
@@ -409,11 +409,11 @@ def get_facility_relay(DATASET):
             dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
                          'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
             if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                result = {**dict_meta, **response.json()}
-                if result['status_code'] == 200 and result['preocpcEndDt'] is not None:
+                DATASET['RELAY_RESULT'] = {**dict_meta, **response.json()}
+                if DATASET['RELAY_RESULT']['status_code'] == 200 and DATASET['RELAY_RESULT']['preocpcEndDt'] is not None:
                     DATASET['TEMPORARY_HOLD'] = True
 
-                    DATASET['RESULT'] = {**dict_meta, **response.json()}
+                    DATASET['RESULT'] = DATASET['RELAY_RESULT']
                     #필요 파라메터 맵핑
                     DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
                     DATASET['FINAL_FCLTYCODE'] = DATASET['RESULT']['fcltyCode']
