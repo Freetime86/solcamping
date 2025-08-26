@@ -112,7 +112,7 @@ def main(DATASET):
                                 CURRENT_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                                 CURRENT_TIME = datetime.strptime(CURRENT_TIME_STR, '%Y-%m-%d %H:%M:%S')
                                 IN_RESERVED_TIME = datetime.strptime(DATASET['RESULT']['preocpcEndDt'],
-                                                                     '%Y-%m-%d %H:%M:%S') - timedelta(seconds=10)
+                                                                     '%Y-%m-%d %H:%M:%S') - timedelta(seconds=999)
                                 #if CURRENT_TIME >= IN_RESERVED_TIME or DATASET['STAND_BY_TIME'] is None:
                                 if DATASET['STAND_BY_TIME'] is None:
                                     DATASET['RESERVE_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'],
@@ -123,6 +123,7 @@ def main(DATASET):
                                         'RESERVE_TIME'] <
                                             DATASET['LIMIT_TIME']):
                                         if not DATASET['TRY_RESERVE']:
+                                            #if '임시 점유 실패' not in str(DATASET['MESSAGE']):
                                             DATASET = mm.message(DATASET,
                                                                  ' 확정 예약 진행 중... ' + DATASET[
                                                                      'TARGET_MAX_CNT'] + ' ' + str(
@@ -435,8 +436,11 @@ def get_facility_relay(DATASET):
                     DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
                     DATASET['JUST_RESERVED'] = False
                     DATASET['STAND_BY_TIME'] = None
+                    DATASET = mm.message4(DATASET, '임시 점유 완료 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
+                        DATASET['RESVENOCODE']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                        DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
                 else:
-                    DATASET = mm.message(DATASET, ' 임시 점유 실패 예약 시도를 계속 합니다.')
+                    DATASET = mm.message4(DATASET, ' 임시 점유 실패 예약 시도를 계속 합니다.')
                 #    CHECK_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 #    CHECK_TIME = datetime.strptime(CHECK_TIME_STR, '%Y-%m-%d %H:%M:%S')
                 #    LIMIT_TIME = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=10)
