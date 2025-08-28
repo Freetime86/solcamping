@@ -18,7 +18,7 @@ def _list():
                'area_code': '1006'
                },
         '02': {'user_name': '김계자',
-               'rpwd': 'cjswosla86',
+               'rpwd': 'CJSWOsla86!@',
                'rid': 'psm07051',
                'rphone': '01056947788',
                'area_code': '1006'
@@ -65,11 +65,11 @@ def _list():
                'rphone': '01041798796',
                'area_code': '1006'
                },
-        '10': {'user_name': '',
-               'rpwd': '',
-               'rid': '',
-               'rphone': '',
-               'area_code': ''
+        '10': {'user_name': '정한준',
+               'rpwd': 'wjdgkswns@!0',
+               'rid': 'sarbi210',
+               'rphone': '01045170210',
+               'area_code': '1006'
                },
         '11': {'user_name': '김은경',
                'rpwd': 'rladmsrud00',
