@@ -6,9 +6,9 @@ def check(DATASET):
         print('현재 작업자 수(' + str(DATASET['BOT_NUMBER']) + ') 작업자 배정 수를 확인하세요.')
         return False
 
-    if int(DATASET['PERIOD']) == 0 or int(DATASET['PERIOD']) > 3:
-        print('연박 수 지정이 잘못되었습니다. 최소/최대 1~3박 까지만 지정 가능합니다.')
-        return False
+    #if int(DATASET['PERIOD']) == 0 or int(DATASET['PERIOD']) > 3:
+    #    print('연박 수 지정이 잘못되었습니다. 최소/최대 1~3박 까지만 지정 가능합니다.')
+    #    return False
 
     for _date in DATASET['SELECT_DATE']:
         try:

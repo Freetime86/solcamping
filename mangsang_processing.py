@@ -23,6 +23,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def main(DATASET):
+    _bot_name = DATASET['BOT_NAME']
     if DATASET['THREAD_FLAG']:
         DATASET['THREAD_FLAG'] = False
         _bot_name = DATASET['BOT_NAME']
@@ -112,7 +113,7 @@ def main(DATASET):
                                 CURRENT_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                                 CURRENT_TIME = datetime.strptime(CURRENT_TIME_STR, '%Y-%m-%d %H:%M:%S')
                                 IN_RESERVED_TIME = datetime.strptime(DATASET['RESULT']['preocpcEndDt'],
-                                                                     '%Y-%m-%d %H:%M:%S') - timedelta(seconds=999)
+                                                                     '%Y-%m-%d %H:%M:%S') - timedelta(seconds=15)
                                 #if CURRENT_TIME >= IN_RESERVED_TIME or DATASET['STAND_BY_TIME'] is None:
                                 if DATASET['STAND_BY_TIME'] is None:
                                     DATASET['RESERVE_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'],
@@ -143,13 +144,10 @@ def main(DATASET):
                                                             DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
                                                             DATASET[
                                                                 'FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
-                                                        #if str(DATASET['FINAL_RESVEBEGINDE']) in DATASET['SELECT_DATE']:
-                                                        #    DATASET['SELECT_DATE'].remove(str(DATASET['FINAL_RESVEBEGINDE']))
                                                         DATASET['TEMPORARY_HOLD'] = False
                                                         DATASET['JUST_RESERVED'] = True
                                                         if DATASET['SYSTEM_OFF']:
                                                             exit()
-                                                        DATASET = mm.message(DATASET, ' 완료된 일짜를 제외하고 다시 예약을 시작합니다.')
                                                     else:
                                                         if '예약가능 시간은' in DATASET['FINAL_RESULT']['message']:
                                                             DATASET['STAND_BY_TIME'] = datetime.strptime(
@@ -186,8 +184,7 @@ def main(DATASET):
                                 DATASET = get_facility_relay(DATASET)
                         else:
                             DATASET = get_facility_relay(DATASET)
-
-                if not DATASET['TEMPORARY_HOLD']:
+                else:
                     for target_type_list in DATASET['TARGET_LIST']:
                         idx = 0
                         for type_no in target_type_list['TARGET_NO']:
@@ -234,13 +231,12 @@ def main(DATASET):
 
                                                 if DATASET['SHOW_WORKS']:
                                                     #print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' 대상 SCAN 중 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(target_type_list['site_name']) + ' => ' + str(DATASET['FCLTYTYCODE']) + ' / ' + str(DATASET['FROM_DATE']) + ' ~ ' + str(DATASET['TO_DATE']))
-                                                    DATASET = mm.message2(DATASET,
-                                                                          '대상 SCAN 중 ' + copy_max_no + ' ' + str(
+                                                    DATASET = mm.message2(DATASET, str(_bot_name) + ' 대상 SCAN 중 ' + copy_max_no + ' ' + str(
                                                                               target_type_list[
                                                                                   'site_name']) + ' => ' + str(
                                                                               type_no_txt) + ' / ' + str(
-                                                                              DATASET['FROM_DATE']) + ' ~ ' + str(
-                                                                              DATASET['TO_DATE']))
+                                                                              begin_date) + ' ~ ' + str(
+                                                                              end_date))
 
                                 if DATASET['TEMPORARY_HOLD']:
                                     break
@@ -345,7 +341,6 @@ def get_facility(DATASET, CURRENT_DICT):
                     DATASET['RELAY_RESULT'] = {**dict_meta, **response.json()}
                     if DATASET['RELAY_RESULT']['status_code'] == 200 and DATASET['RELAY_RESULT']['preocpcEndDt'] is not None:
                         DATASET['TEMPORARY_HOLD'] = True
-
                         DATASET['FCLTYCODE'] = CURRENT_DICT['FCLTYCODE']
                         DATASET['FCLTYTYCODE'] = CURRENT_DICT['FCLTYTYCODE']
                         DATASET['TARGET_MAX_CNT'] = CURRENT_DICT['TARGET_MAX_CNT']
@@ -387,6 +382,7 @@ def get_facility(DATASET, CURRENT_DICT):
                     return DATASET
             else:
                 print('error = > ' + str(response))
+                login(DATASET)
             return DATASET
         except requests.exceptions.RequestException as ex:
             continue
@@ -406,51 +402,55 @@ def get_facility_relay(DATASET):
     while response == '':
         try:
             response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False)
-            dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
-                         'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
-            if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                DATASET['RELAY_RESULT'] = {**dict_meta, **response.json()}
-                if DATASET['RELAY_RESULT']['status_code'] == 200 and DATASET['RELAY_RESULT']['preocpcEndDt'] is not None:
-                    DATASET['TEMPORARY_HOLD'] = True
+            if 'Content-Type' in response.headers:
+                dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                             'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+                if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                    DATASET['RELAY_RESULT'] = {**dict_meta, **response.json()}
+                    if DATASET['RELAY_RESULT']['status_code'] == 200 and DATASET['RELAY_RESULT']['preocpcEndDt'] is not None:
+                        DATASET['TEMPORARY_HOLD'] = True
 
-                    DATASET['RESULT'] = DATASET['RELAY_RESULT']
-                    #필요 파라메터 맵핑
-                    DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
-                    DATASET['FINAL_FCLTYCODE'] = DATASET['RESULT']['fcltyCode']
-                    DATASET['FINAL_FCLTYTYCODE'] = DATASET['RESULT']['fcltyTyCode']
-                    # 한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
-                    if DATASET['FINAL_TYPE_NAME'] == '전통한옥':
-                        DATASET['FINAL_FCLTYCODE'] = CURRENT_DICT['FCLTYCODE']
-                    DATASET['FINAL_PREOCPCFCLTYCODE'] = DATASET['RESULT'][
-                        'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 DATASET['RESULT']['preocpcFcltyCode']
-                    DATASET['FINAL_RESVENOCODE'] = DATASET['RESULT']['resveNoCode']
-                    DATASET['FINAL_RESVEBEGINDE'] = DATASET['RESULT']['resveBeginDe']
-                    DATASET['FINAL_RESVEENDDE'] = DATASET['RESULT']['resveEndDe']
-                    DATASET['FINAL_RESVENO'] = DATASET['RESULT']['resveNo']
-                    DATASET['FINAL_REGISTERID'] = DATASET['registerId']  #로그인 아이디 초기값 하드코딩
-                    DATASET['FINAL_RSVCTMNM'] = DATASET['rsvctmNm']  #사용자 이름 초기값 하드코딩
-                    DATASET['FINAL_RSVCTMENCPTMBTLNUM'] = DATASET['rsvctmEncptMbtlnum']  #전화번호
-                    DATASET['FINAL_ENCPTEMGNCCTTPC'] = DATASET['encptEmgncCttpc']  #긴급전화번호
-                    DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
-                    DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
-                    DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
-                    DATASET['JUST_RESERVED'] = False
-                    DATASET['STAND_BY_TIME'] = None
-                    DATASET = mm.message4(DATASET, '임시 점유 완료 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
-                        DATASET['RESVENOCODE']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
-                        DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
-                else:
-                    DATASET = mm.message4(DATASET, ' 임시 점유 실패 예약 시도를 계속 합니다.')
-                #    CHECK_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                #    CHECK_TIME = datetime.strptime(CHECK_TIME_STR, '%Y-%m-%d %H:%M:%S')
-                #    LIMIT_TIME = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=10)
-                #    if CHECK_TIME > LIMIT_TIME:
-                #        DATASET = mm.message(DATASET, ' 임시 점유 실패 다시 탐색을 시작 합니다.')
-                #        DATASET['TEMPORARY_HOLD'] = False
-                return DATASET
-            else:  # 문자열 형태인 경우
-                DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
-                return DATASET
+                        DATASET['RESULT'] = DATASET['RELAY_RESULT']
+                        #필요 파라메터 맵핑
+                        DATASET['FINAL_TRRSRTCODE'] = DATASET['RESULT']['trrsrtCode']
+                        DATASET['FINAL_FCLTYCODE'] = DATASET['RESULT']['fcltyCode']
+                        DATASET['FINAL_FCLTYTYCODE'] = DATASET['RESULT']['fcltyTyCode']
+                        # 한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
+                        if DATASET['FINAL_TYPE_NAME'] == '전통한옥':
+                            DATASET['FINAL_FCLTYCODE'] = CURRENT_DICT['FCLTYCODE']
+                        DATASET['FINAL_PREOCPCFCLTYCODE'] = DATASET['RESULT'][
+                            'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 DATASET['RESULT']['preocpcFcltyCode']
+                        DATASET['FINAL_RESVENOCODE'] = DATASET['RESULT']['resveNoCode']
+                        DATASET['FINAL_RESVEBEGINDE'] = DATASET['RESULT']['resveBeginDe']
+                        DATASET['FINAL_RESVEENDDE'] = DATASET['RESULT']['resveEndDe']
+                        DATASET['FINAL_RESVENO'] = DATASET['RESULT']['resveNo']
+                        DATASET['FINAL_REGISTERID'] = DATASET['registerId']  #로그인 아이디 초기값 하드코딩
+                        DATASET['FINAL_RSVCTMNM'] = DATASET['rsvctmNm']  #사용자 이름 초기값 하드코딩
+                        DATASET['FINAL_RSVCTMENCPTMBTLNUM'] = DATASET['rsvctmEncptMbtlnum']  #전화번호
+                        DATASET['FINAL_ENCPTEMGNCCTTPC'] = DATASET['encptEmgncCttpc']  #긴급전화번호
+                        DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
+                        DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
+                        DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
+                        DATASET['JUST_RESERVED'] = False
+                        DATASET['STAND_BY_TIME'] = None
+                        DATASET = mm.message4(DATASET, '임시 점유 완료 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
+                            DATASET['RESVENOCODE']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                            DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
+                    else:
+                        DATASET = mm.message4(DATASET, ' 임시 점유 실패 예약 시도를 계속 합니다.')
+                    #    CHECK_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    #    CHECK_TIME = datetime.strptime(CHECK_TIME_STR, '%Y-%m-%d %H:%M:%S')
+                    #    LIMIT_TIME = datetime.strptime(DATASET['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=10)
+                    #    if CHECK_TIME > LIMIT_TIME:
+                    #        DATASET = mm.message(DATASET, ' 임시 점유 실패 다시 탐색을 시작 합니다.')
+                    #        DATASET['TEMPORARY_HOLD'] = False
+                    return DATASET
+                else:  # 문자열 형태인 경우
+                    DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
+                    return DATASET
+            else:
+                print('error = > ' + str(response))
+                login(DATASET)
             return DATASET
         except requests.exceptions.RequestException as ex:
             continue
@@ -513,6 +513,7 @@ def final_reservation(DATASET):
 
 
 def login(DATASET):
+    DATASET = mm.message(DATASET, 'LOGIN PROCESSING!!')
     DATASET['CURRENT_PROCESS'] = 'login'
 
     rid = DATASET['CURRENT_USER']['rid']
@@ -520,6 +521,7 @@ def login(DATASET):
 
     driver = DATASET['LOGIN_BROWSER']
     url = "https://www.campingkorea.or.kr/login/BD_loginForm.do"
+
     driver.get(url)
 
     wait = WebDriverWait(driver, 1000)
@@ -548,7 +550,6 @@ def login(DATASET):
     for cookie in _cookies:
         cookie_dict[cookie['name']] = cookie['value']
     DATASET['COOKIE'] = cookie_dict
-
     return DATASET
 
 
