@@ -133,6 +133,7 @@ def main(DATASET):
                                                                      DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
                                                                      DATASET['FINAL_RESVEENDDE']))
                                             DATASET = final_reservation(DATASET)
+                                            DATASET['POST_TYPE_CODE'] = DATASET['FINAL_FCLTYCODE']
                                             if DATASET['FINAL_RESULT']['status_code'] == 200:
                                                 if 'message' in DATASET['FINAL_RESULT']:
                                                     RESULT_TXT = DATASET['FINAL_RESULT']['message']
@@ -164,6 +165,10 @@ def main(DATASET):
                                                                                       'message'] + ') 다음과 같은 사유로 예약시도를 계속 합니다.')
                                                             DATASET = get_facility_relay(DATASET)
                                                         else:
+                                                            DATASET['TEMPORARY_HOLD'] = False
+                                                            mm.message(DATASET, DATASET['FINAL_RESULT']['message'])
+                                                            break
+                                                        if not DATASET['STAND_BY_MODE']:
                                                             DATASET['TEMPORARY_HOLD'] = False
                                                             mm.message(DATASET, DATASET['FINAL_RESULT']['message'])
                                                             break
@@ -201,6 +206,7 @@ def main(DATASET):
                                     CURRENT_DICT = {}
                                     if not DATASET['TEMPORARY_HOLD']:
 
+                                        #if DATASET['POST_TYPE_CODE'] != type_no or DATASET['POST_TYPE_CODE'] == '':
                                         CURRENT_DICT['FCLTYCODE'] = type_no
                                         CURRENT_DICT['FCLTYTYCODE'] = target_type_list['TARGET_TYPE'][idx]
                                         CURRENT_DICT['TARGET_MAX_CNT'] = copy_max_no
@@ -243,6 +249,7 @@ def main(DATASET):
                             idx = idx + 1
                         if DATASET['TEMPORARY_HOLD']:
                             break
+                    #DATASET['POST_TYPE_CODE'] = ''
         except Exception as ex:
             print(traceback.format_exc())
             mm.message(DATASET, ' EXCEPTION!! ====>  ' + str(ex))
@@ -417,7 +424,7 @@ def get_facility_relay(DATASET):
                         DATASET['FINAL_FCLTYTYCODE'] = DATASET['RESULT']['fcltyTyCode']
                         # 한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
                         if DATASET['FINAL_TYPE_NAME'] == '전통한옥':
-                            DATASET['FINAL_FCLTYCODE'] = CURRENT_DICT['FCLTYCODE']
+                            DATASET['FINAL_FCLTYCODE'] = DATASET['FCLTYCODE']
                         DATASET['FINAL_PREOCPCFCLTYCODE'] = DATASET['RESULT'][
                             'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 DATASET['RESULT']['preocpcFcltyCode']
                         DATASET['FINAL_RESVENOCODE'] = DATASET['RESULT']['resveNoCode']
