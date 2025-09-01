@@ -119,10 +119,7 @@ def main(DATASET):
                                     DATASET['RESERVE_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'],
                                                                                 '%Y-%m-%d')
                                     DATASET['LIVE_TIME'] = datetime.now() + timedelta(days=30)
-                                    if DATASET['FINAL_RESERVE'] and (
-                                            DATASET['LIVE_TIME'] >= DATASET['OPEN_TIME'] or DATASET[
-                                        'RESERVE_TIME'] <
-                                            DATASET['LIMIT_TIME']):
+                                    if DATASET['FINAL_RESERVE'] and (DATASET['LIVE_TIME'] >= DATASET['OPEN_TIME'] or DATASET['RESERVE_TIME'] <= DATASET['LIMIT_TIME']):
                                         if not DATASET['TRY_RESERVE']:
                                             #if '임시 점유 실패' not in str(DATASET['MESSAGE']):
                                             DATASET = mm.message(DATASET,
@@ -220,7 +217,7 @@ def main(DATASET):
                                             DATASET = get_facility(DATASET, CURRENT_DICT)
                                             if DATASET['TEMPORARY_HOLD']:
                                                 DATASET = mm.message4(DATASET, '임시 점유 완료 ' + DATASET[
-                                                    'TARGET_MAX_CNT'] + ' ' + str(
+                                                    'TARGET_MAX_CNT'] + '인실 ' + str(
                                                     DATASET['RESVENOCODE']) + ' => ' + str(
                                                     DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
                                                     DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
@@ -440,7 +437,7 @@ def get_facility_relay(DATASET):
                         DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
                         DATASET['JUST_RESERVED'] = False
                         DATASET['STAND_BY_TIME'] = None
-                        DATASET = mm.message4(DATASET, '임시 점유 완료 ' + DATASET['TARGET_MAX_CNT'] + ' ' + str(
+                        DATASET = mm.message4(DATASET, '임시 점유 완료 ' + DATASET['TARGET_MAX_CNT'] + '인실 ' + str(
                             DATASET['RESVENOCODE']) + ' => ' + str(DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
                             DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(DATASET['FINAL_RESVEENDDE']))
                     else:
