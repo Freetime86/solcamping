@@ -19,7 +19,7 @@ DATASET = ms.dataset()
 DATASET['BOT_NUMBER'] = 1
 
 # 사용자 설정 USER_NO : 최종예약자, PING_PONG_1 = 첫번째 홀더, PING_PONG_2 두번째 홀더
-DATASET['USER_NO'] = '06'
+DATASET['USER_NO'] = '02'
 DATASET['PIN_PONG_1'] = '00'
 DATASET['PIN_PONG_2'] = '01'
 
@@ -30,10 +30,11 @@ DATASET['DELAY'] = 0  # 임시점유 상태의 갱신 주기 속도 새벽엔 �
 DATASET['SYSTEM_OFF'] = False  # 1건 예약 후 시스템 종료 유무
 DATASET['MULTI'] = True  # 1건당 1개의 봇으로 세팅
 DATASET['SHOW_WORKS'] = False  # 1건당 1개의 봇으로 세팅
+DATASET['MULTIPLE_BOT'] = 1
 
 # 숙박 설정
-DATASET['SELECT_DATE'] = ['2025-09-13']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
-DATASET['PERIOD'] = ['1']  # 연박 수
+DATASET['SELECT_DATE'] = ['2025-10-04']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
+DATASET['PERIOD'] = ['3']  # 연박 수
 # 01:든바다, 02:난바다, 03:허허바다, 04:전통한옥, 05:캐라반, 06:자동차야영장, 07:글램핑A 08:글램핑B, 09:캐빈하우스
 DATASET['ROOM_FACILITY'] = ['01', '02']
 # 바다 숙소 : 인실정보 적용 2인실, 4인실, 6인실, 8인실, 10인실  없을 경우 PASS 자동차야영장 등등은 없음.
@@ -69,8 +70,6 @@ for target_type_list in DATASET['TARGET_LIST']:
             copy_max_no = target_type_list['TARGET_MAX_CNT'][idx] + '인실'
         type_no_txt = type_no
         if (type_no_txt in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no_txt not in DATASET['ROOM_EXPT']:
-            name = "{}_WORKER".format(type_no)
-            DATASET['BOT_NAME'] = name
             DATASET['TARGET_MAX_CNT'] = target_type_list['TARGET_MAX_CNT'][idx]
             DATASET['TARGET_TYPE'] = target_type_list['TARGET_TYPE'][idx]
 
@@ -78,6 +77,8 @@ for target_type_list in DATASET['TARGET_LIST']:
             DATASET['resveNoCode'] = target_type_list['resveNoCode']
             DATASET['trrsrtCode'] = target_type_list['trrsrtCode']
             for cnt in range(DATASET['MULTIPLE_BOT']):
+                name = "{}_WORKER".format(str(type_no) + '_' + str(cnt + 1))
+                DATASET['BOT_NAME'] = name
                 t = processor.Worker(DATASET)  # sub thread 생성
                 t.start()
                 time.sleep(DATASET['BOT_STARTING_DELAY'])

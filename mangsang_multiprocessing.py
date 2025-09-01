@@ -228,7 +228,7 @@ def main(DATASET):
                                     if DATASET['SHOW_WORKS']:
                                         #print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' 대상 SCAN 중 ' + BOT_DATASET['TARGET_MAX_CNT'] + ' ' + str(target_type_list['site_name']) + ' => ' + str(BOT_DATASET['FCLTYTYCODE']) + ' / ' + str(BOT_DATASET['FROM_DATE']) + ' ~ ' + str(BOT_DATASET['TO_DATE']))
                                         DATASET = mm.message2(DATASET,
-                                                           str(BOT_DATASET['BOT_NAME']) + ' 대상 SCAN 중 ' + copy_max_no + ' ' + BOT_DATASET[
+                                                           str(BOT_DATASET['BOT_NAME']) + ' 대상 SCAN 중 ' + copy_max_no + '인실 ' + BOT_DATASET[
                                                                'site_name'] + ' => ' + str(
                                                                type_no_txt) + ' / ' + str(
                                                                begin_date) + ' ~ ' + str(

@@ -26,7 +26,7 @@ def dataset():
         'AVAILABLE_NAME_TXT': '',
         'CANCEL_NAME_TXT': '',
         'JUST_RESERVED': False,
-        'BOT_STARTING_DELAY': 0,
+        'BOT_STARTING_DELAY': 0.1,
         'SHOW_WORKS': False,
         'CHECK_DELAY': 60,
         'STAND_BY_TIME': None,
