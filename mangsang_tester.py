@@ -77,7 +77,7 @@ for target_type_list in DATASET['TARGET_LIST']:
             DATASET['site_name'] = target_type_list['site_name']
             DATASET['resveNoCode'] = target_type_list['resveNoCode']
             DATASET['trrsrtCode'] = target_type_list['trrsrtCode']
-            for idx in range(DATASET['MULTIPLE_BOT']):
+            for cnt in range(DATASET['MULTIPLE_BOT']):
                 t = processor.Worker(DATASET)  # sub thread 생성
                 t.start()
                 time.sleep(DATASET['BOT_STARTING_DELAY'])
