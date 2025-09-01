@@ -141,12 +141,16 @@ def main(DATASET):
                                                         BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
                                                         DATASET['TEMPORARY_HOLD'] = False
                                                     elif '비정상적인 접근' in BOT_DATASET['FINAL_RESULT']['message']:
-                                                        delete_occ(DATASET)
                                                         BOT_DATASET = mm.message8(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
                                                                                   ' ' + '(' +
                                                                                   BOT_DATASET['FINAL_RESULT'][
                                                                                       'message'] + ') 다음과 같은 사유로 임시점유 해제 후 재탐색 합니다.')
                                                         BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
+                                                        TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                                        TIME = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
+                                                        DATASET['CHECK_TIME'] = TIME
+                                                        if DATASET['DELAY_TIME'] <= DATASET['CHECK_TIME']:
+                                                            delete_occ(DATASET)
                                                         DATASET['TEMPORARY_HOLD'] = False
                                                     else:
                                                         DATASET['TEMPORARY_HOLD'] = False
@@ -258,7 +262,7 @@ def get_facility(DATASET, BOT_DATASET):
                 TIME = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
                 DATASET['CHECK_TIME'] = TIME
                 if DATASET['DELAY_TIME'] <= DATASET['CHECK_TIME']:
-                    DATASET['DELAY_TIME'] = TIME + timedelta(seconds=0.2)
+                    #DATASET['DELAY_TIME'] = TIME + timedelta(seconds=0.2)
                     response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False)
                     if 'Content-Type' in response.headers:
                         dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
