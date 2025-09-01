@@ -119,7 +119,7 @@ def main(DATASET):
                                     DATASET['RESERVE_TIME'] = datetime.strptime(DATASET['FINAL_RESVEBEGINDE'],
                                                                                 '%Y-%m-%d')
                                     DATASET['LIVE_TIME'] = datetime.now() + timedelta(days=30)
-                                    if DATASET['FINAL_RESERVE'] and (DATASET['LIVE_TIME'] >= DATASET['OPEN_TIME'] or DATASET['RESERVE_TIME'] <= DATASET['LIMIT_TIME']):
+                                    if DATASET['FINAL_RESERVE'] and (DATASET['LIVE_TIME'] >= DATASET['OPEN_TIME'] or DATASET['RESERVE_TIME'] < DATASET['LIMIT_TIME']):
                                         if not DATASET['TRY_RESERVE']:
                                             #if '임시 점유 실패' not in str(DATASET['MESSAGE']):
                                             DATASET = mm.message(DATASET,
