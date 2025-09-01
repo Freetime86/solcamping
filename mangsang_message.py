@@ -81,3 +81,13 @@ def message8(DATASET, text):
         print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' ' + str(text))
         DATASET['MESSAGE8'] = text
     return DATASET
+
+
+def message9(DATASET, text):
+    text = mu.replaceAll(text, "'")
+    text = mu.replaceAll(text, "\n")
+    DATASET['CURRENT_PROCESS'] = 'message8'
+    if DATASET['MESSAGE8'] != text:
+        print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' ' + str(text))
+        DATASET['MESSAGE8'] = text
+    return DATASET

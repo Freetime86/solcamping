@@ -4,8 +4,7 @@ import mangsang_utils as mu
 import traceback
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+import threading
 from datetime import datetime, timedelta
 from selenium.webdriver.support.ui import WebDriverWait
 from user_agent import generate_user_agent
@@ -22,21 +21,26 @@ py.FAILSAFE = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+class Worker(threading.Thread):
+    def __init__(self, first):
+        self.DATASET = first
+        super().__init__()
+
+    def run(self):
+        threading.Thread(target=main(self.DATASET))
+
 def main(DATASET):
-    BOT_DICT = DATASET.copy()
-    _bot_name = DATASET['BOT_NAME']
+    BOT_DATASET = DATASET.copy()
+    BOT_DATASET['BOT_NAME'] = DATASET['BOT_NAME']
     if DATASET['THREAD_FLAG']:
         DATASET['THREAD_FLAG'] = False
-        _bot_name = DATASET['BOT_NAME']
+        print('SYSTEM LOADING....')
         # 시스템 기본 수행작업 필수
-        DATASET = md.convert(DATASET)
         if not md.check(DATASET):
             exit()
         DATASET = login(DATASET)
-        DATASET = mm.message(DATASET, _bot_name + ' START!')
         THREAD_FLAG = 'MAIN'
     else:
-        DATASET = mm.message(DATASET, DATASET['BOT_NAME'] + ' START!')
         THREAD_FLAG = 'SUB'
 
     while True:
@@ -69,357 +73,325 @@ def main(DATASET):
 
     while True:
         try:
-            if BOT_DICT['TEMPORARY_HOLD']:
-                while not BOT_DICT['JUST_RESERVED']:
-                    if 'preocpcEndDt' in BOT_DICT['RESULT']:
-                        if BOT_DICT['RESULT']['preocpcEndDt'] is not None:
-                            BOT_DICT = mm.message5(BOT_DICT, '점유 시간 ' + BOT_DICT['RESULT']['preocpcBeginDt'] + ' ~ ' +
-                                                  BOT_DICT['RESULT']['preocpcEndDt'])
+            if BOT_DATASET['TEMPORARY_HOLD']:
+                while not BOT_DATASET['JUST_RESERVED']:
+                    if 'preocpcEndDt' in BOT_DATASET['RESULT']:
+                        if BOT_DATASET['RESULT']['preocpcEndDt'] is not None:
+                            BOT_DATASET = mm.message5(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                             ' ' + '점유 시간 ' + BOT_DATASET['RESULT']['preocpcBeginDt'] + ' ~ ' +
+                                                  BOT_DATASET['RESULT']['preocpcEndDt'])
                             CURRENT_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             CURRENT_TIME = datetime.strptime(CURRENT_TIME_STR, '%Y-%m-%d %H:%M:%S')
-                            IN_RESERVED_TIME = datetime.strptime(BOT_DICT['RESULT']['preocpcEndDt'],
-                                                                 '%Y-%m-%d %H:%M:%S') - timedelta(seconds=15)
-                            #if CURRENT_TIME >= IN_RESERVED_TIME or BOT_DICT['STAND_BY_TIME'] is None:
-                            if BOT_DICT['STAND_BY_TIME'] is None:
-                                BOT_DICT['RESERVE_TIME'] = datetime.strptime(BOT_DICT['FINAL_RESVEBEGINDE'],
+                            IN_RESERVED_TIME = datetime.strptime(BOT_DATASET['RESULT']['preocpcEndDt'],
+                                                                 '%Y-%m-%d %H:%M:%S') - timedelta(seconds=9999)
+                            #if CURRENT_TIME >= IN_RESERVED_TIME or BOT_DATASET['STAND_BY_TIME'] is None:
+                            if BOT_DATASET['STAND_BY_TIME'] is None:
+                                BOT_DATASET['RESERVE_TIME'] = datetime.strptime(BOT_DATASET['FINAL_RESVEBEGINDE'],
                                                                             '%Y-%m-%d')
-                                BOT_DICT['LIVE_TIME'] = datetime.now() + timedelta(days=30)
-                                if BOT_DICT['FINAL_RESERVE'] and (
-                                        BOT_DICT['LIVE_TIME'] >= BOT_DICT['OPEN_TIME'] or BOT_DICT[
-                                    'RESERVE_TIME'] <
-                                        BOT_DICT['LIMIT_TIME']):
-                                    if not BOT_DICT['TRY_RESERVE']:
-                                        #if '임시 점유 실패' not in str(BOT_DICT['MESSAGE']):
-                                        BOT_DICT = mm.message(BOT_DICT,
-                                                             ' 확정 예약 진행 중... ' + BOT_DICT[
+                                BOT_DATASET['LIVE_TIME'] = datetime.now() + timedelta(days=30)
+                                if BOT_DATASET['FINAL_RESERVE'] and (BOT_DATASET['LIVE_TIME'] >= BOT_DATASET['OPEN_TIME'] or BOT_DATASET['RESERVE_TIME'] <= BOT_DATASET['LIMIT_TIME']):
+                                    if not BOT_DATASET['TRY_RESERVE']:
+                                        #if '임시 점유 실패' not in str(BOT_DATASET['MESSAGE']):
+                                        BOT_DATASET = mm.message(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                             ' ' +
+                                                             '확정 예약 진행 중... ' + BOT_DATASET[
                                                                  'TARGET_MAX_CNT'] + ' ' + str(
-                                                                 BOT_DICT['FINAL_TYPE_NAME']) + ' => ' + str(
-                                                                 BOT_DICT['FINAL_FCLTYCODE']) + ' / ' + str(
-                                                                 BOT_DICT['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
-                                                                 BOT_DICT['FINAL_RESVEENDDE']))
-                                        BOT_DICT = final_reservation(BOT_DICT)
-                                        if BOT_DICT['FINAL_RESULT']['status_code'] == 200:
-                                            if 'message' in BOT_DICT['FINAL_RESULT']:
-                                                RESULT_TXT = BOT_DICT['FINAL_RESULT']['message']
+                                                                 BOT_DATASET['FINAL_TYPE_NAME']) + ' => ' + str(
+                                                                 BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                                                                 BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
+                                                                 BOT_DATASET['FINAL_RESVEENDDE']))
+                                        BOT_DATASET = final_reservation(DATASET, BOT_DATASET)
+                                        if BOT_DATASET['FINAL_RESULT']['status_code'] == 200:
+                                            if 'message' in BOT_DATASET['FINAL_RESULT']:
+                                                RESULT_TXT = BOT_DATASET['FINAL_RESULT']['message']
                                                 if RESULT_TXT == '예약신청이 정상적으로 완료되었습니다.':
-                                                    BOT_DICT = mm.message(BOT_DICT, '[' + str(
-                                                        BOT_DICT['FINAL_TYPE_NAME']) + '] ' + BOT_DICT[
+                                                    BOT_DATASET = mm.message(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                             ' ' +
+                                                             '[' + str(
+                                                        BOT_DATASET['FINAL_TYPE_NAME']) + '] ' + BOT_DATASET[
                                                                              'TARGET_MAX_CNT'] + ' ' + str(
-                                                        BOT_DICT['FINAL_FCLTYCODE']) + ' / ' + str(
-                                                        BOT_DICT['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
-                                                        BOT_DICT[
+                                                        BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                                                        BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
+                                                        BOT_DATASET[
                                                             'FINAL_RESVEENDDE']) + ' => ' + ' 예약이 완료되었습니다. ')
-                                                    BOT_DICT['TEMPORARY_HOLD'] = False
-                                                    BOT_DICT['JUST_RESERVED'] = True
+                                                    BOT_DATASET['TEMPORARY_HOLD'] = False
+                                                    DATASET['TEMPORARY_HOLD'] = False
+                                                    BOT_DATASET['JUST_RESERVED'] = True
                                                     if DATASET['SYSTEM_OFF']:
                                                         exit()
                                                 else:
-                                                    if '예약가능 시간은' in BOT_DICT['FINAL_RESULT']['message']:
-                                                        BOT_DICT['STAND_BY_TIME'] = datetime.strptime(
-                                                            BOT_DICT['FINAL_RESULT']['message'][26:45],
+                                                    if '예약가능 시간은' in BOT_DATASET['FINAL_RESULT']['message']:
+                                                        BOT_DATASET['STAND_BY_TIME'] = datetime.strptime(
+                                                            BOT_DATASET['FINAL_RESULT']['message'][26:45],
                                                             '%Y-%m-%d %H:%M:%S') - timedelta(seconds=2)
-                                                        BOT_DICT = mm.message7(BOT_DICT, BOT_DICT['FINAL_RESULT'][
+                                                        BOT_DATASET = mm.message7(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                             ' ' + BOT_DATASET['FINAL_RESULT'][
                                                             'message'] + ' 가능 시간까지 대기상태로 진입합니다.')
-                                                    elif '일시적인 장애로' in BOT_DICT['FINAL_RESULT'][
-                                                        'message'] or '비정상적인 접근' in BOT_DICT['FINAL_RESULT'][
-                                                        'message'] or '예약이 불가능한' in BOT_DICT['FINAL_RESULT'][
-                                                        'message']:
-                                                        BOT_DICT = mm.message8(BOT_DICT,
-                                                                              '(' + BOT_DICT['FINAL_RESULT'][
+                                                    elif '일시적인 장애로' in BOT_DATASET['FINAL_RESULT']['message'] :
+                                                        BOT_DATASET = mm.message8(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                             ' ' + '(' + BOT_DATASET['FINAL_RESULT'][
                                                                                   'message'] + ') 다음과 같은 사유로 예약시도를 계속 합니다.')
-                                                        BOT_DICT = get_facility_relay(BOT_DICT)
+                                                        BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
+                                                        DATASET['TEMPORARY_HOLD'] = False
+                                                    elif '예약이 불가능한' in BOT_DATASET['FINAL_RESULT']['message']:
+                                                        BOT_DATASET = mm.message8(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                                                  ' ' + '(' +
+                                                                                  BOT_DATASET['FINAL_RESULT'][
+                                                                                      'message'] + ') 다음과 같은 사유로 재 탐색을 진행 합니다.')
+                                                        BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
+                                                        DATASET['TEMPORARY_HOLD'] = False
+                                                    elif '비정상적인 접근' in BOT_DATASET['FINAL_RESULT']['message']:
+                                                        delete_occ(DATASET)
+                                                        BOT_DATASET = mm.message8(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                                                  ' ' + '(' +
+                                                                                  BOT_DATASET['FINAL_RESULT'][
+                                                                                      'message'] + ') 다음과 같은 사유로 임시점유 해제 후 재탐색 합니다.')
+                                                        BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
+                                                        DATASET['TEMPORARY_HOLD'] = False
                                                     else:
-                                                        BOT_DICT['TEMPORARY_HOLD'] = False
-                                                        mm.message(BOT_DICT, BOT_DICT['FINAL_RESULT']['message'])
+                                                        DATASET['TEMPORARY_HOLD'] = False
+                                                        BOT_DATASET['TEMPORARY_HOLD'] = False
+                                                        mm.message(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                             ' ' + BOT_DATASET['FINAL_RESULT']['message'])
                                                         break
                                             else:
-                                                BOT_DICT = final_reservation(BOT_DICT)
+                                                BOT_DATASET = final_reservation(DATASET, BOT_DATASET)
                                         else:
-                                            BOT_DICT = get_facility_relay(BOT_DICT)
+                                            mm.message(BOT_DATASET, BOT_DATASET['BOT_NAME'] +' Server response failed (취소 딜레이 예약 오류)')
+                                            delete_occ(DATASET)
+                                            BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
+                                            DATASET['TEMPORARY_HOLD'] = False
                                 else:
                                     if CURRENT_TIME >= IN_RESERVED_TIME:
-                                        BOT_DICT = get_facility_relay(BOT_DICT)
+                                        BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
+                                    DATASET['TEMPORARY_HOLD'] = False
+
                             else:
                                 if CURRENT_TIME >= IN_RESERVED_TIME:
-                                    BOT_DICT = get_facility_relay(BOT_DICT)
+                                    BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
+                                DATASET['TEMPORARY_HOLD'] = False
                             #else:
-                            #    if CURRENT_TIME >= BOT_DICT['STAND_BY_TIME']:
-                            #        BOT_DICT['STAND_BY_TIME'] = None
+                            #    if CURRENT_TIME >= BOT_DATASET['STAND_BY_TIME']:
+                            #        BOT_DATASET['STAND_BY_TIME'] = None
                         else:
-                            BOT_DICT = get_facility_relay(BOT_DICT)
+                            BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
+                            DATASET['TEMPORARY_HOLD'] = False
                     else:
-                        BOT_DICT = get_facility_relay(BOT_DICT)
+                        BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
+                        DATASET['TEMPORARY_HOLD'] = False
             else:
-                if BOT_DICT['TARGET_MAX_CNT'] == '0':
+                if BOT_DATASET['TARGET_MAX_CNT'] == '0':
                     copy_max_no = '전체이용'
                 else:
-                    copy_max_no = BOT_DICT['TARGET_MAX_CNT'] + '인실'
-                type_no_txt = _bot_name.split('_')[0]
+                    copy_max_no = BOT_DATASET['TARGET_MAX_CNT']
+                type_no_txt = BOT_DATASET['BOT_NAME'].split('_')[0]
 
-                for begin_date in BOT_DICT['SELECT_DATE']:
-                    end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(days=BOT_DICT['PERIOD'])).strftime("%Y-%m-%d")
-                    if not BOT_DICT['TEMPORARY_HOLD']:
-                        BOT_DICT['FCLTYCODE'] = type_no_txt
-                        BOT_DICT['FCLTYTYCODE'] = BOT_DICT['TARGET_TYPE']
-                        BOT_DICT['TARGET_MAX_CNT'] = copy_max_no
-                        BOT_DICT['FINAL_TYPE_NAME'] = BOT_DICT['site_name']
-                        BOT_DICT['RESVENOCODE'] = BOT_DICT['resveNoCode']
-                        BOT_DICT['TRRSRTCODE'] = BOT_DICT['trrsrtCode']
-                        BOT_DICT['FROM_DATE'] = begin_date
-                        BOT_DICT['TO_DATE'] = end_date
+                for begin_date in DATASET['SELECT_DATE']:
+                    for PERIOD in DATASET['PERIOD']:
+                        end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(days=int(PERIOD))).strftime("%Y-%m-%d")
+                        if not BOT_DATASET['TEMPORARY_HOLD']:
+                            BOT_DATASET['FCLTYCODE'] = type_no_txt
+                            BOT_DATASET['FCLTYTYCODE'] = BOT_DATASET['TARGET_TYPE']
+                            BOT_DATASET['TARGET_MAX_CNT'] = copy_max_no
+                            BOT_DATASET['FINAL_TYPE_NAME'] = BOT_DATASET['site_name']
+                            BOT_DATASET['RESVENOCODE'] = BOT_DATASET['resveNoCode']
+                            BOT_DATASET['TRRSRTCODE'] = BOT_DATASET['trrsrtCode']
+                            BOT_DATASET['FROM_DATE'] = begin_date
+                            BOT_DATASET['TO_DATE'] = end_date
 
-                        if not BOT_DICT['TEMPORARY_HOLD']:
-                            BOT_DICT = get_facility(BOT_DICT)
-                            if BOT_DICT['TEMPORARY_HOLD']:
-                                BOT_DICT = mm.message4(BOT_DICT, '임시 점유 완료 ' + BOT_DICT[
-                                    'TARGET_MAX_CNT'] + ' ' + str(
-                                    BOT_DICT['RESVENOCODE']) + ' => ' + str(
-                                    BOT_DICT['FINAL_FCLTYCODE']) + ' / ' + str(
-                                    BOT_DICT['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
-                                    BOT_DICT['FINAL_RESVEENDDE']))
-                                break
-                            else:
-                                elapsed_time = time.time() - start_time  # 경과된 시간 계산
-                                if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
-                                    BOT_DICT = mm.message(BOT_DICT, ' 탐색 지정 대상 ' + DATASET[
-                                        'RANGE_TARGETS'] + ' / ' + DATASET[
-                                                             'SCAN_TARGETS'] + ' 임시점유 예약을 시도 합니다.. ' + begin_date + ' ~ ' + end_date + ' / 경과 시간 : ' + str(
-                                        run_cnt) + '시간')
-                                    run_cnt = run_cnt + 1
+                            if not BOT_DATASET['TEMPORARY_HOLD']:
+                                BOT_DATASET = get_facility(DATASET, BOT_DATASET)
+                                if BOT_DATASET['TEMPORARY_HOLD']:
+                                    BOT_DATASET = mm.message4(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                                 ' ' + '임시 점유 완료 ' + BOT_DATASET[
+                                        'TARGET_MAX_CNT'] + ' ' + str(
+                                        BOT_DATASET['RESVENOCODE']) + ' => ' + str(
+                                        BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                                        BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
+                                        BOT_DATASET['FINAL_RESVEENDDE']))
+                                    break
+                                else:
+                                    if not DATASET['TEMPORARY_HOLD']:
+                                        elapsed_time = time.time() - start_time  # 경과된 시간 계산
+                                        if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
+                                            BOT_DATASET = mm.message(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                                     ' ' +
+                                                              ' 탐색 지정 대상 ' + BOT_DATASET['site_name'] + ' ' + type_no_txt + ' ' +
+                                                              BOT_DATASET[
+                                                                  'TARGET_MAX_CNT'] + '인실' + ' /  임시점유 예약을 시도 합니다.. ' + ' / 경과 시간 : ' + str(
+                                                                  run_cnt) + '시간')
+                                            run_cnt = run_cnt + 1
 
-                                if BOT_DICT['SHOW_WORKS']:
-                                    #print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' 대상 SCAN 중 ' + BOT_DICT['TARGET_MAX_CNT'] + ' ' + str(target_type_list['site_name']) + ' => ' + str(BOT_DICT['FCLTYTYCODE']) + ' / ' + str(BOT_DICT['FROM_DATE']) + ' ~ ' + str(BOT_DICT['TO_DATE']))
-                                    BOT_DICT = mm.message2(BOT_DICT, str(_bot_name) + ' 대상 SCAN 중 ' + copy_max_no + ' ' + BOT_DICT['site_name'] + ' => ' + str(
-                                                              type_no_txt) + ' / ' + str(
-                                                              begin_date) + ' ~ ' + str(
-                                                              end_date))
-                    if BOT_DICT['TEMPORARY_HOLD']:
-                        break
-                if BOT_DICT['TEMPORARY_HOLD']:
-                    break
+                                        if DATASET['SHOW_WORKS']:
+                                            #print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' 대상 SCAN 중 ' + BOT_DATASET['TARGET_MAX_CNT'] + ' ' + str(target_type_list['site_name']) + ' => ' + str(BOT_DATASET['FCLTYTYCODE']) + ' / ' + str(BOT_DATASET['FROM_DATE']) + ' ~ ' + str(BOT_DATASET['TO_DATE']))
+                                            DATASET = mm.message2(DATASET,
+                                                               str(BOT_DATASET['BOT_NAME']) + ' 대상 SCAN 중 ' + copy_max_no + ' ' + BOT_DATASET[
+                                                                   'site_name'] + ' => ' + str(
+                                                                   type_no_txt) + ' / ' + str(
+                                                                   begin_date) + ' ~ ' + str(
+                                                                   end_date) + ' (' + str(PERIOD) + ')박')
+                        if BOT_DATASET['TEMPORARY_HOLD']:
+                            break
         except Exception as ex:
             print(traceback.format_exc())
-            mm.message(BOT_DICT, ' EXCEPTION!! ====>  ' + str(ex))
-            error(BOT_DICT)
+            mm.message(BOT_DATASET, ' EXCEPTION!! ====>  ' + str(ex))
+            error(BOT_DATASET)
             continue
 
 
-def reservation_list(BOT_DICT):
+def get_facility(DATASET, BOT_DATASET):
     # 예약 파라미터 세팅
-    url = "https://www.campingkorea.or.kr/user/reservation/ND_selectChildFcltyList.do"
+    url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
     dict_data = {
-        'trrsrtCode': str(BOT_DICT['LIST_TRRSRTCODE']),
-        'fcltyCode': str(BOT_DICT['LIST_FCLTYCODE']),
-        'resveNoCode': str(BOT_DICT['LIST_RESVENOCODE']),
-        'resveBeginDe': str(BOT_DICT['LIST_FROM_DATE']),
-        'resveEndDe': str(BOT_DICT['LIST_TO_DATE'])
+        'trrsrtCode': str(BOT_DATASET['TRRSRTCODE']),
+        'fcltyCode': str(BOT_DATASET['FCLTYCODE']),
+        'resveNoCode': str(BOT_DATASET['RESVENOCODE']),
+        'resveBeginDe': str(BOT_DATASET['FROM_DATE']),
+        'resveEndDe': str(BOT_DATASET['TO_DATE']),
+        'preocpcTimeCode': '60'
     }
     response = ''
     while response == '':
         try:
-            response = requests.post(url=url, data=dict_data, cookies=BOT_DICT['COOKIE'], verify=False)
-            if not 'login' in response.text:
-                dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
-                             'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
-                if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                    if not BOT_DICT['TEMPORARY_HOLD']:
-                        BOT_DICT['RESERVATION_LIST'] = {**dict_meta, **response.json()}
-                        if BOT_DICT['RESERVATION_LIST']['value'] is not None:
-                            BOT_DICT = reservation_filter(BOT_DICT)
-                        if BOT_DICT['RESERVATION_LIST']['message']:
-                            if '예약취소 후 2시간동안 동일한 시설은 예약을 할 수 없습니다.' in BOT_DICT['RESERVATION_LIST']['message']:
-                                new_msg = mu.replaceAll(str(BOT_DICT['RESERVATION_LIST']['message']), '\n')
-                                print('######################진행 불가 계정 : ' + new_msg)
-                                exit()
-                        return BOT_DICT
-                else:
-                    if response.status_code == 500:
-                        print('통신 에러 (2개 이상의 취소 패널티 등이 원인) 시스템 종료')
-            else:  # 문자열 형태인 경우
-                mm.message(BOT_DICT, '로그인 TIMEOUT 발생, 재로그인 시도')
-                BOT_DICT = login(BOT_DICT)
-            return BOT_DICT
+            if not DATASET['TEMPORARY_HOLD']:
+                TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                TIME = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
+                DATASET['CHECK_TIME'] = TIME
+                if DATASET['DELAY_TIME'] <= DATASET['CHECK_TIME']:
+                    DATASET['DELAY_TIME'] = TIME + timedelta(seconds=0.2)
+                    response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False)
+                    if 'Content-Type' in response.headers:
+                        dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                                     'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+                        if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                            BOT_DATASET['RELAY_RESULT'] = {**dict_meta, **response.json()}
+                            if BOT_DATASET['RELAY_RESULT']['status_code'] == 200 and BOT_DATASET['RELAY_RESULT']['preocpcEndDt'] is not None and not DATASET['TEMPORARY_HOLD']:
+                                DATASET['TEMPORARY_HOLD'] = True
+                                BOT_DATASET['TEMPORARY_HOLD'] = True
+                                BOT_DATASET['registerId'] = BOT_DATASET['CURRENT_USER']['rid']  # 로그인 아이디 초기값 하드코딩
+                                BOT_DATASET['rsvctmNm'] = BOT_DATASET['CURRENT_USER']['user_name']  # 사용자 이름 초기값 하드코딩
+                                BOT_DATASET['rsvctmEncptMbtlnum'] = BOT_DATASET['CURRENT_USER']['rphone']  # 전화번호
+                                BOT_DATASET['encptEmgncCttpc'] = BOT_DATASET['CURRENT_USER']['rphone']  # 긴급전화번호
+                                BOT_DATASET['RESULT'] = BOT_DATASET['RELAY_RESULT']
+                                #필요 파라메터 맵핑
+                                BOT_DATASET['FINAL_TRRSRTCODE'] = BOT_DATASET['RESULT']['trrsrtCode']
+                                BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['RESULT']['fcltyCode']
+                                #한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
+                                if BOT_DATASET['FINAL_TYPE_NAME'] == '전통한옥':
+                                    BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['FCLTYCODE']
+                                BOT_DATASET['FINAL_FCLTYTYCODE'] = BOT_DATASET['RESULT']['fcltyTyCode']
+                                BOT_DATASET['FINAL_PREOCPCFCLTYCODE'] = BOT_DATASET['RESULT'][
+                                    'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 BOT_DATASET['RESULT']['preocpcFcltyCode']
+                                BOT_DATASET['FINAL_RESVENOCODE'] = BOT_DATASET['RESULT']['resveNoCode']
+                                BOT_DATASET['FINAL_RESVEBEGINDE'] = BOT_DATASET['RESULT']['resveBeginDe']
+                                BOT_DATASET['FINAL_RESVEENDDE'] = BOT_DATASET['RESULT']['resveEndDe']
+                                BOT_DATASET['FINAL_RESVENO'] = BOT_DATASET['RESULT']['resveNo']
+                                BOT_DATASET['FINAL_REGISTERID'] = BOT_DATASET['registerId']  #로그인 아이디 초기값 하드코딩
+                                BOT_DATASET['FINAL_RSVCTMNM'] = BOT_DATASET['rsvctmNm']  #사용자 이름 초기값 하드코딩
+                                BOT_DATASET['FINAL_RSVCTMENCPTMBTLNUM'] = BOT_DATASET['rsvctmEncptMbtlnum']  #전화번호
+                                BOT_DATASET['FINAL_ENCPTEMGNCCTTPC'] = BOT_DATASET['encptEmgncCttpc']  #긴급전화번호
+                                BOT_DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
+                                BOT_DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
+                                BOT_DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
+                                BOT_DATASET['JUST_RESERVED'] = False
+                                return BOT_DATASET
+                        else:  # 문자열 형태인 경우
+                            BOT_DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
+                            return BOT_DATASET
+                    else:
+                        print('error = > ' + str(response))
+            return BOT_DATASET
         except requests.exceptions.RequestException as ex:
             continue
 
 
-def reservation_filter(BOT_DICT):
-    BOT_DICT['CURRENT_PROCESS'] = 'reservationList_filter'
-    target_list = BOT_DICT['RESERVATION_LIST']['value']['childFcltyList']
-    AVAILABLE_NAME_LIST = []
-    CANCEL_NAME_LIST = []
-    for target in target_list:
-        _target_no = str(target['fcltyCode'])
-        if _target_no in BOT_DICT['LIST_TARGET_NO']:
-            _availableYn = str(target['resveAt'])
-            _cancelYn = str(target['canclYn'])
-            if _availableYn == 'Y':
-                if _cancelYn == 'Y':
-                    BOT_DICT['AVAILABLE_TARGET_LIST'].append(target)
-                    BOT_DICT['AVA_FROM_DATE_LIST'].append(str(BOT_DICT['LIST_FROM_DATE']))
-                    BOT_DICT['AVA_TO_DATE_LIST'].append(str(BOT_DICT['LIST_TO_DATE']))
-                    AVAILABLE_NAME_LIST.append(str(target['fcltyNm']))
-                else:
-                    BOT_DICT['CANCEL_TARGET_LIST'].append(target)
-                    BOT_DICT['CAN_FROM_DATE_LIST'].append(str(BOT_DICT['LIST_FROM_DATE']))
-                    BOT_DICT['CAN_TO_DATE_LIST'].append(str(BOT_DICT['LIST_TO_DATE']))
-                    CANCEL_NAME_LIST.append(str(target['fcltyNm']))
-    if len(AVAILABLE_NAME_LIST) > 0:
-        BOT_DICT['AVAILABLE_NAME_TXT'] = BOT_DICT['AVAILABLE_NAME_TXT'] + '\n' + str(
-            BOT_DICT['LIST_FROM_DATE']) + ' ~ ' + str(BOT_DICT['LIST_TO_DATE']) + ' ' + str(
-            BOT_DICT['LIST_TARGET_NAME']) + ' => ' + str(AVAILABLE_NAME_LIST)
-    if len(CANCEL_NAME_LIST) > 0:
-        BOT_DICT['CANCEL_NAME_TXT'] = BOT_DICT['CANCEL_NAME_TXT'] + '\n' + str(BOT_DICT['LIST_FROM_DATE']) + ' ~ ' + str(
-            BOT_DICT['LIST_TO_DATE']) + ' ' + str(BOT_DICT['LIST_TARGET_NAME']) + ' => ' + str(AVAILABLE_NAME_LIST)
-    return BOT_DICT
-
-
-def get_facility(BOT_DICT):
+def get_facility_relay(DATASET, BOT_DATASET):
     # 예약 파라미터 세팅
     url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
     dict_data = {
-        'trrsrtCode': str(BOT_DICT['TRRSRTCODE']),
-        'fcltyCode': str(BOT_DICT['FCLTYCODE']),
-        'resveNoCode': str(BOT_DICT['RESVENOCODE']),
-        'resveBeginDe': str(BOT_DICT['FROM_DATE']),
-        'resveEndDe': str(BOT_DICT['TO_DATE'])
+        'trrsrtCode': str(BOT_DATASET['TRRSRTCODE']),
+        'fcltyCode': str(BOT_DATASET['FCLTYCODE']),
+        'resveNoCode': str(BOT_DATASET['RESVENOCODE']),
+        'resveBeginDe': str(BOT_DATASET['FROM_DATE']),
+        'resveEndDe': str(BOT_DATASET['TO_DATE'])
     }
     response = ''
     while response == '':
         try:
-            response = requests.post(url=url, data=dict_data, cookies=BOT_DICT['COOKIE'], verify=False)
-            if 'Content-Type' in response.headers:
-                dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
-                             'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
-                if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                    BOT_DICT['RELAY_RESULT'] = {**dict_meta, **response.json()}
-                    if BOT_DICT['RELAY_RESULT']['status_code'] == 200 and BOT_DICT['RELAY_RESULT']['preocpcEndDt'] is not None:
-                        BOT_DICT['TEMPORARY_HOLD'] = True
-                        BOT_DICT['registerId'] = BOT_DICT['CURRENT_USER']['rid']  # 로그인 아이디 초기값 하드코딩
-                        BOT_DICT['rsvctmNm'] = BOT_DICT['CURRENT_USER']['user_name']  # 사용자 이름 초기값 하드코딩
-                        BOT_DICT['rsvctmEncptMbtlnum'] = BOT_DICT['CURRENT_USER']['rphone']  # 전화번호
-                        BOT_DICT['encptEmgncCttpc'] = BOT_DICT['CURRENT_USER']['rphone']  # 긴급전화번호
-                        BOT_DICT['RESULT'] = BOT_DICT['RELAY_RESULT']
-                        #필요 파라메터 맵핑
-                        BOT_DICT['FINAL_TRRSRTCODE'] = BOT_DICT['RESULT']['trrsrtCode']
-                        BOT_DICT['FINAL_FCLTYCODE'] = BOT_DICT['RESULT']['fcltyCode']
-                        #한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
-                        if BOT_DICT['FINAL_TYPE_NAME'] == '전통한옥':
-                            BOT_DICT['FINAL_FCLTYCODE'] = BOT_DICT['FCLTYCODE']
-                        BOT_DICT['FINAL_FCLTYTYCODE'] = BOT_DICT['RESULT']['fcltyTyCode']
-                        BOT_DICT['FINAL_PREOCPCFCLTYCODE'] = BOT_DICT['RESULT'][
-                            'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 BOT_DICT['RESULT']['preocpcFcltyCode']
-                        BOT_DICT['FINAL_RESVENOCODE'] = BOT_DICT['RESULT']['resveNoCode']
-                        BOT_DICT['FINAL_RESVEBEGINDE'] = BOT_DICT['RESULT']['resveBeginDe']
-                        BOT_DICT['FINAL_RESVEENDDE'] = BOT_DICT['RESULT']['resveEndDe']
-                        BOT_DICT['FINAL_RESVENO'] = BOT_DICT['RESULT']['resveNo']
-                        BOT_DICT['FINAL_REGISTERID'] = BOT_DICT['registerId']  #로그인 아이디 초기값 하드코딩
-                        BOT_DICT['FINAL_RSVCTMNM'] = BOT_DICT['rsvctmNm']  #사용자 이름 초기값 하드코딩
-                        BOT_DICT['FINAL_RSVCTMENCPTMBTLNUM'] = BOT_DICT['rsvctmEncptMbtlnum']  #전화번호
-                        BOT_DICT['FINAL_ENCPTEMGNCCTTPC'] = BOT_DICT['encptEmgncCttpc']  #긴급전화번호
-                        BOT_DICT['FINAL_RSVCTMAREA'] = '1005'  #거주지역
-                        BOT_DICT['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
-                        BOT_DICT['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
-                        BOT_DICT['JUST_RESERVED'] = False
-                        return BOT_DICT
-                else:  # 문자열 형태인 경우
-                    BOT_DICT['RESULT'] = {**dict_meta, **{'text': response.text}}
-                    return BOT_DICT
-            else:
-                print('error = > ' + str(response))
-            return BOT_DICT
-        except requests.exceptions.RequestException as ex:
-            continue
-
-
-def get_facility_relay(BOT_DICT):
-    # 예약 파라미터 세팅
-    url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
-    dict_data = {
-        'trrsrtCode': str(BOT_DICT['TRRSRTCODE']),
-        'fcltyCode': str(BOT_DICT['FCLTYCODE']),
-        'resveNoCode': str(BOT_DICT['RESVENOCODE']),
-        'resveBeginDe': str(BOT_DICT['FROM_DATE']),
-        'resveEndDe': str(BOT_DICT['TO_DATE'])
-    }
-    response = ''
-    while response == '':
-        try:
-            response = requests.post(url=url, data=dict_data, cookies=BOT_DICT['COOKIE'], verify=False)
+            response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False)
             dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
                          'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
             if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                BOT_DICT['RELAY_RESULT'] = {**dict_meta, **response.json()}
-                if BOT_DICT['RELAY_RESULT']['status_code'] == 200 and BOT_DICT['RELAY_RESULT']['preocpcEndDt'] is not None:
-                    BOT_DICT['TEMPORARY_HOLD'] = True
-
-                    BOT_DICT['RESULT'] = BOT_DICT['RELAY_RESULT']
+                BOT_DATASET['RELAY_RESULT'] = {**dict_meta, **response.json()}
+                if BOT_DATASET['RELAY_RESULT']['status_code'] == 200 and BOT_DATASET['RELAY_RESULT']['preocpcEndDt'] is not None:
+                    TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    TIME = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
+                    DATASET['DELAY_TIME'] = TIME + timedelta(seconds=0.2)
+                    #DATASET['TEMPORARY_HOLD'] = True
+                    #BOT_DATASET['TEMPORARY_HOLD'] = True
+                    BOT_DATASET['RESULT'] = BOT_DATASET['RELAY_RESULT']
                     #필요 파라메터 맵핑
-                    BOT_DICT['FINAL_TRRSRTCODE'] = BOT_DICT['RESULT']['trrsrtCode']
-                    BOT_DICT['FINAL_FCLTYCODE'] = BOT_DICT['RESULT']['fcltyCode']
-                    BOT_DICT['FINAL_FCLTYTYCODE'] = BOT_DICT['RESULT']['fcltyTyCode']
+                    BOT_DATASET['FINAL_TRRSRTCODE'] = BOT_DATASET['RESULT']['trrsrtCode']
+                    BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['RESULT']['fcltyCode']
+                    BOT_DATASET['FINAL_FCLTYTYCODE'] = BOT_DATASET['RESULT']['fcltyTyCode']
                     # 한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
-                    if BOT_DICT['FINAL_TYPE_NAME'] == '전통한옥':
-                        BOT_DICT['FINAL_FCLTYCODE'] = CURRENT_DICT['FCLTYCODE']
-                    BOT_DICT['FINAL_PREOCPCFCLTYCODE'] = BOT_DICT['RESULT'][
-                        'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 BOT_DICT['RESULT']['preocpcFcltyCode']
-                    BOT_DICT['FINAL_RESVENOCODE'] = BOT_DICT['RESULT']['resveNoCode']
-                    BOT_DICT['FINAL_RESVEBEGINDE'] = BOT_DICT['RESULT']['resveBeginDe']
-                    BOT_DICT['FINAL_RESVEENDDE'] = BOT_DICT['RESULT']['resveEndDe']
-                    BOT_DICT['FINAL_RESVENO'] = BOT_DICT['RESULT']['resveNo']
-                    BOT_DICT['FINAL_REGISTERID'] = BOT_DICT['registerId']  #로그인 아이디 초기값 하드코딩
-                    BOT_DICT['FINAL_RSVCTMNM'] = BOT_DICT['rsvctmNm']  #사용자 이름 초기값 하드코딩
-                    BOT_DICT['FINAL_RSVCTMENCPTMBTLNUM'] = BOT_DICT['rsvctmEncptMbtlnum']  #전화번호
-                    BOT_DICT['FINAL_ENCPTEMGNCCTTPC'] = BOT_DICT['encptEmgncCttpc']  #긴급전화번호
-                    BOT_DICT['FINAL_RSVCTMAREA'] = '1005'  #거주지역
-                    BOT_DICT['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
-                    BOT_DICT['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
-                    BOT_DICT['JUST_RESERVED'] = False
-                    BOT_DICT['STAND_BY_TIME'] = None
-                    BOT_DICT = mm.message4(BOT_DICT, '임시 점유 완료 ' + BOT_DICT['TARGET_MAX_CNT'] + ' ' + str(
-                        BOT_DICT['RESVENOCODE']) + ' => ' + str(BOT_DICT['FINAL_FCLTYCODE']) + ' / ' + str(
-                        BOT_DICT['FINAL_RESVEBEGINDE']) + ' ~ ' + str(BOT_DICT['FINAL_RESVEENDDE']))
+                    if BOT_DATASET['FINAL_TYPE_NAME'] == '전통한옥':
+                        BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['FCLTYCODE']
+                    BOT_DATASET['FINAL_PREOCPCFCLTYCODE'] = BOT_DATASET['RESULT'][
+                        'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 BOT_DATASET['RESULT']['preocpcFcltyCode']
+                    BOT_DATASET['FINAL_RESVENOCODE'] = BOT_DATASET['RESULT']['resveNoCode']
+                    BOT_DATASET['FINAL_RESVEBEGINDE'] = BOT_DATASET['RESULT']['resveBeginDe']
+                    BOT_DATASET['FINAL_RESVEENDDE'] = BOT_DATASET['RESULT']['resveEndDe']
+                    BOT_DATASET['FINAL_RESVENO'] = BOT_DATASET['RESULT']['resveNo']
+                    BOT_DATASET['FINAL_REGISTERID'] = BOT_DATASET['registerId']  #로그인 아이디 초기값 하드코딩
+                    BOT_DATASET['FINAL_RSVCTMNM'] = BOT_DATASET['rsvctmNm']  #사용자 이름 초기값 하드코딩
+                    BOT_DATASET['FINAL_RSVCTMENCPTMBTLNUM'] = BOT_DATASET['rsvctmEncptMbtlnum']  #전화번호
+                    BOT_DATASET['FINAL_ENCPTEMGNCCTTPC'] = BOT_DATASET['encptEmgncCttpc']  #긴급전화번호
+                    BOT_DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
+                    BOT_DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
+                    BOT_DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
+                    BOT_DATASET['JUST_RESERVED'] = False
+                    BOT_DATASET['STAND_BY_TIME'] = None
+                    BOT_DATASET = mm.message4(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                         ' ' + '임시 점유 완료 ' + BOT_DATASET['TARGET_MAX_CNT'] + ' ' + str(
+                        BOT_DATASET['RESVENOCODE']) + ' => ' + str(BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                        BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(BOT_DATASET['FINAL_RESVEENDDE']))
                 else:
-                    BOT_DICT = mm.message4(BOT_DICT, ' 임시 점유 실패 예약 시도를 계속 합니다.')
-                #    CHECK_TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                #    CHECK_TIME = datetime.strptime(CHECK_TIME_STR, '%Y-%m-%d %H:%M:%S')
-                #    LIMIT_TIME = datetime.strptime(BOT_DICT['RESULT']['preocpcEndDt'], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=10)
-                #    if CHECK_TIME > LIMIT_TIME:
-                #        BOT_DICT = mm.message(BOT_DICT, ' 임시 점유 실패 다시 탐색을 시작 합니다.')
-                #        BOT_DICT['TEMPORARY_HOLD'] = False
-                return BOT_DICT
+                    BOT_DATASET = mm.message4(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                                                         ' ' + '임시 점유 실패 예약 시도를 계속 합니다.')
+                return BOT_DATASET
             else:  # 문자열 형태인 경우
-                BOT_DICT['RESULT'] = {**dict_meta, **{'text': response.text}}
-                return BOT_DICT
-            return BOT_DICT
+                BOT_DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
+                return BOT_DATASET
+            return BOT_DATASET
         except requests.exceptions.RequestException as ex:
             continue
 
 
-def final_reservation(BOT_DICT):
+def final_reservation(DATASET, BOT_DATASET):
     url = "https://www.campingkorea.or.kr/user/reservation/ND_insertresve.do"
     dict_data = {
-        'trrsrtCode': str(BOT_DICT['FINAL_TRRSRTCODE']),
-        'fcltyCode': str(BOT_DICT['FINAL_FCLTYCODE']),
-        'fcltyTyCode': str(BOT_DICT['FINAL_FCLTYTYCODE']),
-        'preocpcFcltyCode': str(BOT_DICT['FINAL_PREOCPCFCLTYCODE']),
+        'trrsrtCode': str(BOT_DATASET['FINAL_TRRSRTCODE']),
+        'fcltyCode': str(BOT_DATASET['FINAL_FCLTYCODE']),
+        'fcltyTyCode': str(BOT_DATASET['FINAL_FCLTYTYCODE']),
+        'preocpcFcltyCode': str(BOT_DATASET['FINAL_PREOCPCFCLTYCODE']),
         'resveNoCode': '',
-        'resveBeginDe': str(BOT_DICT['FINAL_RESVEBEGINDE']),
-        'resveEndDe': str(BOT_DICT['FINAL_RESVEENDDE']),
-        'resveNo': str(BOT_DICT['FINAL_RESVENO']),
-        'registerId': str(BOT_DICT['FINAL_REGISTERID']),
-        'rsvctmNm': str(BOT_DICT['FINAL_RSVCTMNM']),
-        'rsvctmEncptMbtlnum': str(BOT_DICT['FINAL_RSVCTMENCPTMBTLNUM']),
-        'encptEmgncCttpc': str(BOT_DICT['FINAL_ENCPTEMGNCCTTPC']),
-        'rsvctmArea': str(BOT_DICT['FINAL_RSVCTMAREA']),
-        'entrceDelayCode': str(BOT_DICT['FINAL_ENTRCEDELAYCODE']),
-        'dspsnFcltyUseAt': str(BOT_DICT['FINAL_DSPSNFCLTYUSEAT'])
+        'resveBeginDe': str(BOT_DATASET['FINAL_RESVEBEGINDE']),
+        'resveEndDe': str(BOT_DATASET['FINAL_RESVEENDDE']),
+        'resveNo': str(BOT_DATASET['FINAL_RESVENO']),
+        'registerId': str(BOT_DATASET['FINAL_REGISTERID']),
+        'rsvctmNm': str(BOT_DATASET['FINAL_RSVCTMNM']),
+        'rsvctmEncptMbtlnum': str(BOT_DATASET['FINAL_RSVCTMENCPTMBTLNUM']),
+        'encptEmgncCttpc': str(BOT_DATASET['FINAL_ENCPTEMGNCCTTPC']),
+        'rsvctmArea': str(BOT_DATASET['FINAL_RSVCTMAREA']),
+        'entrceDelayCode': str(BOT_DATASET['FINAL_ENTRCEDELAYCODE']),
+        'dspsnFcltyUseAt': str(BOT_DATASET['FINAL_DSPSNFCLTYUSEAT'])
     }
     response = ''
     while response == '':
         try:
-            if BOT_DICT['TEMPORARY_HOLD']:
-                response = requests.post(url=url, data=dict_data, cookies=BOT_DICT['COOKIE'], verify=False, headers={
+            if BOT_DATASET['TEMPORARY_HOLD']:
+                response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False, headers={
                     'Accept': 'application/json, text/javascript, */*; q=0.01',
                     'Accept-Encoding': 'gzip, deflate, br, zstd',
                     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -441,16 +413,26 @@ def final_reservation(BOT_DICT):
                 dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
                              'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
                 if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                    BOT_DICT['FINAL_RESULT'] = {**dict_meta, **response.json()}
-                    return BOT_DICT
+                    BOT_DATASET['FINAL_RESULT'] = {**dict_meta, **response.json()}
+                    return BOT_DATASET
                 else:  # 문자열 형태인 경우
-                    BOT_DICT['FINAL_RESULT'] = {**dict_meta, **{'text': response.text}}
-                    return BOT_DICT
-            return BOT_DICT
+                    BOT_DATASET['FINAL_RESULT'] = {**dict_meta, **{'text': response.text}}
+                    return BOT_DATASET
+            return BOT_DATASET
         except requests.exceptions.RequestException as ex:
             time.sleep(10)
             continue
 
+
+def delete_occ(DATASET):
+    # 예약 파라미터 세팅
+    url = "https://www.campingkorea.or.kr/user/reservation/ND_deletePreOcpcInfo.do"
+    response = ''
+    while response == '':
+        try:
+            response = requests.post(url=url, cookies=DATASET['COOKIE'], verify=False)
+        except requests.exceptions.RequestException as ex:
+            continue
 
 def login(DATASET):
     DATASET['CURRENT_PROCESS'] = 'login'
@@ -572,5 +554,5 @@ def pingpong2_login(DATASET):
     return DATASET
 
 
-def error(BOT_DICT):
-    print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' ERROR INFO ::: ' + str(BOT_DICT))
+def error(BOT_DATASET):
+    print(str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' ERROR INFO ::: ' + str(BOT_DATASET))

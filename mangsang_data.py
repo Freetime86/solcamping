@@ -16,17 +16,17 @@ def check(DATASET):
         except ValueError:
             print('(' + str(_date) + ')' + ' 날짜 형식이 잘못되었습니다. 올바른 방식은 yyyy-mm-dd 입니다.')
             return False
-        _to_date = int((datetime.strptime(_date, '%Y-%m-%d') + timedelta(days=DATASET['PERIOD']-1)).strftime("%Y%m%d"))
-        _t_date = int(_date.replace('-', '', 2))
-
-        error_date = []
-        for _str_date in DATASET['SELECT_DATE']:
-            int_date = int(_str_date.replace('-', '', 2))
-            if _t_date != int_date and _t_date < int_date <= _to_date:
-                error_date.append(_str_date)
-        if len(error_date) > 0:
-            print('(' + str(_date) + ')' + ' 현재 날짜의 연박 수 [' + str(DATASET['PERIOD']) + '] (' + str(error_date).replace("'", '',999).replace('[', '').replace(']', '') + ') 가 지정 날짜에 포함되어 있습니다.')
-            return False
+        #_to_date = int((datetime.strptime(_date, '%Y-%m-%d') + timedelta(days=DATASET['PERIOD']-1)).strftime("%Y%m%d"))
+        #_t_date = int(_date.replace('-', '', 2))
+#
+        #error_date = []
+        #for _str_date in DATASET['SELECT_DATE']:
+        #    int_date = int(_str_date.replace('-', '', 2))
+        #    if _t_date != int_date and _t_date < int_date <= _to_date:
+        #        error_date.append(_str_date)
+        #if len(error_date) > 0:
+        #    print('(' + str(_date) + ')' + ' 현재 날짜의 연박 수 [' + str(DATASET['PERIOD']) + '] (' + str(error_date).replace("'", '',999).replace('[', '').replace(']', '') + ') 가 지정 날짜에 포함되어 있습니다.')
+        #    return False
 
     if len(DATASET['ROOM_FACILITY']) < 1:
         print('시설 타입 정보가 없습니다.')
