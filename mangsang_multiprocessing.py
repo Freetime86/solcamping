@@ -95,7 +95,7 @@ def main(DATASET):
                                         BOT_DATASET = mm.message(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
                                                              ' ' +
                                                              '확정 예약 진행 중... ' + BOT_DATASET[
-                                                                 'TARGET_MAX_CNT'] + ' ' + str(
+                                                                 'TARGET_MAX_CNT'] + '인실 ' + str(
                                                                  BOT_DATASET['FINAL_TYPE_NAME']) + ' => ' + str(
                                                                  BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
                                                                  BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
@@ -207,7 +207,7 @@ def main(DATASET):
                             if BOT_DATASET['TEMPORARY_HOLD']:
                                 BOT_DATASET = mm.message4(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
                                                              ' ' + '임시 점유 완료 ' + BOT_DATASET[
-                                    'TARGET_MAX_CNT'] + ' ' + str(
+                                    'TARGET_MAX_CNT'] + '인실 ' + str(
                                     BOT_DATASET['RESVENOCODE']) + ' => ' + str(
                                     BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
                                     BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
@@ -219,9 +219,9 @@ def main(DATASET):
                                     if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
                                         BOT_DATASET = mm.message(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
                                                                  ' ' +
-                                                          ' 탐색 지정 대상 ' + BOT_DATASET['site_name'] + ' ' + type_no_txt + ' ' +
+                                                          '탐색 지정 대상 ' + BOT_DATASET['site_name'] + ' ' + type_no_txt + ' ' +
                                                           BOT_DATASET[
-                                                              'TARGET_MAX_CNT'] + '인실' + ' /  임시점유 예약을 시도 합니다.. ' + ' / 경과 시간 : ' + str(
+                                                              'TARGET_MAX_CNT'] + '인실' + ' / 임시점유 예약을 시도 합니다.. ' + ' / 경과 시간 : ' + str(
                                                               run_cnt) + '시간')
                                         run_cnt = run_cnt + 1
 
