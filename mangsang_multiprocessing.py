@@ -49,6 +49,8 @@ def main(DATASET):
             DATASET['USER_NO']) + ' (' + str(DATASET['PERIOD']) + ')박')
         mm.message(DATASET,
                    '아이디 : ' + str(DATASET['CURRENT_USER']['rid']) + ' / 패스워드 : ' + str(DATASET['CURRENT_USER']['rpwd']))
+        mm.message(DATASET,
+                   '지정일자 : ' + str(DATASET['SELECT_DATE']))
         _wants = '지정안함'
         _range = '지정안함'
         if len(DATASET['ROOM_RANGE']) > 0:
@@ -110,7 +112,7 @@ def main(DATASET):
                                                              ' ' +
                                                              '[' + str(
                                                         BOT_DATASET['FINAL_TYPE_NAME']) + '] ' + BOT_DATASET[
-                                                                             'TARGET_MAX_CNT'] + ' ' + str(
+                                                                             'TARGET_MAX_CNT'] + '인실 ' + str(
                                                         BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
                                                         BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
                                                         BOT_DATASET[
@@ -151,7 +153,7 @@ def main(DATASET):
                                                         TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                                                         TIME = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
                                                         DATASET['CHECK_TIME'] = TIME
-                                                        if DATASET['DELAY_TIME'] <= DATASET['CHECK_TIME']:
+                                                        if DATASET['DELAY_TIME'] < DATASET['CHECK_TIME']:
                                                             delete_occ(DATASET)
                                                         DATASET['TEMPORARY_HOLD'] = False
                                                     else:
@@ -313,6 +315,7 @@ def get_facility(DATASET, BOT_DATASET):
                             else:
                                 DATASET['TEMPORARY_HOLD'] = False
                                 print('error = > ' + str(response))
+                                login(DATASET)
                     DATASET['OUTPUT'] = response
                     return BOT_DATASET
                 return BOT_DATASET
@@ -334,22 +337,22 @@ def get_facility_relay(DATASET, BOT_DATASET):
                 if BOT_DATASET['RELAY_RESULT']['status_code'] == 200 and BOT_DATASET['RELAY_RESULT']['preocpcEndDt'] is not None:
                     TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     TIME = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
-                    DATASET['DELAY_TIME'] = TIME + timedelta(seconds=0.2)
+                    DATASET['DELAY_TIME'] = TIME + timedelta(seconds=1)
                     BOT_DATASET['RESULT'] = BOT_DATASET['RELAY_RESULT']
                     BOT_DATASET['TEMPORARY_HOLD'] = True
                     #필요 파라메터 맵핑
-                    #BOT_DATASET['FINAL_TRRSRTCODE'] = BOT_DATASET['RESULT']['trrsrtCode']
-                    #BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['RESULT']['fcltyCode']
-                    #BOT_DATASET['FINAL_FCLTYTYCODE'] = BOT_DATASET['RESULT']['fcltyTyCode']
-                    ## 한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
-                    #if BOT_DATASET['FINAL_TYPE_NAME'] == '전통한옥':
-                    #    BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['FCLTYCODE']
-                    #BOT_DATASET['FINAL_PREOCPCFCLTYCODE'] = BOT_DATASET['RESULT'][
-                    #    'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 BOT_DATASET['RESULT']['preocpcFcltyCode']
-                    #BOT_DATASET['FINAL_RESVENOCODE'] = BOT_DATASET['RESULT']['resveNoCode']
-                    #BOT_DATASET['FINAL_RESVEBEGINDE'] = BOT_DATASET['RESULT']['resveBeginDe']
-                    #BOT_DATASET['FINAL_RESVEENDDE'] = BOT_DATASET['RESULT']['resveEndDe']
-                    #BOT_DATASET['FINAL_RESVENO'] = BOT_DATASET['RESULT']['resveNo']
+                    BOT_DATASET['FINAL_TRRSRTCODE'] = BOT_DATASET['RESULT']['trrsrtCode']
+                    BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['RESULT']['fcltyCode']
+                    BOT_DATASET['FINAL_FCLTYTYCODE'] = BOT_DATASET['RESULT']['fcltyTyCode']
+                    # 한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
+                    if BOT_DATASET['FINAL_TYPE_NAME'] == '전통한옥':
+                        BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['FCLTYCODE']
+                    BOT_DATASET['FINAL_PREOCPCFCLTYCODE'] = BOT_DATASET['RESULT'][
+                        'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 BOT_DATASET['RESULT']['preocpcFcltyCode']
+                    BOT_DATASET['FINAL_RESVENOCODE'] = BOT_DATASET['RESULT']['resveNoCode']
+                    BOT_DATASET['FINAL_RESVEBEGINDE'] = BOT_DATASET['RESULT']['resveBeginDe']
+                    BOT_DATASET['FINAL_RESVEENDDE'] = BOT_DATASET['RESULT']['resveEndDe']
+                    BOT_DATASET['FINAL_RESVENO'] = BOT_DATASET['RESULT']['resveNo']
                     #BOT_DATASET['FINAL_REGISTERID'] = BOT_DATASET['registerId']  #로그인 아이디 초기값 하드코딩
                     #BOT_DATASET['FINAL_RSVCTMNM'] = BOT_DATASET['rsvctmNm']  #사용자 이름 초기값 하드코딩
                     #BOT_DATASET['FINAL_RSVCTMENCPTMBTLNUM'] = BOT_DATASET['rsvctmEncptMbtlnum']  #전화번호
@@ -357,7 +360,7 @@ def get_facility_relay(DATASET, BOT_DATASET):
                     #BOT_DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
                     #BOT_DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
                     #BOT_DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
-                    #BOT_DATASET['JUST_RESERVED'] = False
+                    BOT_DATASET['JUST_RESERVED'] = False
                     BOT_DATASET['STAND_BY_TIME'] = None
                     BOT_DATASET = mm.message4(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
                                                              ' ' + '임시 점유 완료 ' + BOT_DATASET[
@@ -371,7 +374,8 @@ def get_facility_relay(DATASET, BOT_DATASET):
                 return BOT_DATASET
             else:  # 문자열 형태인 경우
                 BOT_DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
-                return BOT_DATASET
+                print('error = > ' + str(response))
+                login(DATASET)
         except requests.exceptions.RequestException as ex:
             continue
 
@@ -443,6 +447,7 @@ def delete_occ(DATASET):
             continue
 
 def login(DATASET):
+    DATASET = mm.message(DATASET, 'LOGIN PROCESSING!!')
     DATASET['CURRENT_PROCESS'] = 'login'
 
     rid = DATASET['CURRENT_USER']['rid']

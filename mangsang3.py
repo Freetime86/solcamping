@@ -20,7 +20,7 @@ DATASET = ms.dataset()
 DATASET['BOT_NUMBER'] = 1
 
 # 사용자 설정 USER_NO : 최종예약자, PING_PONG_1 = 첫번째 홀더, PING_PONG_2 두번째 홀더
-DATASET['USER_NO'] = '01'
+DATASET['USER_NO'] = '02'
 DATASET['PIN_PONG_1'] = '00'
 DATASET['PIN_PONG_2'] = '01'
 

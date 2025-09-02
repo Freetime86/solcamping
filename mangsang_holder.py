@@ -22,7 +22,7 @@ DATASET = ms.dataset()
 DATASET['BOT_NUMBER'] = 1
 
 # 사용자 설정 USER_NO : 최종예약자, PING_PONG_1 = 첫번째 홀더, PING_PONG_2 두번째 홀더
-DATASET['USER_NO'] = '00'
+DATASET['USER_NO'] = '10'
 DATASET['PIN_PONG_1'] = '00'
 DATASET['PIN_PONG_2'] = '01'
 
@@ -42,9 +42,9 @@ DATASET['PERIOD'] = ['1']  # 연박 수
 DATASET['ROOM_FACILITY'] = ['06']
 # 바다 숙소 : 인실정보 적용 2인실, 4인실, 6인실, 8인실, 10인실  없을 경우 PASS 자동차야영장 등등은 없음.
 # 한옥 : 인실정보 적용 2인실, 4인실, 6인실
-DATASET['ROOM_RANGE'] = ['7']
+DATASET['ROOM_RANGE'] = []
 # 선호 방 번호 (선호 대상이 없을 경우 그 외 대상을 선택하도록 함)
-DATASET['ROOM_WANTS'] = []
+DATASET['ROOM_WANTS'] = ['11']
 # 제외 대상 설정
 DATASET['ROOM_EXPT'] = []
 
