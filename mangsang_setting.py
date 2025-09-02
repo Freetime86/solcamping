@@ -33,6 +33,7 @@ def dataset():
         'WAITING_SLOW': False,
         'POST_TYPE_CODE': '',
         'MULTIPLE_BOT': 1,
+        'OUTPUT': 'START',
         'DELAY_TIME': datetime.now(),
         'OPEN_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + ' 10:59:59'), '%Y-%m-%d %H:%M:%S'),
         'LIMIT_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")), '%Y-%m-%d')

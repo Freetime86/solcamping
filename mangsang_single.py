@@ -6,12 +6,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import threading
-import sys
-import urllib3
-import pytesseract
+import tempfile
 
 # 기초 데이터 PARSING
 options = Options()
+user_data_dir = tempfile.mkdtemp()  # 고유한 임시 디렉토리
+options.add_argument(f"--user-data-dir={user_data_dir}")
 options.add_experimental_option("detach", True)
 options.add_argument("headless")  # 크롬창 숨기기
 DATASET = ms.dataset()

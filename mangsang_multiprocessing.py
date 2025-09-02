@@ -9,8 +9,9 @@ from datetime import datetime, timedelta
 from selenium.webdriver.support.ui import WebDriverWait
 from user_agent import generate_user_agent
 import pyautogui as py
-import win32gui
-import win32con
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import tempfile
 import requests
 import time
 import urllib3
@@ -19,7 +20,7 @@ import sys
 # 시스템 설정
 py.FAILSAFE = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+lock = threading.Lock()
 
 class Worker(threading.Thread):
     def __init__(self, first):
@@ -43,10 +44,6 @@ def main(DATASET):
     else:
         THREAD_FLAG = 'SUB'
 
-    while True:
-        if 'COOKIE' in DATASET:
-            break
-
     if THREAD_FLAG == 'MAIN':
         mm.message(DATASET, '예약자 : ' + str(DATASET['CURRENT_USER']['user_name']) + ' / 유저 NO:' + str(
             DATASET['USER_NO']) + ' (' + str(DATASET['PERIOD']) + ')박')
@@ -66,6 +63,10 @@ def main(DATASET):
                 exit()
         DATASET['RANGE_TARGETS'] = _range
         DATASET['SCAN_TARGETS'] = _wants
+
+    while True:
+        if 'COOKIE' in DATASET:
+            break
 
     # 경과 시간 계산
     start_time = time.time()
@@ -208,13 +209,13 @@ def main(DATASET):
                             if BOT_DATASET['TEMPORARY_HOLD']:
                                 BOT_DATASET = mm.message4(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
                                                              ' ' + '임시 점유 완료 ' + BOT_DATASET[
-                                    'TARGET_MAX_CNT'] + '인실 ' + ' ' + BOT_DATASET['site_name'] + ' => ' + str(
+                                    'TARGET_MAX_CNT'] + '인실 ' + BOT_DATASET['site_name'] + ' => ' + str(
                                     BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
                                     BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
                                     BOT_DATASET['FINAL_RESVEENDDE']))
                                 break
                             else:
-                                if not DATASET['TEMPORARY_HOLD']:
+                                if not BOT_DATASET['TEMPORARY_HOLD']:
                                     elapsed_time = time.time() - start_time  # 경과된 시간 계산
                                     if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
                                         BOT_DATASET = mm.message(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
@@ -254,59 +255,69 @@ def get_facility(DATASET, BOT_DATASET):
         'preocpcTimeCode': '60'
     }
     response = ''
-    while response == '':
-        try:
-            TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            TIME = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
-            DATASET['CHECK_TIME'] = TIME
-            if DATASET['DELAY_TIME'] < DATASET['CHECK_TIME']:
+    with lock:
+        while response == '':
+            try:
+                #TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                #TIME = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
+                #DATASET['CHECK_TIME'] = TIME
+                #if DATASET['DELAY_TIME'] < DATASET['CHECK_TIME']:
                 #DATASET['DELAY_TIME'] = TIME + timedelta(seconds=0.2)
                 if not DATASET['TEMPORARY_HOLD']:
-                    response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False)
-                    if 'Content-Type' in response.headers:
-                        dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
-                                     'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
-                        if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
-                            BOT_DATASET['RELAY_RESULT'] = {**dict_meta, **response.json()}
-                            if BOT_DATASET['RELAY_RESULT']['status_code'] == 200 and BOT_DATASET['RELAY_RESULT']['preocpcEndDt'] is not None and not DATASET['TEMPORARY_HOLD']:
-                                DATASET['TEMPORARY_HOLD'] = True
-                                BOT_DATASET['TEMPORARY_HOLD'] = True
-                                BOT_DATASET['DICT_DATA'] = dict_data
-                                BOT_DATASET['registerId'] = BOT_DATASET['CURRENT_USER']['rid']  # 로그인 아이디 초기값 하드코딩
-                                BOT_DATASET['rsvctmNm'] = BOT_DATASET['CURRENT_USER']['user_name']  # 사용자 이름 초기값 하드코딩
-                                BOT_DATASET['rsvctmEncptMbtlnum'] = BOT_DATASET['CURRENT_USER']['rphone']  # 전화번호
-                                BOT_DATASET['encptEmgncCttpc'] = BOT_DATASET['CURRENT_USER']['rphone']  # 긴급전화번호
-                                BOT_DATASET['RESULT'] = BOT_DATASET['RELAY_RESULT']
-                                #필요 파라메터 맵핑
-                                BOT_DATASET['FINAL_TRRSRTCODE'] = BOT_DATASET['RESULT']['trrsrtCode']
-                                BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['RESULT']['fcltyCode']
-                                #한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
-                                if BOT_DATASET['FINAL_TYPE_NAME'] == '전통한옥':
-                                    BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['FCLTYCODE']
-                                BOT_DATASET['FINAL_FCLTYTYCODE'] = BOT_DATASET['RESULT']['fcltyTyCode']
-                                BOT_DATASET['FINAL_PREOCPCFCLTYCODE'] = BOT_DATASET['RESULT'][
-                                    'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 BOT_DATASET['RESULT']['preocpcFcltyCode']
-                                BOT_DATASET['FINAL_RESVENOCODE'] = BOT_DATASET['RESULT']['resveNoCode']
-                                BOT_DATASET['FINAL_RESVEBEGINDE'] = BOT_DATASET['RESULT']['resveBeginDe']
-                                BOT_DATASET['FINAL_RESVEENDDE'] = BOT_DATASET['RESULT']['resveEndDe']
-                                BOT_DATASET['FINAL_RESVENO'] = BOT_DATASET['RESULT']['resveNo']
-                                BOT_DATASET['FINAL_REGISTERID'] = BOT_DATASET['registerId']  #로그인 아이디 초기값 하드코딩
-                                BOT_DATASET['FINAL_RSVCTMNM'] = BOT_DATASET['rsvctmNm']  #사용자 이름 초기값 하드코딩
-                                BOT_DATASET['FINAL_RSVCTMENCPTMBTLNUM'] = BOT_DATASET['rsvctmEncptMbtlnum']  #전화번호
-                                BOT_DATASET['FINAL_ENCPTEMGNCCTTPC'] = BOT_DATASET['encptEmgncCttpc']  #긴급전화번호
-                                BOT_DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
-                                BOT_DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
-                                BOT_DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
-                                BOT_DATASET['JUST_RESERVED'] = False
-                                return BOT_DATASET
-                        else:  # 문자열 형태인 경우
-                            BOT_DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
-                            return BOT_DATASET
-                    else:
-                        print('error = > ' + str(response))
-            return BOT_DATASET
-        except requests.exceptions.RequestException as ex:
-            continue
+                    if DATASET['OUTPUT'] == '':
+                        DATASET['OUTPUT'] = ''
+                        TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        DATASET['CURRENT_TIME'] = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
+                        if DATASET['CURRENT_TIME'] > DATASET['DELAY_TIME']:
+                            response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False)
+                            if 'Content-Type' in response.headers:
+                                dict_meta = {'status_code': response.status_code, 'ok': response.ok, 'encoding': response.encoding,
+                                             'Content-Type': response.headers['Content-Type'], 'cookies': response.cookies}
+                                if 'json' in str(response.headers['Content-Type']):  # JSON 형태인 경우
+                                    BOT_DATASET['RELAY_RESULT'] = {**dict_meta, **response.json()}
+                                    if BOT_DATASET['RELAY_RESULT']['status_code'] == 200 and BOT_DATASET['RELAY_RESULT']['preocpcEndDt'] is not None and not DATASET['TEMPORARY_HOLD']:
+                                        DATASET['TEMPORARY_HOLD'] = True
+                                        BOT_DATASET['TEMPORARY_HOLD'] = True
+                                        BOT_DATASET['DICT_DATA'] = dict_data
+                                        BOT_DATASET['registerId'] = BOT_DATASET['CURRENT_USER']['rid']  # 로그인 아이디 초기값 하드코딩
+                                        BOT_DATASET['rsvctmNm'] = BOT_DATASET['CURRENT_USER']['user_name']  # 사용자 이름 초기값 하드코딩
+                                        BOT_DATASET['rsvctmEncptMbtlnum'] = BOT_DATASET['CURRENT_USER']['rphone']  # 전화번호
+                                        BOT_DATASET['encptEmgncCttpc'] = BOT_DATASET['CURRENT_USER']['rphone']  # 긴급전화번호
+                                        BOT_DATASET['RESULT'] = BOT_DATASET['RELAY_RESULT']
+                                        #필요 파라메터 맵핑
+                                        BOT_DATASET['FINAL_TRRSRTCODE'] = BOT_DATASET['RESULT']['trrsrtCode']
+                                        BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['RESULT']['fcltyCode']
+                                        #한옥만 기존 faltycode를 사용한다. 매칭되지 않음. 망상만든 솔루션 쓰레기.
+                                        if BOT_DATASET['FINAL_TYPE_NAME'] == '전통한옥':
+                                            BOT_DATASET['FINAL_FCLTYCODE'] = BOT_DATASET['FCLTYCODE']
+                                        BOT_DATASET['FINAL_FCLTYTYCODE'] = BOT_DATASET['RESULT']['fcltyTyCode']
+                                        BOT_DATASET['FINAL_PREOCPCFCLTYCODE'] = BOT_DATASET['RESULT'][
+                                            'fcltyCode']  #fcltyCode 랑 같은 데이터로 추정 BOT_DATASET['RESULT']['preocpcFcltyCode']
+                                        BOT_DATASET['FINAL_RESVENOCODE'] = BOT_DATASET['RESULT']['resveNoCode']
+                                        BOT_DATASET['FINAL_RESVEBEGINDE'] = BOT_DATASET['RESULT']['resveBeginDe']
+                                        BOT_DATASET['FINAL_RESVEENDDE'] = BOT_DATASET['RESULT']['resveEndDe']
+                                        BOT_DATASET['FINAL_RESVENO'] = BOT_DATASET['RESULT']['resveNo']
+                                        BOT_DATASET['FINAL_REGISTERID'] = BOT_DATASET['registerId']  #로그인 아이디 초기값 하드코딩
+                                        BOT_DATASET['FINAL_RSVCTMNM'] = BOT_DATASET['rsvctmNm']  #사용자 이름 초기값 하드코딩
+                                        BOT_DATASET['FINAL_RSVCTMENCPTMBTLNUM'] = BOT_DATASET['rsvctmEncptMbtlnum']  #전화번호
+                                        BOT_DATASET['FINAL_ENCPTEMGNCCTTPC'] = BOT_DATASET['encptEmgncCttpc']  #긴급전화번호
+                                        BOT_DATASET['FINAL_RSVCTMAREA'] = '1005'  #거주지역
+                                        BOT_DATASET['FINAL_ENTRCEDELAYCODE'] = '1004'  #입실시간 해당없음.
+                                        BOT_DATASET['FINAL_DSPSNFCLTYUSEAT'] = 'N'  #장애인시설 사용여부
+                                        BOT_DATASET['JUST_RESERVED'] = False
+                                    else:
+                                        DATASET['TEMPORARY_HOLD'] = False
+                                #else:  # 문자열 형태인 경우
+                                    #BOT_DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
+                                    #return BOT_DATASET
+                            else:
+                                DATASET['TEMPORARY_HOLD'] = False
+                                print('error = > ' + str(response))
+                    DATASET['OUTPUT'] = response
+                    return BOT_DATASET
+                return BOT_DATASET
+            except requests.exceptions.RequestException as ex:
+                continue
 
 
 def get_facility_relay(DATASET, BOT_DATASET):
@@ -349,9 +360,11 @@ def get_facility_relay(DATASET, BOT_DATASET):
                     #BOT_DATASET['JUST_RESERVED'] = False
                     BOT_DATASET['STAND_BY_TIME'] = None
                     BOT_DATASET = mm.message4(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
-                                                         ' ' + '임시 점유 완료 ' + BOT_DATASET['TARGET_MAX_CNT'] + '인실 ' + str(
-                        BOT_DATASET['RESVENOCODE']) + ' => ' + str(BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
-                        BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(BOT_DATASET['FINAL_RESVEENDDE']))
+                                                             ' ' + '임시 점유 완료 ' + BOT_DATASET[
+                                    'TARGET_MAX_CNT'] + '인실 ' + BOT_DATASET['site_name'] + ' => ' + str(
+                                    BOT_DATASET['FINAL_FCLTYCODE']) + ' / ' + str(
+                                    BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
+                                    BOT_DATASET['FINAL_RESVEENDDE']))
                 else:
                     BOT_DATASET = mm.message4(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
                                                          ' ' + '임시 점유 실패 예약 시도를 계속 합니다.')
@@ -437,8 +450,14 @@ def login(DATASET):
 
     driver = DATASET['LOGIN_BROWSER']
     url = "https://www.campingkorea.or.kr/login/BD_loginForm.do"
-    driver.get(url)
+    try:
+        driver.get(url)
+    finally:
+        driver.get(url)
 
+    for i in range(5):
+        driver.refresh()
+        time.sleep(0.5)
     wait = WebDriverWait(driver, 1000)
     wait.until(EC.visibility_of_element_located((By.ID, "userId"))).send_keys(rid)
     wait.until(EC.visibility_of_element_located((By.ID, "userPassword"))).send_keys(rpwd)
@@ -446,6 +465,9 @@ def login(DATASET):
     wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "banner")))
     CHECK_LOAD = False
     _bannerList = []
+    for i in range(5):
+        driver.refresh()
+        time.sleep(0.5)
     while not CHECK_LOAD:
         try:
             _bannerList = driver.find_elements(By.CLASS_NAME, "banner")
@@ -547,6 +569,13 @@ def pingpong2_login(DATASET):
     DATASET['COOKIE2'] = cookie_dict
 
     return DATASET
+
+
+def get_driver():
+    chrome_options = Options()
+    user_data_dir = tempfile.mkdtemp()  # 고유한 임시 디렉토리
+    chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
+    return webdriver.Chrome(options=chrome_options)
 
 
 def error(BOT_DATASET):
