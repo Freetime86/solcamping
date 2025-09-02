@@ -49,8 +49,8 @@ DATASET['ROOM_WANTS'] = ['101']
 DATASET['ROOM_EXPT'] = []
 
 DATASET['LOGIN_BROWSER'] = webdriver.Chrome(options=options)    #예약 당사자
-DATASET['LOGIN_BROWSER1'] = webdriver.Chrome(options=options)   #핑퐁 1
-DATASET['LOGIN_BROWSER2'] = webdriver.Chrome(options=options)   #핑퐁 2
+#DATASET['LOGIN_BROWSER1'] = webdriver.Chrome(options=options)   #핑퐁 1
+#DATASET['LOGIN_BROWSER2'] = webdriver.Chrome(options=options)   #핑퐁 2
 
 
 class Worker(threading.Thread):
