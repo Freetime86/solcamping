@@ -293,7 +293,7 @@ def get_facility(DATASET, BOT_DATASET):
                 with lock:
                     if DATASET['SHOW_WORKS']:
                         logger.info(BOT_DATASET['BOT_NAME'] + ' LOCKING')
-                    response = BOT_DATASET['SESSION'].post(url=url, data=dict_data, cookies=DATASET['COOKIE'],timeout=10)
+                    response = BOT_DATASET['SESSION'].post(url=url, data=dict_data, cookies=DATASET['COOKIE'],timeout=3)
                 if 'Content-Type' in response.headers:
                     dict_meta = {'status_code': response.status_code, 'ok': response.ok,
                                  'encoding': response.encoding,
