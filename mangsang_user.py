@@ -9,85 +9,113 @@ def _list():
                'rpwd': 'CJSWOsla86!@123',
                'rid': 'jsy3033',
                'rphone': '01024863033',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '01': {'user_name': '권혁인',
                'rpwd': 'khi831883!',
                'rid': 'sochi007',
                'rphone': '01020569536',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '02': {'user_name': '김계자',
                'rpwd': 'CJSWOsla86!@',
                'rid': 'psm07051',
                'rphone': '01056947788',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '03': {'user_name': '박응순',
                'rpwd': 'cjswosla86',
                'rid': 'parksi',
                'rphone': '01021635418',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '04': {'user_name': '박현정',
                'rpwd': 'khi831883!',
                'rid': 'fpahs414',
                'rphone': '01020569536',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '05': {'user_name': '박상민',
                'rpwd': 'CJSWOsla86!@',
                'rid': 'psm0705',
                'rphone': '01024863038',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': False
                },
         '06': {'user_name': '윤민주',
                'rpwd': 'cca1174848',
                'rid': 'jsy3038',
                'rphone': '01048983777',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '07': {'user_name': '김형민',
                'rpwd': 'zhffktk2ek!',
                'rid': 'ttasik99',
                'rphone': '01091251464',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '08': {'user_name': '박보림',
                'rpwd': 'qhfla88067488!',
                'rid': 'iborim',
                'rphone': '01094138806',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '09': {'user_name': '김세익',
                'rpwd': 'cjswosla88!@',
                'rid': 'iseick',
                'rphone': '01042330000',
-               'area_code': '1006'
-               },
-        '10': {'user_name': '이양전',
-               'rpwd': 'Didwjs12^^',
-               'rid': 'helloyang86',
-               'rphone': '01046135857',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '11': {'user_name': '김은경',
                'rpwd': 'rladmsrud00',
                'rid': 'you0140',
                'rphone': '01046579804',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
         '12': {'user_name': '최윤정',
                'rpwd': 'choi20023!',
                'rid': 'cdw1317',
                'rphone': '01048983777',
-               'area_code': '1006'
+               'area_code': '1006',
+               'active': True
                },
-        '13': {'user_name': '최현호',
-               'rpwd': 'a123456789',
-               'rid': 'takoru',
-               'rphone': '01053807840',
-               'area_code': '1006'
+        '13': {'user_name': '강건찬',
+               'rpwd': 'kkc91375*',
+               'rid': 'k76235',
+               'rphone': '01062797909',
+               'area_code': '1006',
+               'active': True
+               },
+        '14': {'user_name': '홍석환',
+               'rpwd': 'hwan1150^^',
+               'rid': 'hong5870',
+               'rphone': '01082853000',
+               'area_code': '1006',
+               'active': True
+               },
+        '15': {'user_name': '김보경',
+               'rpwd': 'bk05051314!',
+               'rid': 'bk0309',
+               'rphone': '01046098903',
+               'area_code': '1006',
+               'active': True
+               },
+        '16': {'user_name': '김수현',
+               'rpwd': 'tngus1234@',
+               'rid': 'wodndtngus',
+               'rphone': '01082817597',
+               'area_code': '1006',
+               'active': True
                }
     }
     return dict_data
