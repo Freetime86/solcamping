@@ -6,6 +6,8 @@ def dataset():
     dict_data = {
         'USER_INFO': mangsang_user._list(),
         'FACILITY_INFO': mangsang_facility._list(),
+        'POOL': [],
+        'POOL_DEFINED': [],
         'TARGET_LIST': [],
         'TEMPORARY_HOLD': False,
         'CURRENT_PROCESS': 'START',
@@ -34,6 +36,8 @@ def dataset():
         'POST_TYPE_CODE': '',
         'MULTIPLE_BOT': 1,
         'OUTPUT': 'START',
+        'RELAY_OUTPUT': 'START',
+        'SEARCH_RANGE': [],
         'DELAY_TIME': datetime.now(),
         'OPEN_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + ' 10:59:59'), '%Y-%m-%d %H:%M:%S'),
         'LIMIT_TIME': datetime.strptime(((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")), '%Y-%m-%d')
