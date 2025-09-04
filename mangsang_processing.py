@@ -102,6 +102,7 @@ def main(DATASET):
                         DATASET = mm.message3(DATASET, '가능 대상 => ' + str(DATASET['AVAILABLE_NAME_TXT']), '')
                     elif len(DATASET['CANCEL_TARGET_LIST']) > 0:
                         DATASET = mm.message3(DATASET, '', '취소중 대상 => ' + str(DATASET['CANCEL_NAME_TXT']))
+                exit()
 
             elif THREAD_FLAG == 'SUB' or (not DATASET['MODE_LIVE'] and THREAD_FLAG == 'MAIN'):
                 if DATASET['TEMPORARY_HOLD']:
