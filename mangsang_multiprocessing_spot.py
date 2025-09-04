@@ -98,17 +98,12 @@ def get_proxy():
 
 
 # ✅ 예약 요청을 보내는 함수
-def reserve_site(DATASET, session, dict_data, bot_name, maxUserList, user):
+def reserve_site(DATASET, session, dict_data, bot_name, user):
     try:
         BOT_DATASET = copy.deepcopy(DATASET)
         while True:
-            if bot_name != shared_data['POST_ID']:
-                shared_data['POST_ID'] = bot_name
-                #with lock:
-                    #if shared_data['LIMIT'] > maxUserList:
-                    #    shared_data['LIMIT'] = 0
-                    #    #time.sleep(0.2)
-                    #shared_data['LIMIT'] = shared_data['LIMIT'] + 1
+            if user['rid'] != shared_data['POST_ID'] or len(user) == 1:
+                shared_data['POST_ID'] = user['rid']
                 url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
                 BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
                 response = session.post(url, data=dict_data, timeout=5)
@@ -232,7 +227,7 @@ def run_reservation_bot(DATASET):
             target = target_data[target_idx]
             bot_name = f"{target['fcltyCode']}_{i + 1}"
             futures.append(
-                executor.submit(reserve_site, BOT_DATASET, session, target, bot_name, session_len, user)
+                executor.submit(reserve_site, BOT_DATASET, session, target, bot_name, user)
             )
         for future in futures:
             future.result()  # 예외 발생 시 처리
