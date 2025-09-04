@@ -293,7 +293,8 @@ def get_facility(DATASET, BOT_DATASET):
                 with lock:
                     if DATASET['SHOW_WORKS']:
                         logger.info(BOT_DATASET['BOT_NAME'] + ' LOCKING')
-                    response = BOT_DATASET['SESSION'].post(url=url, data=dict_data, cookies=DATASET['COOKIE'],timeout=3)
+                    if BOT_DATASET['BOT_ID'] not in DATASET['POOL']:
+                        response = BOT_DATASET['SESSION'].post(url=url, data=dict_data, cookies=DATASET['COOKIE'],timeout=3)
                 if 'Content-Type' in response.headers:
                     dict_meta = {'status_code': response.status_code, 'ok': response.ok,
                                  'encoding': response.encoding,
@@ -396,7 +397,7 @@ def get_facility_relay(DATASET, BOT_DATASET):
                                         BOT_DATASET['FINAL_RESVEBEGINDE']) + ' ~ ' + str(
                                         BOT_DATASET['FINAL_RESVEENDDE']))
                     else:
-                        BOT_DATASET = mm.message5(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
+                        BOT_DATASET = mm.message4(BOT_DATASET, BOT_DATASET['BOT_NAME'] +
                                                              ' ' + '임시 점유 실패 예약 시도를 계속 합니다.')
                         #delete_occ(DATASET)
                     return BOT_DATASET
