@@ -149,8 +149,8 @@ def main(DATASET):
                                                             BOT_DATASET['TEMPORARY_HOLD'] = False
                                                             DATASET['TEMPORARY_HOLD'] = False
                                                             BOT_DATASET['JUST_RESERVED'] = True
-                                                            DATASET['POOL'].remove(BOT_DATASET['FINAL_FCLTYCODE'])
-                                                            DATASET['POOL_DEFINED'].remove(BOT_DATASET['FINAL_FCLTYCODE'])
+                                                            DATASET['POOL'].remove(BOT_DATASET['BOT_ID'])
+                                                            DATASET['POOL_DEFINED'] = [item for item in DATASET['POOL_DEFINED'] if BOT_DATASET['BOT_ID'] not in item]
                                                             delete_occ(DATASET)
                                                             if DATASET['SYSTEM_OFF']:
                                                                 exit()
