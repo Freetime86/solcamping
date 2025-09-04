@@ -407,8 +407,8 @@ def get_facility_relay(DATASET, BOT_DATASET):
                     return BOT_DATASET
                 else:  # 문자열 형태인 경우
                     BOT_DATASET['RESULT'] = {**dict_meta, **{'text': response.text}}
-                    print('error = > ' + str(response))
-                    login(DATASET)
+                    #print('error = > ' + str(response))
+                    #login(DATASET)
                 DATASET['RELAY_OUTPUT'] = 'DONE'
         except requests.exceptions.RequestException as ex:
             continue
