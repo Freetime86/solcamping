@@ -291,6 +291,8 @@ def get_facility(DATASET, BOT_DATASET):
         try:
             if not DATASET['TEMPORARY_HOLD'] and BOT_DATASET['BOT_ID'] not in DATASET['POOL']:
                 with lock:
+                    if DATASET['SHOW_WORKS']:
+                        logger.info(BOT_DATASET['BOT_NAME'] + ' LOCKING')
                     response = BOT_DATASET['SESSION'].post(url=url, data=dict_data, cookies=DATASET['COOKIE'],timeout=10)
                 if 'Content-Type' in response.headers:
                     dict_meta = {'status_code': response.status_code, 'ok': response.ok,
