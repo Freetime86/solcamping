@@ -168,27 +168,27 @@ def main(DATASET):
                                                             elif '일시적인 장애로' in BOT_DATASET['FINAL_RESULT']['message'] :
                                                                 BOT_DATASET = mm.message8(BOT_DATASET, BOT_DATASET['BOT_NAME'] + ' ' + BOT_DATASET['site_name'] + ' ' + BOT_DATASET['FINAL_FCLTYCODE'] +
                                                                      ' ' + '(' + BOT_DATASET['FINAL_RESULT'][
-                                                                                          'message'] + ') 다음과 같은 사유로 예약시도를 계속 합니다.')
+                                                                                          'message'] + ') 다음과 같은 사유로 임시 점유를 다시 시도합니다.')
                                                                 BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
                                                                 DATASET['TEMPORARY_HOLD'] = False
                                                             elif '예약이 불가능한' in BOT_DATASET['FINAL_RESULT']['message']:
                                                                 BOT_DATASET = mm.message8(BOT_DATASET, BOT_DATASET['BOT_NAME'] + ' ' + BOT_DATASET['site_name'] + ' ' + BOT_DATASET['FINAL_FCLTYCODE'] +
                                                                                           ' ' + '(' +
                                                                                           BOT_DATASET['FINAL_RESULT'][
-                                                                                              'message'] + ') 다음과 같은 사유로 재 탐색을 진행 합니다.')
+                                                                                              'message'] + ') 다음과 같은 사유로 임시 점유를 다시 시도합니다.')
                                                                 BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
                                                                 DATASET['TEMPORARY_HOLD'] = False
                                                             elif '비정상적인 접근' in BOT_DATASET['FINAL_RESULT']['message']:
                                                                 BOT_DATASET = mm.message8(BOT_DATASET, BOT_DATASET['BOT_NAME'] + ' ' + BOT_DATASET['site_name'] + ' ' + BOT_DATASET['FINAL_FCLTYCODE'] +
                                                                                           ' ' + '(' +
                                                                                           BOT_DATASET['FINAL_RESULT'][
-                                                                                              'message'] + ') 다음과 같은 사유로 임시점유 해제 후 재탐색 합니다.')
+                                                                                              'message'] + ') 다음과 같은 사유로 임시 점유를 다시 시도합니다.')
                                                                 BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
                                                                 TIME_STR = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                                                                 TIME = datetime.strptime(TIME_STR, '%Y-%m-%d %H:%M:%S')
-                                                                DATASET['CHECK_TIME'] = TIME
-                                                                if DATASET['DELAY_TIME'] < DATASET['CHECK_TIME']:
-                                                                    delete_occ(DATASET)
+                                                                #DATASET['CHECK_TIME'] = TIME
+                                                                #if DATASET['DELAY_TIME'] < DATASET['CHECK_TIME']:
+                                                                #    delete_occ(DATASET)
                                                                 DATASET['TEMPORARY_HOLD'] = False
                                                             else:
                                                                 DATASET['TEMPORARY_HOLD'] = False
@@ -200,7 +200,7 @@ def main(DATASET):
                                                         BOT_DATASET = final_reservation(DATASET, BOT_DATASET)
                                                 else:
                                                     mm.message(BOT_DATASET, BOT_DATASET['BOT_NAME'] + ' ' + BOT_DATASET['FINAL_FCLTYCODE'] + ' Server response failed (취소 딜레이 예약 오류)')
-                                                    delete_occ(DATASET)
+                                                    #delete_occ(DATASET)
                                                     BOT_DATASET = get_facility_relay(DATASET, BOT_DATASET)
                                                     DATASET['TEMPORARY_HOLD'] = False
                                         else:
@@ -297,7 +297,7 @@ def get_facility(DATASET, BOT_DATASET):
                     if DATASET['SHOW_WORKS']:
                         logger.info(BOT_DATASET['BOT_NAME'] + ' LOCKING')
                     if BOT_DATASET['BOT_ID'] not in DATASET['POOL']:
-                        response = BOT_DATASET['SESSION'].post(url=url, data=dict_data, cookies=DATASET['COOKIE'],timeout=50)
+                        response = BOT_DATASET['SESSION'].post(url=url, data=dict_data, cookies=DATASET['COOKIE'],timeout=3)
                 if response != '':
                     if 'Content-Type' in response.headers:
                         dict_meta = {'status_code': response.status_code, 'ok': response.ok,
@@ -346,8 +346,8 @@ def get_facility(DATASET, BOT_DATASET):
                             #return BOT_DATASET
                     else:
                         DATASET['TEMPORARY_HOLD'] = False
-                        print('error = > ' + str(response))
-                        login(DATASET)
+                        #print('error = > ' + str(response))
+                        #login(DATASET)
             return BOT_DATASET
         except requests.exceptions.RequestException as ex:
             continue
