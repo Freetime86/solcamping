@@ -28,22 +28,22 @@ global try_cnt
 
 machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박살낼 수가 있음.. 조심
 time_cut = 1  # 머신 시작 간격
-period = 1  # 연박 수
+period = 3  # 연박 수
 delay = 0  # 모니터링 리프레시 속도
-test = True
+test = False
 #room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
 #room_list = ['503']
 #room_exception = ['501', '502', '503', '505', '506', '507']
-room_exception = []
-room_want = ''
+room_exception = ['501', '502']
+room_want = '503'
 #room_list = ['311', '312', '313', '314', '315', '316', '317', '318']
 # D 사이트
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
-sel_month_list = ['08']
-sel_date_list = ['0814']
-site = 'D'
+sel_month_list = ['10']
+sel_date_list = ['1003']
+site = 'E'
 
-continue_work = False
+continue_work = True
 trying = False
 current_room = '0'
 user_type = 9999  # 사용자 정보 세팅
