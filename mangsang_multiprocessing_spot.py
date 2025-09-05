@@ -57,7 +57,8 @@ def get_logged_in_session(DATASET):
         max_keepalive_connections=100
     )
     user_keys = list(USER_INFO.keys())
-    #random.shuffle(user_keys)
+    if DATASET['USER_RANDOM']:
+        random.shuffle(user_keys)
 
     for user_key in user_keys:
         user_data = USER_INFO[user_key]
