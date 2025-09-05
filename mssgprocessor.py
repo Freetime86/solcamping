@@ -129,12 +129,11 @@ def get_proxy():
 # ✅ 예약 요청을 보내는 함수
 def reserve_site(DATASET, session, dict_data, bot_name, user):
     try:
-        BOT_DATASET = copy.deepcopy(DATASET)
         start_time = time.time()
         run_cnt = 0
         while True:
             url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
-            BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
+            DATASET = mm.message(DATASET, ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
             response = session.post(url, data=dict_data, timeout=100)
             if response.is_success and 'json' in response.headers.get('Content-Type', ''):
                 dict_meta = {'status_code': response.status_code, 'ok': response.is_success,
@@ -144,24 +143,24 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                 result = {**dict_meta, **response.json()}
                 if result['preocpcEndDt'] is not None:
                     msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
-                    mm.message4(BOT_DATASET, bot_name + ' ' + '임시 점유 완료 ' + msg + ' => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
-                    mm.message7(BOT_DATASET, bot_name + ' ' + '임시 점유 시간 ' + msg + ' ' + str(result['preocpcBeginDt']) + ' ~ ' + str(result['preocpcEndDt']))
+                    mm.message4(DATASET, '임시 점유 완료 ' + msg + ' => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
+                    mm.message7(DATASET, '임시 점유 시간 ' + msg + ' ' + str(result['preocpcBeginDt']) + ' ~ ' + str(result['preocpcEndDt']))
                     #live_time = datetime.now() + timedelta(days=30)
                     #open_time = datetime.strptime((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:57", "%Y-%m-%d %H:%M:%S")
                     reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
-                    if reserve_final(BOT_DATASET, user, session, bot_name, result):
+                    if reserve_final(DATASET, user, session, bot_name, result):
                         break
             else:
-                mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
+                mm.message9(DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
             elapsed_time = time.time() - start_time  # 경과된 시간 계산
             if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
-                BOT_DATASET = mm.message8(BOT_DATASET, bot_name + ' 예약 진행 중.. / 경과 시간 : ' + str(run_cnt) + '시간')
+                DATASET = mm.message8(DATASET, '예약 진행 중.. / 경과 시간 : ' + str(run_cnt) + '시간')
     except Exception as e:
         pass
         #print(f"[{bot_name}] 예외 발생: {e}")
 
 
-def reserve_final(BOT_DATASET, user, session, bot_name, result):
+def reserve_final(DATASET, user, session, bot_name, result):
     try:
         msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
         dict_data = {
@@ -182,7 +181,7 @@ def reserve_final(BOT_DATASET, user, session, bot_name, result):
             'dspsnFcltyUseAt': 'N'
         }
 
-        BOT_DATASET = mm.message5(BOT_DATASET, bot_name + ' ' + '확정 예약 중 ' + msg + ' => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
+        DATASET = mm.message5(DATASET, '확정 예약 중 ' + msg + ' => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
 
         url = "https://www.campingkorea.or.kr/user/reservation/ND_insertresve.do"
         response = session.post(url, data=dict_data, timeout=5, headers={
@@ -212,62 +211,30 @@ def reserve_final(BOT_DATASET, user, session, bot_name, result):
                 if 'message' in result:
                     RESULT_TXT = result['message']
                     if RESULT_TXT == '예약신청이 정상적으로 완료되었습니다.':
-                        mm.message6(BOT_DATASET, bot_name + ' ' + msg + ' => ' + ' 예약이 완료되었습니다. => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
+                        mm.message6(DATASET, msg + ' => ' + ' 예약이 완료되었습니다. => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
                         return True
                     else:
                         if '일시적인 장애로' in result['message']:
-                            mm.message6(BOT_DATASET, bot_name + ' ' + msg +
+                            mm.message6(DATASET, msg +
                                         ' ' + '(' + result[
                                             'message'] + ') 다음과 같은 사유로 임시 점유를 다시 시도합니다.')
                         elif '예약이 불가능한' in result['message']:
-                            mm.message6(BOT_DATASET, bot_name + ' ' + msg +
+                            mm.message6(DATASET, msg +
                                         ' ' + '(' + result[
                                             'message'] + ') 다음과 같은 사유로 임시 점유를 다시 시도합니다.')
                         elif '비정상적인 접근' in result['message']:
-                            mm.message6(BOT_DATASET, bot_name + ' ' + msg +
+                            mm.message6(DATASET, msg +
                                         ' ' + '(' + result[
                                             'message'] + ') 다음과 같은 사유로 임시 점유를 다시 시도합니다.')
                         else:
-                            mm.message6(BOT_DATASET, bot_name + ' ' + msg +' ' + result['message'])
+                            mm.message6(DATASET, msg +' ' + result['message'])
         else:
-             mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 확정 예약 이상")
+             mm.message9(DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 확정 예약 이상")
         return False
     except Exception as e:
         pass
         #print(f"[{bot_name}] 예외 발생: {e}")
 
-
-def cancellation(DATASET, session, dict_data, bot_name, user):
-    try:
-        BOT_DATASET = copy.deepcopy(DATASET)
-        start_time = time.time()
-        run_cnt = 0
-        while True:
-            url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
-            BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
-            response = session.post(url, data=dict_data, timeout=100)
-            if response.is_success and 'json' in response.headers.get('Content-Type', ''):
-                dict_meta = {'status_code': response.status_code, 'ok': response.is_success,
-                             'encoding': response.encoding,
-                             'Content-Type': response.headers['Content-Type'],
-                             'cookies': response.cookies}
-                result = {**dict_meta, **response.json()}
-                if result['preocpcEndDt'] is not None:
-                    msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
-                    mm.message4(BOT_DATASET, bot_name + ' ' + '임시 점유 완료 ' + msg + ' => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
-                    mm.message7(BOT_DATASET, bot_name + ' ' + '임시 점유 시간 ' + msg + ' ' + str(result['preocpcBeginDt']) + ' ~ ' + str(result['preocpcEndDt']))
-                    #live_time = datetime.now() + timedelta(days=30)
-                    #open_time = datetime.strptime((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:57", "%Y-%m-%d %H:%M:%S")
-                    reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
-                    if reserve_final(BOT_DATASET, user, session, bot_name, result):
-                        break
-            else:
-                BOT_DATASET = mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
-            elapsed_time = time.time() - start_time  # 경과된 시간 계산
-            if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
-                BOT_DATASET = mm.message8(BOT_DATASET, bot_name + ' 예약 진행 중.. / 경과 시간 : ' + str(run_cnt) + '시간')
-    except Exception as e:
-        pass
 
 
 # ✅ 실행 부분
