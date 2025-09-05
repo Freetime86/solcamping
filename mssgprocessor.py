@@ -129,11 +129,12 @@ def get_proxy():
 # ✅ 예약 요청을 보내는 함수
 def reserve_site(DATASET, session, dict_data, bot_name, user):
     try:
+        BOT_DATASET = copy.deepcopy(DATASET)
         start_time = time.time()
         run_cnt = 0
         while True:
             url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
-            DATASET = mm.message(DATASET, ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
+            BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
             response = session.post(url, data=dict_data, timeout=100)
             if response.is_success and 'json' in response.headers.get('Content-Type', ''):
                 dict_meta = {'status_code': response.status_code, 'ok': response.is_success,
@@ -151,7 +152,7 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                     if reserve_final(DATASET, user, session, bot_name, result):
                         break
             else:
-                mm.message9(DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
+                mm.message9(BOT_DATASET, bot_name + ' ' + user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
             elapsed_time = time.time() - start_time  # 경과된 시간 계산
             if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
                 DATASET = mm.message8(DATASET, '예약 진행 중.. / 경과 시간 : ' + str(run_cnt) + '시간')
