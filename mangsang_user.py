@@ -24,14 +24,14 @@ def _list():
                'rid': 'psm07051',
                'rphone': '01056947788',
                'area_code': '1006',
-               'active': True
+               'active': False
                },
         '03': {'user_name': '박응순',
                'rpwd': 'cjswosla86',
                'rid': 'parksi',
                'rphone': '01021635418',
                'area_code': '1006',
-               'active': False
+               'active': True
                },
         '04': {'user_name': '박현정',
                'rpwd': 'khi831883!',
@@ -45,7 +45,7 @@ def _list():
                'rid': 'psm0705',
                'rphone': '01024863038',
                'area_code': '1006',
-               'active': True
+               'active': False
                },
         '06': {'user_name': '윤민주',
                'rpwd': 'cca1174848',

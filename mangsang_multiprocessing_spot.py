@@ -157,11 +157,14 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                                         f"=> 유저정보: 아이디=({user['rid'].ljust(10)}) "
                                         f"비밀번호=({user['rpwd'].ljust(18)}) "
                                         f"이름=({user['user_name']})")
-                        #live_time = datetime.now() + timedelta(days=30)
-                        #open_time = datetime.strptime((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:57", "%Y-%m-%d %H:%M:%S")
-                        #reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
-                        if reserve_final(BOT_DATASET, user, session, bot_name, result):
-                            break
+                        live_time = datetime.now() + timedelta(days=30)
+                        open_time = datetime.strptime(
+                            (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:58",
+                            "%Y-%m-%d %H:%M:%S")
+                        reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
+                        if live_time > reserve_time or open_time < live_time:
+                            if reserve_final(BOT_DATASET, user, session, bot_name, result):
+                                break
             else:
                 mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
     except Exception as e:
@@ -251,7 +254,7 @@ def delete_occ(session):
         session.post(url, timeout=100)
     except Exception as e:
         pass
-        #print(f"[{bot_name}] 예외 발생: {e}")
+        #print(f"예외 발생: {e}")
 
 
 # ✅ 실행 부분
