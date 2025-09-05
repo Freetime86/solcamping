@@ -40,7 +40,7 @@ DATASET['SHOW_WORKS'] = False  # 1건당 1개의 봇으로 세팅
 DATASET['MULTIPLE_BOT'] = 10
 
 # 숙박 설정
-DATASET['SELECT_DATE'] = ['2025-10-04']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
+DATASET['SELECT_DATE'] = ['2025-10-05']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
 DATASET['PERIOD'] = ['3']  # 연박 수
 # 01:든바다, 02:난바다, 03:허허바다, 04:전통한옥, 05:캐라반, 06:자동차야영장, 07:글램핑A 08:글램핑B, 09:캐빈하우스
 DATASET['ROOM_FACILITY'] = ['02']
@@ -48,14 +48,10 @@ DATASET['ROOM_FACILITY'] = ['02']
 # 한옥 : 인실정보 적용 2인실, 4인실, 6인실
 DATASET['ROOM_RANGE'] = ['8', '10']
 # 선호 방 번호 (선호 대상이 없을 경우 그 외 대상을 선택하도록 함)
-DATASET['ROOM_WANTS'] = []
+DATASET['ROOM_WANTS'] = ['101', '109', '115']
 # 제외 대상 설정
 # 고정 빈방 STATIC
 DATASET['ROOM_EXPT'] = ['DG106', 'DC109', 'DD115']
 DATASET['ROOM_EXPT'].append('NF113')
-
-#DATASET['LOGIN_BROWSER'] = webdriver.Chrome(options=options)    #예약 당사자
-#DATASET['LOGIN_BROWSER1'] = webdriver.Chrome(options=options)   #핑퐁 1
-#DATASET['LOGIN_BROWSER2'] = webdriver.Chrome(options=options)   #핑퐁 2
 
 processor.worker(DATASET)
