@@ -135,35 +135,33 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                                              f"아이디={user['rid'].ljust(10)} "
                                              f"비밀번호={user['rpwd'].ljust(18)} "
                                              f"이름={user['user_name']}")
-            if user['rid'] != shared_data['POST_ID'] or len(user) == 1:
-                shared_data['POST_ID'] = user['rid']
-                url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
-                #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
-                response = session.post(url, data=dict_data, timeout=100)
-                if response.is_success and 'json' in response.headers.get('Content-Type', ''):
-                    result = response.json()
-                    if result['preocpcEndDt'] is not None:
-                        if DATASET['SHOW_RESERVATION']:
-                            if str(result['fcltyFullNm']) not in shared_data['AVAILABLE_ROOMS']:
-                                shared_data['AVAILABLE_ROOMS'].append(str(result['fcltyFullNm']) + '/' + bot_name.split()[-1])
-                                logger.info(str(result['fcltyFullNm']) + '/' + bot_name.split()[-1])
-                                return
-                        else:
-                            msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
-                            mm.message4(BOT_DATASET,f"{bot_name.ljust(12)} 임시 점유 완료 {msg.ljust(10)} => 유저정보: "
-                                            f"아이디=({user['rid'].ljust(10)}) "
-                                            f"비밀번호=({user['rpwd'].ljust(18)}) "
-                                            f"이름=({user['user_name']})")
-                            mm.message7(BOT_DATASET,  f"{bot_name.ljust(12)} 임시 점유 시간 {msg.ljust(10)} "
-                                            f"{str(result['preocpcBeginDt'])} ~ {str(result['preocpcEndDt'])} "
-                                            f"=> 유저정보: 아이디=({user['rid'].ljust(10)}) "
-                                            f"비밀번호=({user['rpwd'].ljust(18)}) "
-                                            f"이름=({user['user_name']})")
-                            #live_time = datetime.now() + timedelta(days=30)
-                            #open_time = datetime.strptime((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:57", "%Y-%m-%d %H:%M:%S")
-                            #reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
-                            if reserve_final(BOT_DATASET, user, session, bot_name, result):
-                                break
+            url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
+            #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
+            response = session.post(url, data=dict_data, timeout=100)
+            if response.is_success and 'json' in response.headers.get('Content-Type', ''):
+                result = response.json()
+                if result['preocpcEndDt'] is not None:
+                    if DATASET['SHOW_RESERVATION']:
+                        if str(result['fcltyFullNm']) not in shared_data['AVAILABLE_ROOMS']:
+                            shared_data['AVAILABLE_ROOMS'].append(str(result['fcltyFullNm']) + '/' + bot_name.split()[-1])
+                            logger.info(str(result['fcltyFullNm']) + '/' + bot_name.split()[-1])
+                            return
+                    else:
+                        msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
+                        mm.message4(BOT_DATASET,f"{bot_name.ljust(12)} 임시 점유 완료 {msg.ljust(10)} => 유저정보: "
+                                        f"아이디=({user['rid'].ljust(10)}) "
+                                        f"비밀번호=({user['rpwd'].ljust(18)}) "
+                                        f"이름=({user['user_name']})")
+                        mm.message7(BOT_DATASET,  f"{bot_name.ljust(12)} 임시 점유 시간 {msg.ljust(10)} "
+                                        f"{str(result['preocpcBeginDt'])} ~ {str(result['preocpcEndDt'])} "
+                                        f"=> 유저정보: 아이디=({user['rid'].ljust(10)}) "
+                                        f"비밀번호=({user['rpwd'].ljust(18)}) "
+                                        f"이름=({user['user_name']})")
+                        #live_time = datetime.now() + timedelta(days=30)
+                        #open_time = datetime.strptime((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:57", "%Y-%m-%d %H:%M:%S")
+                        #reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
+                        if reserve_final(BOT_DATASET, user, session, bot_name, result):
+                            break
                 else:
                     mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
     except Exception as e:
@@ -278,7 +276,7 @@ def run_reservation_bot(DATASET):
 
             session = session_list[session_idx]
             user = active_user_list[session_idx]
-            target = target_data[target_idx]
+            target = target_data[target_idx].copy()
             bot_name = f"{(target['fcltyCode'] + '_' + str(i + 1)).ljust(9)} {target['max_cnt'].rjust(3)}인실"
             del target['max_cnt']
             futures.append(
