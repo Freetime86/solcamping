@@ -42,7 +42,9 @@ global limit
 # ✅ 공통 세션 확보 (로그인 완료 후 쿠키 포함)
 def get_logged_in_session(DATASET):
     USER_INFO = DATASET['USER_INFO']
-    proxies = get_proxy()
+    proxies = {}
+    if DATASET['PROXY']:
+        proxies = get_proxy()
     login_url = 'https://www.campingkorea.or.kr/login/ND_loginAction.do'
     # 커넥션 풀 제한 설정
     limits = httpx.Limits(

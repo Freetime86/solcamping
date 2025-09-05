@@ -15,7 +15,7 @@ DATASET['BOT_NUMBER'] = 10
 DATASET['PROXY'] = False  # 실시간 가능 리스트 적용 유무
 
 # 사용자 설정 USER_NO : 최종예약자
-DATASET['CUSTOMER'] = '02'
+DATASET['CUSTOMER'] = '03'
 DATASET['HOLDER'] = '03'
 
 # 숙박 설정
