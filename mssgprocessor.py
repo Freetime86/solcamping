@@ -1,6 +1,5 @@
 import random
 import time
-
 import datetime
 from user_agent import generate_user_agent
 import httpx
@@ -11,8 +10,6 @@ import logging
 import sys
 import threading
 import os
-import re
-from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from httpx import HTTPTransport
@@ -37,9 +34,7 @@ logger = logging.getLogger()
 
 lock = threading.Lock()
 shared_data = {'LIMIT': 0,
-               'POST_ID': '',
-               'RESERVATION_LOG': True,
-               'AVAILABLE_ROOMS': []}
+               'POST_ID': ''}
 
 global limit
 
@@ -49,60 +44,70 @@ def get_logged_in_session(DATASET):
     USER_INFO = DATASET['USER_INFO']
     proxies = get_proxy()
     login_url = 'https://www.campingkorea.or.kr/login/ND_loginAction.do'
-    DATASET['SESSION_LIST'] = []
-    DATASET['ACTIVE_USER_LIST'] = []
     # 커넥션 풀 제한 설정
     limits = httpx.Limits(
         max_connections=200,
         max_keepalive_connections=100
     )
-    user_keys = list(USER_INFO.keys())
-    #random.shuffle(user_keys)
+    customer = DATASET['CUSTOMER']
+    holder = DATASET['HOLDER']
+    user = {}
 
-    for user_key in user_keys:
-        user_data = USER_INFO[user_key]
-        if user_data['active']:
-            if DATASET['PROXY']:
-                #proxy = ''
-                #while True:
-                #    try:
-                #        proxy = random.choice(proxies)
-                #        transport = HTTPTransport(proxy=proxy, verify=False)
-                #        with httpx.Client(transport=transport, timeout=3) as client:
-                #            r = client.get("https://httpbin.org/ip")
-                #            if r.status_code == 200:
-                #                break
-                #    except Exception as e:
-                #        print(f"[프록시 실패] {proxy} → {e}")
-                #        continue
-                #transport = HTTPTransport(proxy=proxy, verify=False)
-                proxy = random.choice(proxies)
-                transport = HTTPTransport(proxy=proxy, verify=False)
-                session = httpx.Client(
-                    transport=transport,
-                    limits=limits,
-                    verify=False
-                )
-            else:
-                session = httpx.Client(
-                    limits=limits,
-                    verify=False,
-                    timeout=200
-                )
-            data = {
-                'userId': user_data['rid'],
-                'userPassword': mu.op_encrypt(user_data['rpwd']),
-                'returnUrl': 'https://www.campingkorea.or.kr/index.do'
-            }
-            session.post(login_url, data=data)
-            DATASET['SESSION_LIST'].append(session)
-            DATASET['ACTIVE_USER_LIST'].append(user_data)
-            if DATASET['SHOW_RESERVATION']:
-                delete_occ(session)
-    if not DATASET['SHOW_RESERVATION']:
-        logger.info('ACTIVE USER NUMBER (' + str(len(DATASET['SESSION_LIST'])) + ')개 활성화')
-    else:
-        logger.info('적용일자 기준 예약 가능한 대상 탐색 중....')
+    for i in range(2):
+        if DATASET['PROXY']:
+            #proxy = ''
+            #while True:
+            #    try:
+            #        proxy = random.choice(proxies)
+            #        transport = HTTPTransport(proxy=proxy, verify=False)
+            #        with httpx.Client(transport=transport, timeout=3) as client:
+            #            r = client.get("https://httpbin.org/ip")
+            #            if r.status_code == 200:
+            #                break
+            #    except Exception as e:
+            #        print(f"[프록시 실패] {proxy} → {e}")
+            #        continue
+            #transport = HTTPTransport(proxy=proxy, verify=False)
+            proxy = random.choice(proxies)
+            transport = HTTPTransport(proxy=proxy, verify=False)
+            session = httpx.Client(
+                transport=transport,
+                limits=limits,
+                verify=False
+            )
+        else:
+            session = httpx.Client(
+                limits=limits,
+                verify=False,
+                timeout=200
+            )
+
+        #customer
+        if i == 0:
+            user = USER_INFO[customer]
+        #holder
+        elif i == 1:
+            user = USER_INFO[holder]
+
+        data = {
+            'userId': user['rid'],
+            'userPassword': mu.op_encrypt(user['rpwd']),
+            'returnUrl': 'https://www.campingkorea.or.kr/index.do'
+        }
+        # create session
+        session.post(login_url, data=data)
+
+        # customer
+        if i == 0:
+            DATASET['CUSTOMER_SESSION'] = session
+            DATASET['CUSTOMER'] = user
+            logger.info('구매자 : ID => ' + user['rid'] + ' 이름 => ' + user['user_name'])
+        # holder
+        elif i == 1:
+            DATASET['HOLDER_SESSION'] = session
+            DATASET['HOLDER'] = user
+            logger.info('취소자 : ID => ' + user['rid'] + ' 이름 => ' + user['user_name'])
+
     return DATASET
 
 
@@ -126,46 +131,31 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
         start_time = time.time()
         run_cnt = 0
         while True:
-            if not DATASET['SHOW_RESERVATION']:
-                elapsed_time = time.time() - start_time  # 경과된 시간 계산
-                if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
-                    BOT_DATASET = mm.message(BOT_DATASET,
-                                             f"{bot_name.ljust(12)} {dict_data['resveBeginDe']} ~ {dict_data['resveEndDe']} 예약 진행 중 / "
-                                             f"경과 시간 : {str(run_cnt).ljust(2)}시간 => 유저정보: "
-                                             f"아이디={user['rid'].ljust(10)} "
-                                             f"비밀번호={user['rpwd'].ljust(18)} "
-                                             f"이름={user['user_name']}")
             if user['rid'] != shared_data['POST_ID'] or len(user) == 1:
                 shared_data['POST_ID'] = user['rid']
                 url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
-                #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
+                BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
                 response = session.post(url, data=dict_data, timeout=100)
                 if response.is_success and 'json' in response.headers.get('Content-Type', ''):
-                    result = response.json()
+                    dict_meta = {'status_code': response.status_code, 'ok': response.is_success,
+                                 'encoding': response.encoding,
+                                 'Content-Type': response.headers['Content-Type'],
+                                 'cookies': response.cookies}
+                    result = {**dict_meta, **response.json()}
                     if result['preocpcEndDt'] is not None:
-                        if DATASET['SHOW_RESERVATION']:
-                            if str(result['fcltyFullNm']) not in shared_data['AVAILABLE_ROOMS']:
-                                shared_data['AVAILABLE_ROOMS'].append(str(result['fcltyFullNm']) + '/' + bot_name.split()[-1])
-                                logger.info(str(result['fcltyFullNm']) + '/' + bot_name.split()[-1])
-                                return
-                        else:
-                            msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
-                            mm.message4(BOT_DATASET,f"{bot_name.ljust(12)} 임시 점유 완료 {msg.ljust(10)} => 유저정보: "
-                                            f"아이디=({user['rid'].ljust(10)}) "
-                                            f"비밀번호=({user['rpwd'].ljust(18)}) "
-                                            f"이름=({user['user_name']})")
-                            mm.message7(BOT_DATASET,  f"{bot_name.ljust(12)} 임시 점유 시간 {msg.ljust(10)} "
-                                            f"{str(result['preocpcBeginDt'])} ~ {str(result['preocpcEndDt'])} "
-                                            f"=> 유저정보: 아이디=({user['rid'].ljust(10)}) "
-                                            f"비밀번호=({user['rpwd'].ljust(18)}) "
-                                            f"이름=({user['user_name']})")
-                            #live_time = datetime.now() + timedelta(days=30)
-                            #open_time = datetime.strptime((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:57", "%Y-%m-%d %H:%M:%S")
-                            #reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
-                            if reserve_final(BOT_DATASET, user, session, bot_name, result):
-                                break
+                        msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
+                        mm.message4(BOT_DATASET, bot_name + ' ' + '임시 점유 완료 ' + msg + ' => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
+                        mm.message7(BOT_DATASET, bot_name + ' ' + '임시 점유 시간 ' + msg + ' ' + str(result['preocpcBeginDt']) + ' ~ ' + str(result['preocpcEndDt']))
+                        #live_time = datetime.now() + timedelta(days=30)
+                        #open_time = datetime.strptime((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:57", "%Y-%m-%d %H:%M:%S")
+                        reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
+                        if reserve_final(BOT_DATASET, user, session, bot_name, result):
+                            break
                 else:
                     mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
+            elapsed_time = time.time() - start_time  # 경과된 시간 계산
+            if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
+                BOT_DATASET = mm.message8(BOT_DATASET, bot_name + ' 예약 진행 중.. / 경과 시간 : ' + str(run_cnt) + '시간')
     except Exception as e:
         pass
         #print(f"[{bot_name}] 예외 발생: {e}")
@@ -240,17 +230,44 @@ def reserve_final(BOT_DATASET, user, session, bot_name, result):
                         else:
                             mm.message6(BOT_DATASET, bot_name + ' ' + msg +' ' + result['message'])
         else:
-            mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 확정 예약 이상")
+             mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 확정 예약 이상")
         return False
     except Exception as e:
         pass
         #print(f"[{bot_name}] 예외 발생: {e}")
 
 
-def delete_occ(session):
+def cancellation(DATASET, session, dict_data, bot_name, user):
     try:
-        url = "https://www.campingkorea.or.kr/user/reservation/ND_deletePreOcpcInfo.do"
-        session.post(url, timeout=100)
+        BOT_DATASET = copy.deepcopy(DATASET)
+        start_time = time.time()
+        run_cnt = 0
+        while True:
+            if user['rid'] != shared_data['POST_ID'] or len(user) == 1:
+                shared_data['POST_ID'] = user['rid']
+                url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
+                BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
+                response = session.post(url, data=dict_data, timeout=100)
+                if response.is_success and 'json' in response.headers.get('Content-Type', ''):
+                    dict_meta = {'status_code': response.status_code, 'ok': response.is_success,
+                                 'encoding': response.encoding,
+                                 'Content-Type': response.headers['Content-Type'],
+                                 'cookies': response.cookies}
+                    result = {**dict_meta, **response.json()}
+                    if result['preocpcEndDt'] is not None:
+                        msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
+                        mm.message4(BOT_DATASET, bot_name + ' ' + '임시 점유 완료 ' + msg + ' => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
+                        mm.message7(BOT_DATASET, bot_name + ' ' + '임시 점유 시간 ' + msg + ' ' + str(result['preocpcBeginDt']) + ' ~ ' + str(result['preocpcEndDt']))
+                        #live_time = datetime.now() + timedelta(days=30)
+                        #open_time = datetime.strptime((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:57", "%Y-%m-%d %H:%M:%S")
+                        reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
+                        if reserve_final(BOT_DATASET, user, session, bot_name, result):
+                            break
+                else:
+                    BOT_DATASET = mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
+            elapsed_time = time.time() - start_time  # 경과된 시간 계산
+            if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
+                BOT_DATASET = mm.message8(BOT_DATASET, bot_name + ' 예약 진행 중.. / 경과 시간 : ' + str(run_cnt) + '시간')
     except Exception as e:
         pass
         #print(f"[{bot_name}] 예외 발생: {e}")
@@ -260,31 +277,31 @@ def delete_occ(session):
 def run_reservation_bot(DATASET):
     BOT_DATASET = copy.deepcopy(DATASET)
     DATASET = get_logged_in_session(DATASET)
-    DATASET['CONTINUE'] = True
-    session_list = DATASET['SESSION_LIST']
-    active_user_list = DATASET['ACTIVE_USER_LIST']
-    target_data = DATASET['TARGET_DATA']
+    customer_session = DATASET['CUSTOMER_SESSION']
+    holder_session = DATASET['HOLDER_SESSION']
+    target_data = DATASET['TARGET_DATA']    #무조건 하나로 강제함.
+    worker_cnt = int(DATASET['BOT_NUMBER']) * 1 + 1 #1은 HOLDER 용
 
-    session_len = len(session_list)
-    target_len = len(target_data)
-    max_len = max(session_len, target_len)
     # ThreadPoolExecutor 사용
-    with ThreadPoolExecutor(max_workers=max_len) as executor:
+    with ThreadPoolExecutor(max_workers=worker_cnt) as executor:
         futures = []
 
-        for i in range(max_len):
-            session_idx = i % session_len
-            target_idx = i % target_len
-
-            session = session_list[session_idx]
-            user = active_user_list[session_idx]
-            target = target_data[target_idx]
-            bot_name = f"{(target['fcltyCode'] + '_' + str(i + 1)).ljust(9)} {target['max_cnt'].rjust(3)}인실"
-            del target['max_cnt']
-            futures.append(
-                executor.submit(reserve_site, BOT_DATASET, session, target, bot_name, user)
-            )
-
+        for i in range(worker_cnt):
+            # 첫 bot은 취소자
+            if i == 0:
+                session = holder_session
+                user = DATASET['HOLDER']
+                bot_name = 'HOLDER_BOT'
+                #futures.append(
+                #    executor.submit(reserve_site, BOT_DATASET, session, target_data, bot_name, user)
+                #)
+            else:
+                session = customer_session
+                user = DATASET['CUSTOMER']
+                bot_name = 'CUSTOMER_BOT' + str(i + 1)
+                futures.append(
+                    executor.submit(reserve_site, BOT_DATASET, session, target_data, bot_name, user)
+                )
         for future in futures:
             future.result()  # 예외 발생 시 처리
         time.sleep(0.1)
@@ -293,26 +310,20 @@ def run_reservation_bot(DATASET):
 # ✅ 테스트 데이터 예시
 def worker(DATASET):
     DATASET = md.convert(DATASET)
-    reservation_targets = []
+    TARGET_DATA = {}
     for target_type_list in DATASET['TARGET_LIST']:
-        idx = 0
         for type_no in target_type_list['TARGET_NO']:
-            _max_cnt = target_type_list['TARGET_MAX_CNT'][idx]
             if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET['ROOM_EXPT']:
                 for begin_date in DATASET['SELECT_DATE']:
                     for PERIOD in DATASET['PERIOD']:
-                        end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(days=int(PERIOD))).strftime(
-                            "%Y-%m-%d")
-
+                        end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(days=int(PERIOD))).strftime("%Y-%m-%d")
                         TARGET_DATA = {
                             'trrsrtCode': str(target_type_list['trrsrtCode']),
                             'fcltyCode': str(type_no),
                             'resveNoCode': str(target_type_list['resveNoCode']),
                             'resveBeginDe': str(begin_date),
-                            'resveEndDe': str(end_date),
-                            'max_cnt': str(_max_cnt)
+                            'resveEndDe': str(end_date)
                         }
-                        reservation_targets.append(TARGET_DATA)
-            idx = idx + 1
-        DATASET['TARGET_DATA'] = reservation_targets
+                        break
+    DATASET['TARGET_DATA'] = TARGET_DATA
     run_reservation_bot(DATASET)

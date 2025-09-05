@@ -17,7 +17,7 @@ def _list():
                'rid': 'sochi007',
                'rphone': '01020569536',
                'area_code': '1006',
-               'active': False
+               'active': True
                },
         '02': {'user_name': '김계자',
                'rpwd': 'CJSWOsla86!@',
@@ -31,7 +31,7 @@ def _list():
                'rid': 'parksi',
                'rphone': '01021635418',
                'area_code': '1006',
-               'active': True
+               'active': False
                },
         '04': {'user_name': '박현정',
                'rpwd': 'khi831883!',
@@ -45,7 +45,7 @@ def _list():
                'rid': 'psm0705',
                'rphone': '01024863038',
                'area_code': '1006',
-               'active': False
+               'active': True
                },
         '06': {'user_name': '윤민주',
                'rpwd': 'cca1174848',
@@ -94,21 +94,21 @@ def _list():
                'rid': 'k76235',
                'rphone': '01062797909',
                'area_code': '1006',
-               'active': False
+               'active': True
                },
         '14': {'user_name': '홍석환',
                'rpwd': 'hwan1150^^',
                'rid': 'hong5870',
                'rphone': '01082853000',
                'area_code': '1006',
-               'active': False
+               'active': True
                },
         '15': {'user_name': '김보경',
                'rpwd': 'bk05051314!',
                'rid': 'bk0309',
                'rphone': '01046098903',
                'area_code': '1006',
-               'active': False
+               'active': True
                },
         '16': {'user_name': '김수현',
                'rpwd': 'tngus1234@',

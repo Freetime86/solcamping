@@ -102,7 +102,7 @@ def message8(DATASET, text):
 def message9(DATASET, text):
     text = mu.replaceAll(text, "'")
     text = mu.replaceAll(text, "\n")
-    DATASET['CURRENT_PROCESS'] = 'message8'
+    DATASET['CURRENT_PROCESS'] = 'message9'
     if DATASET['MESSAGE9'] != text:
         logger.info(str(text))
         DATASET['MESSAGE9'] = text
