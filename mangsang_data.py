@@ -111,7 +111,7 @@ def convert(DATASET):
                     _target_max_list.append(_fcltyInfo[0])
                     _target_no_list.append(_fcltyInfo[1])
                     _target_ty_list.append(_fcltyInfo[2])
-                if len(_target_max_list) == 0:
+                if len(_target_max_list) == 0 and index != '02' and index != '03':
                     _target_max_list.append('ALL')
                 else:
                     _target['TARGET_MAX_CNT'] = _target_max_list

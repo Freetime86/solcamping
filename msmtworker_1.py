@@ -1,7 +1,5 @@
 import mangsang_setting as ms
-from selenium.webdriver.chrome.options import Options
 import mangsang_multiprocessing_spot as processor
-import tempfile
 
 
 # 기초 데이터 PARSING
@@ -17,15 +15,17 @@ DATASET['PIN_PONG_2'] = '01'
 
 # 감시모드 설정
 DATASET['PROXY'] = False  # 실시간 가능 리스트 적용 유무
-DATASET['SHOW_RESERVATION'] = True
+DATASET['SHOW_RESERVATION'] = False
 DATASET['MULTIPLE_BOT'] = 10
+DATASET['USER_RANDOM'] = False
+
 
 print('프록시 서버 ON -> ' + str(DATASET['PROXY']))
 print('예약현황 체크 -> ' + str(DATASET['SHOW_RESERVATION']))
 print('다중 봇 사용 -> ' + str(DATASET['MULTIPLE_BOT']))
 
 # 숙박 설정
-DATASET['SELECT_DATE'] = ['2025-10-06']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
+DATASET['SELECT_DATE'] = ['2025-10-05']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
 DATASET['PERIOD'] = ['3']  # 연박 수
 # 01:든바다, 02:난바다, 03:허허바다, 04:전통한옥, 05:캐라반, 06:자동차야영장, 07:글램핑A 08:글램핑B, 09:캐빈하우스
 DATASET['ROOM_FACILITY'] = ['01', '02', '03']
