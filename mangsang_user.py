@@ -17,7 +17,7 @@ def _list():
                'rid': 'sochi007',
                'rphone': '01020569536',
                'area_code': '1006',
-               'active': True
+               'active': False
                },
         '02': {'user_name': '김계자',
                'rpwd': 'CJSWOsla86!@',
@@ -94,35 +94,42 @@ def _list():
                'rid': 'k76235',
                'rphone': '01062797909',
                'area_code': '1006',
-               'active': True
+               'active': False
                },
         '14': {'user_name': '홍석환',
                'rpwd': 'hwan1150^^',
                'rid': 'hong5870',
                'rphone': '01082853000',
                'area_code': '1006',
-               'active': True
+               'active': False
                },
         '15': {'user_name': '김보경',
                'rpwd': 'bk05051314!',
                'rid': 'bk0309',
                'rphone': '01046098903',
                'area_code': '1006',
-               'active': True
+               'active': False
                },
         '16': {'user_name': '김수현',
                'rpwd': 'tngus1234@',
                'rid': 'wodndtngus',
                'rphone': '01082817597',
                'area_code': '1006',
-               'active': True
+               'active': False
                },
         '17': {'user_name': '임은지',
                'rpwd': 'dmswlwkd123!',
                'rid': 'eunz111',
                'rphone': '01034558480',
                'area_code': '1006',
-               'active': True
+               'active': False
+               },
+        '18': {'user_name': '류창근',
+               'rpwd': 'qwer123456',
+               'rid': 'ryoo6565',
+               'rphone': '01033479550',
+               'area_code': '1006',
+               'active': False
                }
     }
     return dict_data
