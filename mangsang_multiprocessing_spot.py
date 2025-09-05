@@ -1,5 +1,7 @@
 import random
 import time
+
+import datetime
 from user_agent import generate_user_agent
 import httpx
 import mangsang_data as md
@@ -101,6 +103,8 @@ def get_proxy():
 def reserve_site(DATASET, session, dict_data, bot_name, user):
     try:
         BOT_DATASET = copy.deepcopy(DATASET)
+        start_time = time.time()
+        run_cnt = 0
         while True:
             if user['rid'] != shared_data['POST_ID'] or len(user) == 1:
                 shared_data['POST_ID'] = user['rid']
@@ -115,12 +119,19 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                     result = {**dict_meta, **response.json()}
                     if result['preocpcEndDt'] is not None:
                         msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
-                        mm.message4(BOT_DATASET, bot_name + ' ' + '임시 점유 완료 ' + msg)
+                        mm.message4(BOT_DATASET, bot_name + ' ' + '임시 점유 완료 ' + msg + ' => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
                         mm.message7(BOT_DATASET, bot_name + ' ' + '임시 점유 시간 ' + msg + ' ' + str(result['preocpcBeginDt']) + ' ~ ' + str(result['preocpcEndDt']))
-                        if reserve_final(BOT_DATASET, user, session, bot_name, result):
-                            break
+                        live_time = datetime.now() + timedelta(days=30)
+                        open_time = datetime.strptime((datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:55", "%Y-%m-%d %H:%M:%S")
+                        reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
+                        if live_time > open_time or reserve_time < open_time:
+                            if reserve_final(BOT_DATASET, user, session, bot_name, result):
+                                break
                 else:
                     print(f"[{bot_name}] 실패 - 임시 점유 이상")
+            elapsed_time = time.time() - start_time  # 경과된 시간 계산
+            if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
+                BOT_DATASET = mm.message8(BOT_DATASET, bot_name + ' 예약 진행 중.. / 경과 시간 : ' + str(run_cnt) + '시간')
     except Exception as e:
         pass
         #print(f"[{bot_name}] 예외 발생: {e}")
