@@ -9,7 +9,7 @@ DATASET['PIN_PONG_1'] = '00'  # 최종 유저
 DATASET['PIN_PONG_2'] = '00'  # 최종 유저
     
 # 시스템 설정 최소 값 1
-DATASET['BOT_NUMBER'] = 1
+DATASET['BOT_NUMBER'] = 10
 
 # 감시모드 설정
 DATASET['PROXY'] = False  # 실시간 가능 리스트 적용 유무
@@ -19,7 +19,7 @@ DATASET['CUSTOMER'] = '02'
 DATASET['HOLDER'] = '03'
 
 # 숙박 설정
-DATASET['SELECT_DATE'] = ['2025-10-05']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
+DATASET['SELECT_DATE'] = ['2025-10-01']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
 DATASET['PERIOD'] = ['1']  # 연박 수
 # 01:든바다, 02:난바다, 03:허허바다, 04:전통한옥, 05:캐라반, 06:자동차야영장, 07:글램핑A 08:글램핑B, 09:캐빈하우스
 DATASET['ROOM_FACILITY'] = ['02']

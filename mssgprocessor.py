@@ -53,7 +53,7 @@ def get_logged_in_session(DATASET):
     holder = DATASET['HOLDER']
     user = {}
 
-    for i in range(2):
+    for i in range(1):
         if DATASET['PROXY']:
             #proxy = ''
             #while True:
@@ -278,7 +278,7 @@ def run_reservation_bot(DATASET):
     BOT_DATASET = copy.deepcopy(DATASET)
     DATASET = get_logged_in_session(DATASET)
     customer_session = DATASET['CUSTOMER_SESSION']
-    holder_session = DATASET['HOLDER_SESSION']
+    #holder_session = DATASET['HOLDER_SESSION']
     target_data = DATASET['TARGET_DATA']    #무조건 하나로 강제함.
     worker_cnt = int(DATASET['BOT_NUMBER']) * 1 + 1 #1은 HOLDER 용
 
@@ -289,7 +289,7 @@ def run_reservation_bot(DATASET):
         for i in range(worker_cnt):
             # 첫 bot은 취소자
             if i == 0:
-                session = holder_session
+                #session = holder_session
                 user = DATASET['HOLDER']
                 bot_name = 'HOLDER_BOT'
                 #futures.append(
