@@ -162,8 +162,8 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                         #reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
                         if reserve_final(BOT_DATASET, user, session, bot_name, result):
                             break
-                else:
-                    mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
+            else:
+                mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
     except Exception as e:
         pass
         #print(f"[{bot_name}] 예외 발생: {e}")
