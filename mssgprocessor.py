@@ -270,7 +270,6 @@ def cancellation(DATASET, session, dict_data, bot_name, user):
                 BOT_DATASET = mm.message8(BOT_DATASET, bot_name + ' 예약 진행 중.. / 경과 시간 : ' + str(run_cnt) + '시간')
     except Exception as e:
         pass
-        #print(f"[{bot_name}] 예외 발생: {e}")
 
 
 # ✅ 실행 부분
