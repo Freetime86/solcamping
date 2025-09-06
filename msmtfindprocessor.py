@@ -129,7 +129,7 @@ def searching(DATASET, session, bot_name, user):
                     if '데이터가' not in values[0]:
                         BOT_DATASET = mm.message8(BOT_DATASET,
                                     '유저정보: 아이디:' + user['rid'].ljust(12) + ' 비밀번호:' + user['rpwd'].ljust(12) + ' 이름=' + user[
-                                        'user_name'].ljust(4) + ' CANCEL 대상 리스트 => 대상:' + str(values[5].ljust(27)) + ' 예약기간:' + str(values[4]) + '   예약시점:' + str(values[3]) + ' 상태:' + str(values[8]) + ' 예약번호:[' + str(values[2]) + ']')
+                                        'user_name'].ljust(4) + ' 예약 리스트 => 대상:' + str(values[5].ljust(27)) + ' 예약기간:' + str(values[4]) + '   예약시점:' + str(values[3]) + ' 상태:' + str(values[8]) + ' 예약번호:[' + str(values[2]) + ']')
                 break
             else:
                 mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
