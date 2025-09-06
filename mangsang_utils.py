@@ -1,5 +1,7 @@
 import base64
 import hashlib
+import datetime
+import calendar
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from binascii import unhexlify
@@ -7,6 +9,22 @@ from binascii import unhexlify
 
 def replaceAll(text, target):
     return text.replace(target, '', 99999)
+
+
+def get_all_day_holidays():
+    today = datetime.date.today()
+    end_date = today + datetime.timedelta(days=30)
+
+    saturdays = []
+    current_day = today
+
+    while current_day <= end_date:
+        if current_day.weekday() == 5:  # 토요일
+            if current_day != today:  # 오늘이 토요일이면 제외
+                saturdays.append(current_day.strftime('%Y-%m-%d'))
+        current_day += datetime.timedelta(days=1)
+
+    return saturdays
 
 
 def op_encrypt(plain_text: str) -> str:

@@ -31,7 +31,7 @@ DATASET['ROOM_RANGE'] = ['8']
 DATASET['ROOM_WANTS'] = ['101']
 
 #사용하지 않음
-DATASET['ROOM_EXPT'] = []
+DATASET['ROOM_EXPT'] = ['']
 
 if 1 < len(DATASET['ROOM_WANTS']) == 0:
     print('CHECK ROOM_WANTS')

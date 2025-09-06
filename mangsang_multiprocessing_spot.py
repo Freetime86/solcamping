@@ -96,8 +96,9 @@ def get_logged_in_session(DATASET):
                 'returnUrl': 'https://www.campingkorea.or.kr/index.do'
             }
             session.post(login_url, data=data)
-            DATASET['SESSION_LIST'].append(session)
-            DATASET['ACTIVE_USER_LIST'].append(user_data)
+            for i in range(int(DATASET['MULTIPLE_BOT'])):
+                DATASET['SESSION_LIST'].append(session)
+                DATASET['ACTIVE_USER_LIST'].append(user_data)
             if DATASET['SHOW_RESERVATION']:
                 delete_occ(session)
     if not DATASET['SHOW_RESERVATION']:
@@ -295,6 +296,8 @@ def run_reservation_bot(DATASET):
 # ✅ 테스트 데이터 예시
 def worker(DATASET):
     DATASET = md.convert(DATASET)
+    if DATASET['ALL_HOLIDAY_SEARCH']:
+        DATASET['SELECT_DATE'] = mu.get_all_day_holidays()
     reservation_targets = []
     for target_type_list in DATASET['TARGET_LIST']:
         idx = 0
