@@ -218,7 +218,7 @@ def reserve_final(DATASET, user, session, bot_name, result):
                     RESULT_TXT = result['message']
                     if RESULT_TXT == '예약신청이 정상적으로 완료되었습니다.':
                         mm.message6(DATASET, msg + ' => ' + ' 예약이 완료되었습니다. => 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
-                        exit()
+                        sys.exit('시스템 종료')
                     else:
                         if '일시적인 장애로' in result['message']:
                             mm.message6(DATASET, msg +
@@ -232,6 +232,12 @@ def reserve_final(DATASET, user, session, bot_name, result):
                             mm.message6(DATASET, msg +
                                         ' ' + '(' + result[
                                             'message'] + ') 다음과 같은 사유로 임시 점유를 다시 시도합니다.')
+                        elif '이미 완료된 예약입니다.' in result['message']:
+                            mm.message6(DATASET, msg +
+                                        ' ' + '(' + result[
+                                            'message'] + ')')
+
+                            sys.exit('시스템 종료')
                         else:
                             mm.message6(DATASET, msg +' ' + result['message'])
         else:
