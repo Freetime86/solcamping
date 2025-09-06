@@ -30,7 +30,7 @@ machine = 1  # 예약 머신 숫자 높을 수록 압도적이지만, 서버 박
 time_cut = 1  # 머신 시작 간격
 period = 1  # 연박 수
 delay = 0  # 모니터링 리프레시 속도
-test = True
+test = False
 #room_list = ['503', '504', '505', '506', '507', '508', '509', '510']  # 사이트 번호 지정
 #room_list = ['503']
 #room_exception = ['501', '502', '503', '505', '506', '507']
@@ -40,10 +40,10 @@ room_want = '503'
 # D 사이트
 #room_list = ['701', '702', '703', '704', '705', '707', '708', '709']
 sel_month_list = ['10']
-sel_date_list = ['1005']
-site = 'E'
+sel_date_list = ['1006']
+site = 'B'
 
-continue_work = True
+continue_work = False
 trying = False
 current_room = '0'
 user_type = 999999  # 사용자 정보 세팅
@@ -356,10 +356,16 @@ def main(dataset):
                                             # D 사이트 709번은 APP INDEX를 한칸 더 간다.
                                             if site == 'D' and room == '709':
                                                 start_index = start_index + 1
+                                            if site == 'B' and int(room) >= 242:
+                                                start_index = start_index + 105
                                             room_key = str('appRoom[') + str(start_index) + str("]")
                                             machine_id_txt = str(datetime.now()) + ' // ' + str(
                                                 thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + '/' + site + str(
                                                 room) + ' -> '
+                                            if site == 'D' and room == '709':
+                                                start_index = start_index - 1
+                                            if site == 'B' and int(room) >= 242:
+                                                start_index = start_index - 105
                                             room_num = str(site + str(int(start_index) + fix_room_num))
 
                                             dict_meta = captcha(cookie, thread_name)
@@ -506,7 +512,6 @@ def retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name,
                 'CAPTCHA_TEXT': dict_meta.get('captcha')
             }
             while continue_work:
-                print(thread_name + ' 9999')
                 if trying:
                     print(thread_name + ' 이미 예약 완료된 기록이 존재 합니다. 종료 합니다.')
                     sys.exit()
@@ -531,7 +536,6 @@ def retry_moudule(userAgent, site, target_date, room, fix_room_num, thread_name,
                             continue_work = False
                             print(machine_id_txt + result_txt.get('ERROR'))
                     else:
-                        print(thread_name + ' 5555')
                         dict_data = json.loads(response.get('text')).get('data')
                         if not trying and dict_data is not None:
                             url = 'https://camping.gtdc.or.kr/DZ_reservation/procedure/execCamping_reservation.json'  # 솔향기 커넥션 정보 GET

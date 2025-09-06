@@ -18,7 +18,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 py.FAILSAFE = False
 options = Options()
 options.add_experimental_option("detach", True)
-options.add_argument("headless") # 크롬창 숨기기
+#options.add_argument("headless") # 크롬창 숨기기
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 

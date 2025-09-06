@@ -43,7 +43,7 @@ sel_month_list = ['10']
 sel_date_list = ['1003']
 site = 'E'
 
-continue_work = True
+continue_work = False
 trying = False
 current_room = '0'
 user_type = 9999  # 사용자 정보 세팅
@@ -356,10 +356,16 @@ def main(dataset):
                                             # D 사이트 709번은 APP INDEX를 한칸 더 간다.
                                             if site == 'D' and room == '709':
                                                 start_index = start_index + 1
+                                            if site == 'B' and int(room) >= 242:
+                                                start_index = start_index + 105
                                             room_key = str('appRoom[') + str(start_index) + str("]")
                                             machine_id_txt = str(datetime.now()) + ' // ' + str(
                                                 thread_name) + ' ::: 예약 : ' + site + ' ' + target_date + ' ' + room_key + '/' + site + str(
                                                 room) + ' -> '
+                                            if site == 'D' and room == '709':
+                                                start_index = start_index - 1
+                                            if site == 'B' and int(room) >= 242:
+                                                start_index = start_index - 105
                                             room_num = str(site + str(int(start_index) + fix_room_num))
 
                                             dict_meta = captcha(cookie, thread_name)
