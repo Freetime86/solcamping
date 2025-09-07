@@ -355,3 +355,50 @@ def get_facility_no(_target, number):
         elif number == '10':
             result = []
     return result
+
+
+def get_facility_code(_target, number):
+    matches = []
+    if _target == '01':
+        result2 = ['2|DA104', '2|DA105', '2|DA107',
+                   '2|DA108', '2|DA113', '2|DA114',
+                   '2|DA117', '2|DA118']
+        result4 = ['4|DB120', '4|DB121', '4|DB122',
+                   '4|DB123', '4|DC103', '4|DC109',
+                   '4|DC116', '4|DE102', '4|ED111']
+        result6 = ['6|DD112', '6|DD115', '6|DD119']
+        result8 = ['8|DE101', '8|DE110']
+        result10 = ['10|DG106']
+        merged = result2 + result4 + result6 + result8 + result10
+        matches = [x for x in merged if number in x]
+
+    elif _target == '02':
+        result4 = ['4|NB103', '4|NB104', '4|NB107',
+                   '4|NB108', '4|NB111', '4|NB112']
+        result6 = ['6|ND105', '6|NF102', '6|NF110', '6|NF114']
+        result8 = ['8|NF101', '8|NF109', '8|NF113']
+        result10 = ['10|NG106', '10|NG115']
+        merged = result4 + result6 + result8 + result10
+        matches = [x for x in merged if number in x]
+
+    elif _target == '03':
+        result4 = ['4|HB106', '4|HB107', '4|HC104', '4|HE103']
+        result6 = ['6|HD105']
+        result8 = ['8|HE102']
+        result10 = ['10|HG101', '10|HG108']
+        merged = result4 + result6 + result8 + result10
+        matches = [x for x in merged if number in x]
+    elif _target == '04':
+        return
+    elif _target == '05':
+        return
+    elif _target == '06':
+        roomNum = 1600 + int(number)
+        matches = ['ALL|' + str(roomNum)]
+    elif _target == '07':
+        return
+    elif _target == '08':
+        return
+    elif _target == '09':
+        return
+    return matches[0]

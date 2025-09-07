@@ -139,7 +139,6 @@ def searching(DATASET, session, bot_name, user):
                             f"예약기간:{values[4]}   예약시점:{values[3]} "
                             f"상태:{values[8]} 예약번호:[{values[2]}]"
                         )
-
                         BOT_DATASET = mm.message8(BOT_DATASET, line)
                 break
             else:

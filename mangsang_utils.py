@@ -50,7 +50,27 @@ def cut_display(s: str, width: int) -> str:
     return ''.join(out)
 
 
-def get_all_day_holidays():
+def get_all_day_holidays(cnt):
+    today = datetime.date.today()
+    end_date = today + datetime.timedelta(days=30)
+
+    holidays = []
+    current_day = today
+
+    while current_day <= end_date:
+        if current_day.weekday() == 5:  # 토요일
+            if current_day != today:  # 오늘이 토요일이면 제외
+                # cnt일 뒤로 + 토요일 = cnt+1일
+                for i in range(cnt, -1, -1):  # 예: cnt=3 → 3,2,1,0
+                    day = current_day - datetime.timedelta(days=i)
+                    if day >= today:
+                        holidays.append(day.strftime('%Y-%m-%d'))
+        current_day += datetime.timedelta(days=1)
+
+    return holidays
+
+
+def get_all_target_days(cnt):
     today = datetime.date.today()
     end_date = today + datetime.timedelta(days=30)
 
@@ -65,6 +85,37 @@ def get_all_day_holidays():
 
     return saturdays
 
+
+def extract_number(text: str):
+    match = re.search(r'(\d+)(호|번)', text)
+    if match:
+        return match.group(1)   # 숫자 부분만
+    return None
+
+
+def extract_site_name_code(text: str) -> str:
+    # "대상:" 뒷부분을 잘라서 ">" 앞쪽만 추출
+    name = text.split(">")[0].strip()
+    code = '00'
+    if name == '든바다':
+        code = '01'
+    elif name == '난바다':
+        code = '02'
+    elif name == '허허바다':
+        code = '03'
+    elif name == '전통한옥':
+        code = '04'
+    elif name == '캐라반':
+        code = '05'
+    elif name == '자동차캠핑장':
+        code = '06'
+    elif name == '글램핑A':
+        code = '07'
+    elif name == '글램핑B':
+        code = '08'
+    elif name == '캐빈하우스':
+        code = '09'
+    return code
 
 def op_encrypt(plain_text: str) -> str:
     # Constants (from JS function)

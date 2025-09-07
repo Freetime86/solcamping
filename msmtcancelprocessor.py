@@ -157,22 +157,22 @@ def cancellation_final(user, session, bot_name, reservation_numbers):
             }
             url = "https://www.campingkorea.or.kr/user/myPage/ND_updateCancleResve.do"
             response = session.post(url, data=dict_data, timeout=5, headers={
-                        'Accept': 'application/json, text/javascript, */*; q=0.01',
-                        'Accept-Encoding': 'gzip, deflate, br, zstd',
-                        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-                        'Connection': 'keep-alive',
-                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                        'Host': 'www.campingkorea.or.kr',
-                        'Origin': 'https://www.campingkorea.or.kr',
-                        'Referer': 'https://www.campingkorea.or.kr/user/myPage/BD_reservationReserveInfo.do?trrsrtCode=&resveSttusCode=&q_currPage=1',
-                        'Sec-Ch-Ua': '"Google Chrome";v="138", "Chromium";v="138", "Not-A.Brand";v="8"',
-                        'Sec-Ch-Ua-Mobile': '?0',
-                        'Sec-Ch-Ua-Platform': '"Windows"',
-                        'Sec-Fetch-Dest': 'empty',
-                        'Sec-Fetch-Mode': 'cors',
-                        'Sec-Fetch-Site': 'same-origin',
-                        'User-Agent': str(generate_user_agent(os='win', device_type='desktop')),
-                        'X-Requested-With': 'XMLHttpRequest'})
+                'Accept': 'application/json, text/javascript, */*; q=0.01',
+                'Accept-Encoding': 'gzip, deflate, br, zstd',
+                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Connection': 'keep-alive',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Host': 'www.campingkorea.or.kr',
+                'Origin': 'https://www.campingkorea.or.kr',
+                'Referer': 'https://www.campingkorea.or.kr/user/myPage/BD_reservationReserveInfo.do?trrsrtCode=&resveSttusCode=&q_currPage=1',
+                'Sec-Ch-Ua': '"Google Chrome";v="138", "Chromium";v="138", "Not-A.Brand";v="8"',
+                'Sec-Ch-Ua-Mobile': '?0',
+                'Sec-Ch-Ua-Platform': '"Windows"',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
+                'User-Agent': str(generate_user_agent(os='win', device_type='desktop')),
+                'X-Requested-With': 'XMLHttpRequest'})
             if response.is_success and 'json' in response.headers.get('Content-Type', ''):
                 dict_meta = {'status_code': response.status_code, 'ok': response.is_success,
                              'encoding': response.encoding,
@@ -181,7 +181,8 @@ def cancellation_final(user, session, bot_name, reservation_numbers):
                 result = {**dict_meta, **response.json()}
                 if result['status_code'] == 200:
                     if 'message' in result:
-                        print('[' + str(num) + ']' + ' => 예약 내역 삭제 완료 / 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user['user_name'] + ')')
+                        print('[' + str(num) + ']' + ' => 예약 내역 삭제 완료 / 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user[
+                            'rpwd'] + ') 이름=(' + user['user_name'] + ')')
             else:
                 print(user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 확정 예약 이상")
         return True
@@ -190,13 +191,39 @@ def cancellation_final(user, session, bot_name, reservation_numbers):
         #print(f"[{bot_name}] 예외 발생: {e}")
 
 
-
 # ✅ 실행 부분
-def run_reservation_bot(DATASET):
+def run_cancellation_bot(DATASET):
     BOT_DATASET = copy.deepcopy(DATASET)
-    DATASET = get_logged_in_session(DATASET)
+    if DATASET['CANCEL']:
+        DATASET = get_logged_in_session(DATASET)
     DATASET['CONTINUE'] = True
     session_list = DATASET['SESSION_LIST']
+    active_user_list = DATASET['ACTIVE_USER_LIST']
+    target_data = DATASET['TARGET_DATA']
+
+    session_len = len(session_list)
+    target_len = len(target_data)
+    max_len = max(session_len, target_len)
+    # ThreadPoolExecutor 사용
+    with ThreadPoolExecutor(max_workers=max_len) as executor:
+        futures = []
+
+        for i in range(session_len):
+            session = session_list[i]
+            user = active_user_list[i]
+            bot_name = 'ID' + str(user['rid']) + ' 이름 : ' + str(user['user_name'])
+            futures.append(
+                executor.submit(cancellation, BOT_DATASET, session, bot_name, user)
+            )
+
+        for future in futures:
+            future.result()  # 예외 발생 시 처리
+        time.sleep(0.1)
+
+
+def run_canceler(DATASET, session_list):
+    BOT_DATASET = copy.deepcopy(DATASET)
+    DATASET['CONTINUE'] = True
     active_user_list = DATASET['ACTIVE_USER_LIST']
     target_data = DATASET['TARGET_DATA']
 
@@ -224,4 +251,4 @@ def run_reservation_bot(DATASET):
 def worker(DATASET):
     DATASET = md.convert(DATASET)
     DATASET['TARGET_DATA'] = []
-    run_reservation_bot(DATASET)
+    run_cancellation_bot(DATASET)
