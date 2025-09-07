@@ -151,11 +151,11 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                             return
                     else:
                         msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
-                        mm.message4(BOT_DATASET,f"{bot_name.ljust(12)} 임시 점유 완료 {msg.ljust(10)} => 유저정보: "
-                                        f"아이디=({user['rid'].ljust(10)}) "
-                                        f"비밀번호=({user['rpwd'].ljust(18)}) "
-                                        f"이름=({user['user_name']})")
-                        mm.message7(BOT_DATASET,  f"{bot_name.ljust(12)} 임시 점유 시간 {msg.ljust(10)} "
+                        #mm.message4(BOT_DATASET,f"{bot_name.ljust(12)} 임시 점유 완료 {msg.ljust(10)} => 유저정보: "
+                        #                f"아이디=({user['rid'].ljust(10)}) "
+                        #                f"비밀번호=({user['rpwd'].ljust(18)}) "
+                        #                f"이름=({user['user_name']})")
+                        mm.message7(BOT_DATASET,  f"{bot_name.ljust(12)} 임시 점유 완료 => 점유 시간 {msg.ljust(10)} "
                                         f"{str(result['preocpcBeginDt'])} ~ {str(result['preocpcEndDt'])} "
                                         f"=> 유저정보: 아이디=({user['rid'].ljust(10)}) "
                                         f"비밀번호=({user['rpwd'].ljust(18)}) "
@@ -172,7 +172,6 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                 mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
         except Exception as e:
             continue
-            print(f"[{bot_name}] 예외 발생: {e}")
 
 
 def reserve_final(BOT_DATASET, user, session, bot_name, result):
@@ -242,6 +241,8 @@ def reserve_final(BOT_DATASET, user, session, bot_name, result):
                                         'message'] + ') 다음과 같은 사유로 임시 점유를 다시 시도합니다.')
                     else:
                         mm.message6(BOT_DATASET, bot_name + ' ' + msg +' ' + result['message'])
+        else:
+            mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 서버 회신 이상 " + str(result['status_code']) + ' ERROR')
     else:
         mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 확정 예약 이상")
     return False
