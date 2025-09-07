@@ -122,25 +122,23 @@ def cancellation(DATASET, session, bot_name, user):
                 if response.is_success:
                     html = response.text  # 또는 html 문자열 직접 사용
                     soup = BeautifulSoup(html, 'html.parser')
+                    tbody = soup.find_all("tbody")[0]  # 첫 번째 tbody
+                    rows = tbody.find_all("tr")  # tbody 안의 모든 tr
 
                     # 예약번호들을 담을 리스트
                     reservation_numbers = []
 
-                    # 모든 a 태그를 찾고, href 속성에서 예약번호 추출
-                    for a_tag in soup.find_all('a', href=True):
-                        href = a_tag['href']
-                        match = re.search(r"goDetail\('([^']+)'\)", href)
-                        if match:
-                            reservation_no = match.group(1)
-                            reservation_numbers.append(reservation_no)
-
-                    unique_numbers = list(set(reservation_numbers))
-
-                    if len(unique_numbers) > 0:
-                        print('유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user[
-                            'user_name'] + ') CANCEL 대상 리스트 => ' + str(unique_numbers))
-                        if cancellation_final(user, session, bot_name, unique_numbers):
-                            break
+                    for row in rows:
+                        cells = row.find_all("td")
+                        values = [cell.get_text(strip=True) for cell in cells]
+                        if '데이터가' not in values[0]:
+                            if '결제하기' not in values[8]:
+                                reservation_numbers.append(str(values[2]))
+                                if len(reservation_numbers) > 0:
+                                    print('유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user[
+                                        'user_name'] + ') CANCEL 대상 리스트 => ' + str(reservation_numbers))
+                    if cancellation_final(user, session, bot_name, reservation_numbers):
+                        break
                 else:
                     mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
             elapsed_time = time.time() - start_time  # 경과된 시간 계산
