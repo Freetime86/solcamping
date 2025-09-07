@@ -131,6 +131,8 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
     BOT_DATASET = copy.deepcopy(DATASET)
     start_time = time.time()
     run_cnt = 0
+    if DATASET['RESET']:
+        delete_occ(session)
     while True:
         try:
             elapsed_time = time.time() - start_time  # 경과된 시간 계산
@@ -160,7 +162,7 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                     open_time = datetime.strptime(
                         (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:58", "%Y-%m-%d %H:%M:%S")
                     reserve_time = datetime.strptime(result['resveBeginDe'] + " 23:59:59", "%Y-%m-%d %H:%M:%S")
-                    if live_time > reserve_time or open_time < live_time:
+                    if live_time > reserve_time or open_time < live_time and DATASET['FINAL_RESERVATION']:
                         if reserve_final(DATASET, user, session, bot_name, result):
                             break
             else:
@@ -286,6 +288,16 @@ def run_reservation_bot(DATASET):
                     )
             for future in futures:
                 future.result()  # 예외 발생 시 처리
+
+
+def delete_occ(session):
+    try:
+        url = "https://www.campingkorea.or.kr/user/reservation/ND_deletePreOcpcInfo.do"
+        session.post(url, timeout=100)
+    except Exception as e:
+        pass
+        #print(f"예외 발생: {e}")
+
 
 
 # ✅ 테스트 데이터 예시
