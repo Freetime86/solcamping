@@ -55,42 +55,41 @@ def get_logged_in_session(DATASET):
         max_keepalive_connections=100
     )
     for user in USER_INFO:
-        if USER_INFO[user]['active']:
-            if DATASET['PROXY']:
-                #proxy = ''
-                #while True:
-                #    try:
-                #        proxy = random.choice(proxies)
-                #        transport = HTTPTransport(proxy=proxy, verify=False)
-                #        with httpx.Client(transport=transport, timeout=3) as client:
-                #            r = client.get("https://httpbin.org/ip")
-                #            if r.status_code == 200:
-                #                break
-                #    except Exception as e:
-                #        print(f"[프록시 실패] {proxy} → {e}")
-                #        continue
-                #transport = HTTPTransport(proxy=proxy, verify=False)
-                proxy = random.choice(proxies)
-                transport = HTTPTransport(proxy=proxy, verify=False)
-                session = httpx.Client(
-                    transport=transport,
-                    limits=limits,
-                    verify=False
-                )
-            else:
-                session = httpx.Client(
-                    limits=limits,
-                    verify=False,
-                    timeout=200
-                )
-            data = {
-                'userId': USER_INFO[user]['rid'],
-                'userPassword': mu.op_encrypt(USER_INFO[user]['rpwd']),
-                'returnUrl': 'https://www.campingkorea.or.kr/index.do'
-            }
-            session.post(login_url, data=data)
-            DATASET['SESSION_LIST'].append(session)
-            DATASET['ACTIVE_USER_LIST'].append(USER_INFO[user])
+        if DATASET['PROXY']:
+            #proxy = ''
+            #while True:
+            #    try:
+            #        proxy = random.choice(proxies)
+            #        transport = HTTPTransport(proxy=proxy, verify=False)
+            #        with httpx.Client(transport=transport, timeout=3) as client:
+            #            r = client.get("https://httpbin.org/ip")
+            #            if r.status_code == 200:
+            #                break
+            #    except Exception as e:
+            #        print(f"[프록시 실패] {proxy} → {e}")
+            #        continue
+            #transport = HTTPTransport(proxy=proxy, verify=False)
+            proxy = random.choice(proxies)
+            transport = HTTPTransport(proxy=proxy, verify=False)
+            session = httpx.Client(
+                transport=transport,
+                limits=limits,
+                verify=False
+            )
+        else:
+            session = httpx.Client(
+                limits=limits,
+                verify=False,
+                timeout=200
+            )
+        data = {
+            'userId': USER_INFO[user]['rid'],
+            'userPassword': mu.op_encrypt(USER_INFO[user]['rpwd']),
+            'returnUrl': 'https://www.campingkorea.or.kr/index.do'
+        }
+        session.post(login_url, data=data)
+        DATASET['SESSION_LIST'].append(session)
+        DATASET['ACTIVE_USER_LIST'].append(USER_INFO[user])
     logger.info('ACTIVE USER NUMBER (' + str(len(DATASET['SESSION_LIST'])) + ')개 활성화')
     return DATASET
 
