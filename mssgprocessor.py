@@ -286,7 +286,6 @@ def run_reservation_bot(DATASET):
                     )
             for future in futures:
                 future.result()  # 예외 발생 시 처리
-            time.sleep(0.1)
 
 
 # ✅ 테스트 데이터 예시
