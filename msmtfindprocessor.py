@@ -126,9 +126,21 @@ def searching(DATASET, session, bot_name, user):
                     cells = row.find_all("td")
                     values = [cell.get_text(strip=True) for cell in cells]
                     if '데이터가' not in values[0]:
-                        BOT_DATASET = mm.message8(BOT_DATASET,
-                                    '유저정보: 아이디:' + user['rid'].ljust(12) + ' 비밀번호:' + user['rpwd'].ljust(12) + ' 이름=' + user[
-                                        'user_name'].ljust(4) + ' 예약 리스트 => 대상:' + str(values[5].ljust(27)) + ' 예약기간:' + str(values[4]) + '   예약시점:' + str(values[3]) + ' 상태:' + str(values[8]) + ' 예약번호:[' + str(values[2]) + ']')
+                        raw_target = str(values[5])
+                        target_norm = mu.normalize_text(raw_target)  # ← 여기서 전각/특수공백 정리
+                        target_fit = mu.cut_display(target_norm, 25)  # 너무 길면 25컬럼로 자르고
+                        target_padded = mu.ljust_display(target_fit, 25)  # 25컬럼로 패딩
+
+                        line = (
+                            f"유저정보: 아이디:{user['rid']:<12} "
+                            f"비밀번호:{user['rpwd']:<17} "
+                            f"이름={user['user_name']:<4} "
+                            f"예약 리스트 => 대상:{target_padded} "
+                            f"예약기간:{values[4]}   예약시점:{values[3]} "
+                            f"상태:{values[8]} 예약번호:[{values[2]}]"
+                        )
+
+                        BOT_DATASET = mm.message8(BOT_DATASET, line)
                 break
             else:
                 mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
