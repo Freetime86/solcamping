@@ -15,13 +15,13 @@ DATASET['BOT_NUMBER'] = 50
 DATASET['PROXY'] = True  # 실시간 가능 리스트 적용 유무
 
 # 사용자 설정 USER_NO : 최종예약자
-DATASET['CUSTOMER'] = '09'
+DATASET['CUSTOMER'] = '02'
 DATASET['HOLDER'] = '03'
 DATASET['GROUP'] = ['C']
 
 # 숙박 설정
-DATASET['SELECT_DATE'] = ['2025-10-06']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
-DATASET['PERIOD'] = ['1']  # 연박 수
+DATASET['SELECT_DATE'] = ['2025-10-04']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
+DATASET['PERIOD'] = ['3']  # 연박 수
 # 01:든바다, 02:난바다, 03:허허바다, 04:전통한옥, 05:캐라반, 06:자동차야영장, 07:글램핑A 08:글램핑B, 09:캐빈하우스
 DATASET['ROOM_FACILITY'] = ['01']
 # 바다 숙소 : 인실정보 적용 2인실, 4인실, 6인실, 8인실, 10인실  없을 경우 PASS 자동차야영장 등등은 없음.
@@ -29,7 +29,7 @@ DATASET['ROOM_FACILITY'] = ['01']
 DATASET['ROOM_RANGE'] = ['4']
 # 선호 방 번호 (선호 대상이 없을 경우 그 외 대상을 선택하도록 함)
 #['ROOM_WANTS'] = ['101', '109', '115']
-DATASET['ROOM_WANTS'] = ['121']
+DATASET['ROOM_WANTS'] = ['123']
 
 #사용하지 않음
 DATASET['ROOM_EXPT'] = ['']
