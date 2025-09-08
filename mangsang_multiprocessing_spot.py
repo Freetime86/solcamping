@@ -137,6 +137,7 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                                              f"아이디={user['rid'].ljust(10)} "
                                              f"비밀번호={user['rpwd'].ljust(18)} "
                                              f"이름={user['user_name']}")
+                    un_cnt = run_cnt + 1
             url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
             #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
             response = session.post(url, data=dict_data, timeout=100)
@@ -150,13 +151,13 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                             logger.info(str(result['fcltyFullNm']) + '/' + bot_name.split()[-1])
                             return
                     else:
-                        msg = str(result['fcltyFullNm']) + ' => ' + str(result['fcltyCode']) + ' / ' + str(
+                        msg = str(result['fcltyCode']) + ' / ' + str(
                             result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
                         #mm.message4(BOT_DATASET,f"{bot_name.ljust(12)} 임시 점유 완료 {msg.ljust(10)} => 유저정보: "
                         #                f"아이디=({user['rid'].ljust(10)}) "
                         #                f"비밀번호=({user['rpwd'].ljust(18)}) "
                         #                f"이름=({user['user_name']})")
-                        mm.message7(BOT_DATASET, f"{bot_name.ljust(12)} 임시 점유 완료 => 점유 시간 {msg.ljust(10)} "
+                        mm.message7(BOT_DATASET, f"{bot_name.ljust(12)} 임시 점유 완료 => {result['fcltyFullNm'].ljust(30)} 점유 시간 {msg.ljust(10)} "
                                                  f"{str(result['preocpcBeginDt'])} ~ {str(result['preocpcEndDt'])} "
                                                  f"=> 유저정보: 아이디=({user['rid'].ljust(10)}) "
                                                  f"비밀번호=({user['rpwd'].ljust(18)}) "
@@ -338,8 +339,31 @@ def worker(DATASET):
     SESSION_LIST = DATASET['SESSION_LIST']
     DATASET['SESSION_LIST'] = []
     reservation_targets = []
-    if DATASET['OVERWRITE_RESERVATION']:
+    if DATASET['ALL_HOLIDAY_SEARCH']:
         DATASET['SELECT_DATE'] = mu.get_all_day_holidays(DATASET['SUNDAY_MINUS_DAY_CNT'])
+        for target_type_list in DATASET['TARGET_LIST']:
+            idx = 0
+            for type_no in target_type_list['TARGET_NO']:
+                _max_cnt = target_type_list['TARGET_MAX_CNT'][idx]
+                if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET['ROOM_EXPT']:
+                    for begin_date in DATASET['SELECT_DATE']:
+                        for PERIOD in DATASET['PERIOD']:
+                            end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(
+                                days=int(PERIOD))).strftime(
+                                "%Y-%m-%d")
+
+                            TARGET_DATA = {
+                                'trrsrtCode': str(target_type_list['trrsrtCode']),
+                                'fcltyCode': str(type_no),
+                                'resveNoCode': str(target_type_list['resveNoCode']),
+                                'resveBeginDe': str(begin_date),
+                                'resveEndDe': str(end_date),
+                                'max_cnt': str(_max_cnt)
+                            }
+                            reservation_targets.append(TARGET_DATA)
+                idx = idx + 1
+        DATASET['TARGET_DATA'] = reservation_targets
+    elif DATASET['OVERWRITE_RESERVATION']:
         DATASET['SELECT_DATE'] = []
         for session in SESSION_LIST:
             DATASET = searching(DATASET, session)
