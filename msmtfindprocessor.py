@@ -128,8 +128,8 @@ def searching(DATASET, session, bot_name, user):
                     if '데이터가' not in values[0]:
                         raw_target = str(values[5])
                         target_norm = mu.normalize_text(raw_target)  # ← 여기서 전각/특수공백 정리
-                        target_fit = mu.cut_display(target_norm, 25)  # 너무 길면 25컬럼로 자르고
-                        target_padded = mu.ljust_display(target_fit, 25)  # 25컬럼로 패딩
+                        target_fit = mu.cut_display(target_norm, 35)  # 너무 길면 25컬럼로 자르고
+                        target_padded = mu.ljust_display(target_fit, 35)  # 25컬럼로 패딩
 
                         line = (
                             f"유저정보: 아이디:{user['rid']:<12} "

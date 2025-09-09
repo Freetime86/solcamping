@@ -137,7 +137,7 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                                              f"아이디={user['rid'].ljust(10)} "
                                              f"비밀번호={user['rpwd'].ljust(18)} "
                                              f"이름={user['user_name']}")
-                    un_cnt = run_cnt + 1
+                    run_cnt = run_cnt + 1
             url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
             #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
             response = session.post(url, data=dict_data, timeout=100)
@@ -157,11 +157,12 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                         #                f"아이디=({user['rid'].ljust(10)}) "
                         #                f"비밀번호=({user['rpwd'].ljust(18)}) "
                         #                f"이름=({user['user_name']})")
-                        mm.message7(BOT_DATASET, f"{bot_name.ljust(12)} 임시 점유 완료 => {result['fcltyFullNm'].ljust(30)} 점유 시간 {msg.ljust(10)} "
-                                                 f"{str(result['preocpcBeginDt'])} ~ {str(result['preocpcEndDt'])} "
-                                                 f"=> 유저정보: 아이디=({user['rid'].ljust(10)}) "
-                                                 f"비밀번호=({user['rpwd'].ljust(18)}) "
-                                                 f"이름=({user['user_name']})")
+                        mm.message7(BOT_DATASET,
+                                    f"{bot_name.ljust(12)} 임시 점유 완료 => {result['fcltyFullNm'].ljust(30)} 점유 시간 {msg.ljust(10)} "
+                                    f"{str(result['preocpcBeginDt'])} ~ {str(result['preocpcEndDt'])} "
+                                    f"=> 유저정보: 아이디=({user['rid'].ljust(10)}) "
+                                    f"비밀번호=({user['rpwd'].ljust(18)}) "
+                                    f"이름=({user['user_name']})")
                         live_time = datetime.now() + timedelta(days=30)
                         open_time = datetime.strptime(
                             (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d") + " 10:59:58",
@@ -173,6 +174,7 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
             else:
                 mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
         except Exception as e:
+            #print(e)
             continue
 
 
@@ -273,13 +275,14 @@ def searching(DATASET, session):
                 for row in rows:
                     cells = row.find_all("td")
                     values = [cell.get_text(strip=True) for cell in cells]
-                    if '데이터가' not in values[0]:
+                    if '데이터가' not in values[0] and '' == values[8]:
                         print(values)
                         range_date = [d.strip() for d in str(values[4]).split("~")]
                         target_info = {'FROM_DATE': range_date[0],
                                        'TO_DATE': range_date[1],
                                        'TYPE_NO': mu.extract_number(str(values[5])),
-                                       'TYPE_CODE': mu.extract_site_name_code(str(values[5]))}
+                                       'TYPE_CODE': mu.extract_site_name_code(str(values[5])),
+                                       'RESERVE_NO': values[2]}
                         DATASET['SELECT_DATE'].append(target_info)
                 return DATASET
             #else:
@@ -307,7 +310,11 @@ def run_reservation_bot(DATASET, session_list):
 
     session_len = len(session_list)
     target_len = len(target_data)
-    max_len = max(session_len, target_len)
+
+    if DATASET['OVERWRITE_RESERVATION']:
+        max_len = len(target_data)
+    else:
+        max_len = max(session_len, target_len)
     # ThreadPoolExecutor 사용
     with ThreadPoolExecutor(max_workers=max_len) as executor:
         futures = []
@@ -330,6 +337,9 @@ def run_reservation_bot(DATASET, session_list):
                     future.result()  # 예외 발생 시 처리
             except Exception as e:
                 print("스레드 예외:", e)
+            finally:
+                if DATASET['OVERWRITE_RESERVATION']:
+                    break
 
 
 # ✅ 테스트 데이터 예시
@@ -345,7 +355,8 @@ def worker(DATASET):
             idx = 0
             for type_no in target_type_list['TARGET_NO']:
                 _max_cnt = target_type_list['TARGET_MAX_CNT'][idx]
-                if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET['ROOM_EXPT']:
+                if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET[
+                    'ROOM_EXPT']:
                     for begin_date in DATASET['SELECT_DATE']:
                         for PERIOD in DATASET['PERIOD']:
                             end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(
@@ -363,33 +374,46 @@ def worker(DATASET):
                             reservation_targets.append(TARGET_DATA)
                 idx = idx + 1
         DATASET['TARGET_DATA'] = reservation_targets
+        run_reservation_bot(DATASET, SESSION_LIST)
     elif DATASET['OVERWRITE_RESERVATION']:
-        DATASET['SELECT_DATE'] = []
-        for session in SESSION_LIST:
-            DATASET = searching(DATASET, session)
-        _dateList = DATASET['SELECT_DATE']
-        for date_info in _dateList:
-            facility_info = DATASET['FACILITY_INFO'][date_info['TYPE_CODE']]
-            facility_target_code = md.get_facility_code(date_info['TYPE_CODE'], date_info['TYPE_NO'])
-            max_cnt = facility_target_code.split('|')[0]
-            facility_code = facility_target_code.split('|')[1]
-            TARGET_DATA = {
-                'trrsrtCode': str(facility_info['trrsrtCode']),
-                'fcltyCode': str(facility_code),
-                'resveNoCode': str(facility_info['resveNoCode']),
-                'resveBeginDe': str(date_info['FROM_DATE']),
-                'resveEndDe': str(date_info['TO_DATE']),
-                'max_cnt': str(max_cnt)
-            }
-            reservation_targets.append(TARGET_DATA)
-        DATASET['TARGET_DATA'] = reservation_targets
-        mcp.run_canceler(DATASET, SESSION_LIST)
+        while True:
+            DATASET['SELECT_DATE'] = []
+            DATASET['RESERVATION_NO_LIST'] = []
+            WORKING_SESSION = []
+            _dateList = []
+            for session in SESSION_LIST:
+                DATASET = searching(DATASET, session)
+            for idx in range(len(DATASET['SELECT_DATE'])):
+                _dateList.append(DATASET['SELECT_DATE'][idx])
+                DATASET['RESERVATION_NO_LIST'].append(DATASET['SELECT_DATE'][idx]['RESERVE_NO'])
+                WORKING_SESSION.append(SESSION_LIST[idx])
+                if idx + 1 == len(SESSION_LIST):
+                    break
+            for date_info in _dateList:
+                facility_info = DATASET['FACILITY_INFO'][date_info['TYPE_CODE']]
+                facility_target_code = md.get_facility_code(date_info['TYPE_CODE'], date_info['TYPE_NO'])
+                max_cnt = facility_target_code.split('|')[0]
+                facility_code = facility_target_code.split('|')[1]
+                TARGET_DATA = {
+                    'trrsrtCode': str(facility_info['trrsrtCode']),
+                    'fcltyCode': str(facility_code),
+                    'resveNoCode': str(facility_info['resveNoCode']),
+                    'resveBeginDe': str(date_info['FROM_DATE']),
+                    'resveEndDe': str(date_info['TO_DATE']),
+                    'max_cnt': str(max_cnt),
+                    'reserveNo': str(date_info['RESERVE_NO'])
+                }
+                reservation_targets.append(TARGET_DATA)
+            DATASET['TARGET_DATA'] = reservation_targets
+            mcp.run_canceler(DATASET, SESSION_LIST)
+            run_reservation_bot(DATASET, WORKING_SESSION)
     else:
         for target_type_list in DATASET['TARGET_LIST']:
             idx = 0
             for type_no in target_type_list['TARGET_NO']:
                 _max_cnt = target_type_list['TARGET_MAX_CNT'][idx]
-                if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET['ROOM_EXPT']:
+                if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET[
+                    'ROOM_EXPT']:
                     for begin_date in DATASET['SELECT_DATE']:
                         for PERIOD in DATASET['PERIOD']:
                             end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(
@@ -407,4 +431,4 @@ def worker(DATASET):
                             reservation_targets.append(TARGET_DATA)
                 idx = idx + 1
         DATASET['TARGET_DATA'] = reservation_targets
-    run_reservation_bot(DATASET, SESSION_LIST)
+        run_reservation_bot(DATASET, SESSION_LIST)

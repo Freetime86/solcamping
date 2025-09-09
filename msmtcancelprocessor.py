@@ -131,12 +131,8 @@ def cancellation(DATASET, session, bot_name, user):
                     for row in rows:
                         cells = row.find_all("td")
                         values = [cell.get_text(strip=True) for cell in cells]
-                        if '데이터가' not in values[0]:
-                            if '결제하기' not in values[8]:
-                                reservation_numbers.append(str(values[2]))
-                                if len(reservation_numbers) > 0:
-                                    print('유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user['rpwd'] + ') 이름=(' + user[
-                                        'user_name'] + ') CANCEL 대상 리스트 => ' + str(reservation_numbers))
+                        if '데이터가' not in values[0] and values[2] in DATASET['RESERVATION_NO_LIST']:
+                            reservation_numbers.append(str(values[2]))
                     if cancellation_final(user, session, bot_name, reservation_numbers):
                         break
                 else:

@@ -107,7 +107,7 @@ def _list():
                'rphone': '01062797909',
                'area_code': '1006',
                'active': True,
-               'group': 'B'
+               'group': 'C'
                },
         '14': {'user_name': '홍석환',
                'rpwd': 'hwan1150^^',
@@ -131,7 +131,7 @@ def _list():
                'rphone': '01033479550',
                'area_code': '1006',
                'active': True,
-               'group': 'X'
+               'group': 'C'
                },
         '17': {'user_name': '이양전',
                'rpwd': 'qwe123456@#',
