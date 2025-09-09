@@ -15,10 +15,10 @@ DATASET['PIN_PONG_2'] = '01'
 # 감시모드 설정
 DATASET['PROXY'] = False # 실시간 가능 리스트 적용 유무
 DATASET['SHOW_RESERVATION'] = False
-DATASET['MULTIPLE_BOT'] = 10
-DATASET['USER_RANDOM'] = False
+DATASET['MULTIPLE_BOT'] = 20
+DATASET['USER_RANDOM'] = True
 DATASET['ALL_HOLIDAY_SEARCH'] = False    #현재 일 기준 가용가능한 (+30일) 까지 모든 토요일 주말 날짜 취하기
-DATASET['GROUP'] = ['C']
+DATASET['GROUP'] = ['A']
 DATASET['OVERWRITE_RESERVATION'] = False
 
 print('프록시 서버 ON -> ' + str(DATASET['PROXY']))
@@ -41,6 +41,7 @@ DATASET['ROOM_WANTS'] = []
 # 제외 대상 설정
 # 고정 빈방 STATIC
 DATASET['ROOM_EXPT'] = ['DG106', 'DC109', 'DD115']
+DATASET['ROOM_EXPT'].append('NB108')
 
 if DATASET['SHOW_RESERVATION']:
     DATASET['ROOM_FACILITY'] = ['01', '02', '03']
