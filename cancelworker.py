@@ -43,9 +43,5 @@ DATASET['ROOM_WANTS'] = []
 DATASET['ROOM_EXPT'] = ['DG106', 'DC109', 'DD115']
 #DATASET['ROOM_EXPT'].append('NF113')
 
-for i in range(30):
-    print('WARNING!!!!!!!!!!!!!!!!!!!! CANCELLATION WORKING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    print('WARNING!!!!!!!!!!!!!!!!!!!! CANCELLATION WORKING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    time.sleep(1)
 
 processor.worker(DATASET)
