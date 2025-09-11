@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from selenium.webdriver.support.ui import WebDriverWait
 from user_agent import generate_user_agent
 import pyautogui as py
@@ -482,6 +482,21 @@ def final_reservation(DATASET):
     }
     response = ''
     while response == '':
+        # KST = UTC+9
+        KST = timezone(timedelta(hours=9))
+        # 현재 KST 시각
+        now_kst = datetime.now(KST)
+        # 3시간 후 KST 시각
+        future_kst = now_kst + timedelta(hours=3)
+        # 밀리초 단위 Epoch 변환
+        now_ms = int(now_kst.timestamp() * 1000)
+        future_ms = int(future_kst.timestamp() * 1000)
+        print("현재 KST 밀리초:", now_ms)
+
+        #print("3시간 후 KST 밀리초:", future_ms)
+        ip = DATASET['COOKIE']['anlzUserId'].split('|')[0]
+        print(DATASET['COOKIE']['anlzUserId'].split('|')[1])
+        DATASET['COOKIE']['anlzUserId'] = str(ip) + '|' + str(future_ms)
         try:
             if DATASET['TEMPORARY_HOLD']:
                 response = requests.post(url=url, data=dict_data, cookies=DATASET['COOKIE'], verify=False, headers={

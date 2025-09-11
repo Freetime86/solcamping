@@ -137,9 +137,6 @@ def cancellation(DATASET, session, bot_name, user):
                         break
                 else:
                     mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
-            elapsed_time = time.time() - start_time  # 경과된 시간 계산
-            if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
-                BOT_DATASET = mm.message8(BOT_DATASET, bot_name + ' 예약 진행 중.. / 경과 시간 : ' + str(run_cnt) + '시간')
     except Exception as e:
         pass
         #print(f"[{bot_name}] 예외 발생: {e}")
@@ -177,10 +174,13 @@ def cancellation_final(user, session, bot_name, reservation_numbers):
                 result = {**dict_meta, **response.json()}
                 if result['status_code'] == 200:
                     if 'message' in result:
-                        print('[' + str(num) + ']' + ' => 예약 내역 삭제 완료 / 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user[
+                        mm.message({'MESSAGE', ''}, '[' + str(num) + ']' + ' => 예약 내역 삭제 완료 / 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user[
+                            'rpwd'] + ') 이름=(' + user['user_name'] + ')')
+                else:
+                    mm.message({'MESSAGE', ''},'[' + str(num) + ']' + ' => 예약 내역 삭제 실패 / 유저정보: 아이디=(' + user['rid'] + ') 비밀번호=(' + user[
                             'rpwd'] + ') 이름=(' + user['user_name'] + ')')
             else:
-                print(user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 확정 예약 이상")
+                print(user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 예약 취소 실패, response error")
         return True
     except Exception as e:
         pass

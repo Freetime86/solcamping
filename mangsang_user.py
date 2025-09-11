@@ -19,14 +19,14 @@ def _list():
                'rphone': '01020569536',
                'area_code': '1006',
                'active': True,
-               'group': 'A'
+               'group': 'B'
                },
         '02': {'user_name': '김계자',
                'rpwd': 'CJSWOsla86!@',
                'rid': 'psm07051',
                'rphone': '01056947788',
                'area_code': '1006',
-               'active': True,
+               'active': False,
                'group': 'A'
                },
         '03': {'user_name': '박응순',
@@ -34,7 +34,7 @@ def _list():
                'rid': 'parksi',
                'rphone': '01021635418',
                'area_code': '1006',
-               'active': True,
+               'active': False,
                'group': 'A'
                },
         '04': {'user_name': '박현정',
@@ -43,7 +43,7 @@ def _list():
                'rphone': '01020569536',
                'area_code': '1006',
                'active': True,
-               'group': 'A'
+               'group': 'B'
                },
         '05': {'user_name': '박상민',
                'rpwd': 'CJSWOsla86!@',
@@ -58,7 +58,7 @@ def _list():
                'rid': 'jsy3038',
                'rphone': '01048983777',
                'area_code': '1006',
-               'active': True,
+               'active': False,
                'group': 'A'
                },
         '07': {'user_name': '김형민',
@@ -75,7 +75,7 @@ def _list():
                'rphone': '01094138806',
                'area_code': '1006',
                'active': True,
-               'group': 'B'
+               'group': 'A'
                },
         '09': {'user_name': '김세익',
                'rpwd': 'cjswosla88!@',
@@ -83,7 +83,7 @@ def _list():
                'rphone': '01042330000',
                'area_code': '1006',
                'active': True,
-               'group': 'B'
+               'group': 'A'
                },
         '11': {'user_name': '김은경',
                'rpwd': 'rladmsrud00',
@@ -91,7 +91,7 @@ def _list():
                'rphone': '01046579804',
                'area_code': '1006',
                'active': True,
-               'group': 'B'
+               'group': 'A'
                },
         '12': {'user_name': '최윤정',
                'rpwd': 'choi20023!',
@@ -138,7 +138,7 @@ def _list():
                'rid': 'rosesilver04',
                'rphone': '01046135857',
                'area_code': '1006',
-               'active': False,
+               'active': True,
                'group': 'X'
                },
         '18': {'user_name': '김용호',
