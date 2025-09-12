@@ -314,6 +314,7 @@ def run_reservation_bot(DATASET, session_list):
     session_len = len(session_list)
     target_len = len(target_data)
     groupA_session = []
+    groupR_session = []
     if DATASET['OVERWRITE_RESERVATION']:
         max_len = len(target_data)
     else:
@@ -325,6 +326,8 @@ def run_reservation_bot(DATASET, session_list):
             myuser = active_user_list[seq]
             if myuser['group'] == 'A':
                 groupA_session.append({'a_session': session_list[seq], 'a_user': myuser})
+            if myuser['group'] != 'A':
+                groupR_session.append({'r_session': session_list[seq], 'r_user': myuser})
     # ThreadPoolExecutor 사용
     target_spread = False
     with ThreadPoolExecutor(max_workers=max_len) as executor:
@@ -342,6 +345,10 @@ def run_reservation_bot(DATASET, session_list):
                     my_new_session = random.choice(groupA_session)
                     session = my_new_session['a_session']
                     user = my_new_session['a_user']
+                if target_spread:
+                    my_new_session = random.choice(groupR_session)
+                    session = my_new_session['r_session']
+                    user = my_new_session['r_user']
 
                 target = target_data[target_idx].copy()
                 if (user['group'] == 'A' and DATASET['OVERWRITE_RESERVATION']) or not DATASET['OVERWRITE_RESERVATION']:
@@ -359,6 +366,7 @@ def run_reservation_bot(DATASET, session_list):
                 print("스레드 예외:", e)
             finally:
                 if DATASET['OVERWRITE_RESERVATION']:
+                    print("추가 작업 중...")
                     break
 
 
