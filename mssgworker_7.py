@@ -13,24 +13,24 @@ DATASET['BOT_NUMBER'] = 1
 
 # 감시모드 설정
 DATASET['PROXY'] = False  # 실시간 가능 리스트 적용 유무
-DATASET['RESET'] = True  # 자리를 잡을 때 해당 기능을 사용하여 예약 유무 확인
+DATASET['RESET'] = False  # 자리를 잡을 때 해당 기능을 사용하여 예약 유무 확인
 
 # 사용자 설정 USER_NO : 최종예약자
-DATASET['CUSTOMER'] = '01'
-DATASET['HOLDER'] = '01'
+DATASET['CUSTOMER'] = '13'
+DATASET['HOLDER'] = '13'
 DATASET['FINAL_RESERVATION'] = True
 
 # 숙박 설정
-DATASET['SELECT_DATE'] = ['2025-10-08']    # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
-DATASET['PERIOD'] = ['3']  # 연박 수
+DATASET['SELECT_DATE'] = ['2025-09-20']  # 지정일 기준 * 연박 ex) 2025-08-14 + 2박 => 2025-08-14 ~ 2025-08-16
+DATASET['PERIOD'] = ['1']  # 연박 수
 # 01:든바다, 02:난바다, 03:허허바다, 04:전통한옥, 05:캐라반, 06:자동차야영장, 07:글램핑A 08:글램핑B, 09:캐빈하우스
-DATASET['ROOM_FACILITY'] = ['02']
+DATASET['ROOM_FACILITY'] = ['01']
 # 바다 숙소 : 인실정보 적용 2인실, 4인실, 6인실, 8인실, 10인실  없을 경우 PASS 자동차야영장 등등은 없음.
 # 한옥 : 인실정보 적용 2인실, 4인실, 6인실
-DATASET['ROOM_RANGE'] = ['10']
+DATASET['ROOM_RANGE'] = ['4', '6', '8', '10']
 # 선호 방 번호 (선호 대상이 없을 경우 그 외 대상을 선택하도록 함)
-#['ROOM_WANTS'] = ['101', '109', '115']
-DATASET['ROOM_WANTS'] = ['106']
+# ['ROOM_WANTS'] = ['101', '109', '115']
+DATASET['ROOM_WANTS'] = ['DD119']
 
 # 사용하지 않음
 DATASET['ROOM_EXPT'] = []

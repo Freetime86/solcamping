@@ -131,8 +131,6 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
     BOT_DATASET = copy.deepcopy(DATASET)
     start_time = time.time()
     run_cnt = 0
-    if DATASET['RESET']:
-        delete_occ(session)
     while True:
         try:
             elapsed_time = time.time() - start_time  # 경과된 시간 계산
@@ -283,6 +281,8 @@ def run_reservation_bot(DATASET):
                 else:
                     session = customer_session
                     user = DATASET['CUSTOMER']
+                    if DATASET['RESET']:
+                        delete_occ(session)
                     futures.append(
                         executor.submit(reserve_site, BOT_DATASET, session, target_data, bot_name, user)
                     )

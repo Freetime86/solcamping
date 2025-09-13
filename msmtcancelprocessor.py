@@ -144,6 +144,7 @@ def cancellation(DATASET, session, bot_name, user):
 
 def cancellation_final(user, session, bot_name, reservation_numbers):
     try:
+        print('delete start!!!! do not stop!!')
         for num in reservation_numbers:
             dict_data = {
                 'resveNo': num

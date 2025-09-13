@@ -54,42 +54,45 @@ def get_logged_in_session(DATASET):
         max_connections=200,
         max_keepalive_connections=100
     )
-    for user in USER_INFO:
-        if DATASET['PROXY']:
-            #proxy = ''
-            #while True:
-            #    try:
-            #        proxy = random.choice(proxies)
-            #        transport = HTTPTransport(proxy=proxy, verify=False)
-            #        with httpx.Client(transport=transport, timeout=3) as client:
-            #            r = client.get("https://httpbin.org/ip")
-            #            if r.status_code == 200:
-            #                break
-            #    except Exception as e:
-            #        print(f"[프록시 실패] {proxy} → {e}")
-            #        continue
-            #transport = HTTPTransport(proxy=proxy, verify=False)
-            proxy = random.choice(proxies)
-            transport = HTTPTransport(proxy=proxy, verify=False)
-            session = httpx.Client(
-                transport=transport,
-                limits=limits,
-                verify=False
-            )
-        else:
-            session = httpx.Client(
-                limits=limits,
-                verify=False,
-                timeout=200
-            )
-        data = {
-            'userId': USER_INFO[user]['rid'],
-            'userPassword': mu.op_encrypt(USER_INFO[user]['rpwd']),
-            'returnUrl': 'https://www.campingkorea.or.kr/index.do'
-        }
-        session.post(login_url, data=data)
-        DATASET['SESSION_LIST'].append(session)
-        DATASET['ACTIVE_USER_LIST'].append(USER_INFO[user])
+    user_keys = list(USER_INFO.keys())
+    for user_key in user_keys:
+        user_data = USER_INFO[user_key]
+        if user_data['group'] != 'X':
+            if DATASET['PROXY']:
+                #proxy = ''
+                #while True:
+                #    try:
+                #        proxy = random.choice(proxies)
+                #        transport = HTTPTransport(proxy=proxy, verify=False)
+                #        with httpx.Client(transport=transport, timeout=3) as client:
+                #            r = client.get("https://httpbin.org/ip")
+                #            if r.status_code == 200:
+                #                break
+                #    except Exception as e:
+                #        print(f"[프록시 실패] {proxy} → {e}")
+                #        continue
+                #transport = HTTPTransport(proxy=proxy, verify=False)
+                proxy = random.choice(proxies)
+                transport = HTTPTransport(proxy=proxy, verify=False)
+                session = httpx.Client(
+                    transport=transport,
+                    limits=limits,
+                    verify=False
+                )
+            else:
+                session = httpx.Client(
+                    limits=limits,
+                    verify=False,
+                    timeout=200
+                )
+            data = {
+                'userId': USER_INFO[user_key]['rid'],
+                'userPassword': mu.op_encrypt(USER_INFO[user_key]['rpwd']),
+                'returnUrl': 'https://www.campingkorea.or.kr/index.do'
+            }
+            session.post(login_url, data=data)
+            DATASET['SESSION_LIST'].append(session)
+            DATASET['ACTIVE_USER_LIST'].append(USER_INFO[user_key])
     logger.info('ACTIVE USER NUMBER (' + str(len(DATASET['SESSION_LIST'])) + ')개 활성화')
     return DATASET
 
@@ -111,39 +114,38 @@ def searching(DATASET, session, bot_name, user):
     try:
         BOT_DATASET = copy.deepcopy(DATASET)
         while True:
-            if user['group'] != 'X':
-                url = "https://www.campingkorea.or.kr/user/myPage/BD_reservationReserveInfo.do?trrsrtCode=&resveSttusCode=&q_currPage=1"
-                #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
-                response = session.get(url, timeout=100)
-                if response.is_success:
-                    html = response.text  # 또는 html 문자열 직접 사용
-                    soup = BeautifulSoup(html, 'html.parser')
+            url = "https://www.campingkorea.or.kr/user/myPage/BD_reservationReserveInfo.do?trrsrtCode=&resveSttusCode=&q_currPage=1"
+            #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
+            response = session.get(url, timeout=100)
+            if response.is_success:
+                html = response.text  # 또는 html 문자열 직접 사용
+                soup = BeautifulSoup(html, 'html.parser')
 
-                    # 예약번호들을 담을 리스트
-                    tbody = soup.find_all("tbody")[0]  # 첫 번째 tbody
-                    rows = tbody.find_all("tr")  # tbody 안의 모든 tr
+                # 예약번호들을 담을 리스트
+                tbody = soup.find_all("tbody")[0]  # 첫 번째 tbody
+                rows = tbody.find_all("tr")  # tbody 안의 모든 tr
 
-                    for row in rows:
-                        cells = row.find_all("td")
-                        values = [cell.get_text(strip=True) for cell in cells]
-                        if '데이터가' not in values[0]:
-                            raw_target = str(values[5])
-                            target_norm = mu.normalize_text(raw_target)  # ← 여기서 전각/특수공백 정리
-                            target_fit = mu.cut_display(target_norm, 35)  # 너무 길면 25컬럼로 자르고
-                            target_padded = mu.ljust_display(target_fit, 35)  # 25컬럼로 패딩
+                for row in rows:
+                    cells = row.find_all("td")
+                    values = [cell.get_text(strip=True) for cell in cells]
+                    if '데이터가' not in values[0]:
+                        raw_target = str(values[5])
+                        target_norm = mu.normalize_text(raw_target)  # ← 여기서 전각/특수공백 정리
+                        target_fit = mu.cut_display(target_norm, 35)  # 너무 길면 25컬럼로 자르고
+                        target_padded = mu.ljust_display(target_fit, 35)  # 25컬럼로 패딩
 
-                            line = (
-                                f"유저정보: 아이디:{user['rid']:<12} "
-                                f"비밀번호:{user['rpwd']:<17} "
-                                f"이름={user['user_name']:<4} "
-                                f"예약 리스트 => 대상:{target_padded} "
-                                f"예약기간:{values[4]}   예약시점:{values[3]} "
-                                f"상태:{values[8]} 예약번호:[{values[2]}]"
-                            )
-                            BOT_DATASET = mm.message8(BOT_DATASET, line)
-                    break
-                else:
-                    mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
+                        line = (
+                            f"유저정보: 아이디:{user['rid']:<12} "
+                            f"비밀번호:{user['rpwd']:<17} "
+                            f"이름={user['user_name']:<4} "
+                            f"예약 리스트 => 대상:{target_padded} "
+                            f"예약기간:{values[4]}   예약시점:{values[3]} "
+                            f"상태:{values[8]} 예약번호:[{values[2]}]"
+                        )
+                        BOT_DATASET = mm.message8(BOT_DATASET, line)
+                break
+            else:
+                mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
     except Exception as e:
         pass
         #print(f"[{bot_name}] 예외 발생: {e}")

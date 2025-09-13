@@ -123,12 +123,14 @@ def get_proxy():
 # ✅ 예약 요청을 보내는 함수
 def reserve_site(DATASET, session, dict_data, bot_name, user):
     BOT_DATASET = copy.deepcopy(DATASET)
-    BOT_DATASET['TEMPORARY_HOLD'] = False
+    shared_data[user['rid']] = False
+    shared_data[user['rid']+'BOT'] = ''
     start_time = time.time()
     run_cnt = 0
+    time.sleep(10)
     while True:
         try:
-            if not DATASET['SHOW_RESERVATION']:
+            if not shared_data[user['rid']]:
                 elapsed_time = time.time() - start_time  # 경과된 시간 계산
                 if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
                     BOT_DATASET = mm.message(BOT_DATASET,
@@ -144,7 +146,7 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
             if response.is_success and 'json' in response.headers.get('Content-Type', ''):
                 result = response.json()
                 if result['preocpcEndDt'] is not None:
-                    BOT_DATASET['TEMPORARY_HOLD'] = True
+                    shared_data[user['rid']] = True
                     if DATASET['SHOW_RESERVATION']:
                         if str(result['fcltyFullNm']) not in shared_data['AVAILABLE_ROOMS']:
                             shared_data['AVAILABLE_ROOMS'].append(
@@ -172,9 +174,10 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                         if live_time > reserve_time or open_time < live_time:
                             if user['group'] == 'A':
                                 if reserve_final(BOT_DATASET, user, session, bot_name, result):
+                                    shared_data[user['rid']] = False
                                     break
                 else:
-                    BOT_DATASET['TEMPORARY_HOLD'] = False
+                    shared_data[user['rid']] = False
             else:
                 mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
         except Exception as e:
@@ -333,6 +336,7 @@ def run_reservation_bot(DATASET, session_list):
     with ThreadPoolExecutor(max_workers=max_len) as executor:
         while True:
             futures = []
+            clear_users = []
             for i in range(max_len):
                 session_idx = i % session_len
                 target_idx = i % target_len
@@ -354,6 +358,9 @@ def run_reservation_bot(DATASET, session_list):
                 if (user['group'] == 'A' and DATASET['OVERWRITE_RESERVATION']) or not DATASET['OVERWRITE_RESERVATION']:
                     bot_name = f"{(target['fcltyCode'] + '_' + str(i + 1)).ljust(9)} {target['max_cnt'].rjust(3)}인실"
                     del target['max_cnt']
+                    if DATASET['RESET'] and user['rid'] not in clear_users:
+                        delete_occ(session)
+                        clear_users.append(user['rid'])
                     futures.append(
                         executor.submit(reserve_site, BOT_DATASET, session, target, bot_name, user)
                     )
@@ -407,14 +414,12 @@ def worker(DATASET):
         while True:
             DATASET['SELECT_DATE'] = []
             DATASET['RESERVATION_NO_LIST'] = []
-            WORKING_SESSION = []
             _dateList = []
             for session in SESSION_LIST:
                 DATASET = searching(DATASET, session)
             for idx in range(len(DATASET['SELECT_DATE'])):
                 _dateList.append(DATASET['SELECT_DATE'][idx])
                 DATASET['RESERVATION_NO_LIST'].append(DATASET['SELECT_DATE'][idx]['RESERVE_NO'])
-                #WORKING_SESSION.append(SESSION_LIST[idx])
                 if idx + 1 == len(SESSION_LIST):
                     break
             for date_info in _dateList:
@@ -433,6 +438,8 @@ def worker(DATASET):
                 }
                 reservation_targets.append(TARGET_DATA)
             DATASET['TARGET_DATA'] = reservation_targets
+            print(str(len(DATASET['TARGET_DATA'])) + ' 건을 삭제 처리 합니다. CHECKING TIME..........')
+            time.sleep(10)
             mcp.run_canceler(DATASET, SESSION_LIST)
             run_reservation_bot(DATASET, SESSION_LIST)
     else:
