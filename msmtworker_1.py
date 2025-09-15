@@ -20,7 +20,7 @@ DATASET['ALL_HOLIDAY_SEARCH'] = False    #현재 일 기준 가용가능한 (+30
 DATASET['SUNDAY_MINUS_DAY_CNT'] = 0    #현재 일 기준 가용가능한 (+30일) 까지 모든 토요일 주말 날짜 취하기
 DATASET['GROUP'] = ['A', 'B', 'C']
 DATASET['SINGLE_SPOT'] = False
-DATASET['OVERWRITE_RESERVATION'] = True    #ACTIVE 그룹에 속한 예약 정보를 전부 갱신 후 다시 등록!! 주의 절때 멈추지 말것
+DATASET['OVERWRITE_RESERVATION'] = False    #ACTIVE 그룹에 속한 예약 정보를 전부 갱신 후 다시 등록!! 주의 절때 멈추지 말것
 DATASET['RESET'] = False
 
 
