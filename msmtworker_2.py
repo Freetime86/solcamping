@@ -14,18 +14,17 @@ DATASET['PIN_PONG_2'] = '01'
 
 # 감시모드 설정
 DATASET['PROXY'] = False # 실시간 가능 리스트 적용 유무
-DATASET['SHOW_RESERVATION'] = False
-DATASET['MULTIPLE_BOT'] = 2
-DATASET['USER_RANDOM'] = True
+DATASET['MULTIPLE_BOT'] = 1
+DATASET['USER_RANDOM'] = False
 DATASET['ALL_HOLIDAY_SEARCH'] = False    #현재 일 기준 가용가능한 (+30일) 까지 모든 토요일 주말 날짜 취하기
 DATASET['SUNDAY_MINUS_DAY_CNT'] = 0    #현재 일 기준 가용가능한 (+30일) 까지 모든 토요일 주말 날짜 취하기
-DATASET['GROUP'] = ['A', 'B', 'C']
+DATASET['GROUP'] = ['R']
+DATASET['SINGLE_SPOT'] = True
 DATASET['OVERWRITE_RESERVATION'] = False    #ACTIVE 그룹에 속한 예약 정보를 전부 갱신 후 다시 등록!! 주의 절때 멈추지 말것
-DATASET['RESET'] = True
+DATASET['RESET'] = False
 
 
 print('프록시 서버 ON -> ' + str(DATASET['PROXY']))
-print('예약현황 체크 -> ' + str(DATASET['SHOW_RESERVATION']))
 print('다중 봇 사용 -> ' + str(DATASET['MULTIPLE_BOT']))
 
 # 숙박 설정
@@ -37,7 +36,7 @@ DATASET['PERIOD'] = ['1']  # 연박 수
 DATASET['ROOM_FACILITY'] = ['01', '02']
 # 바다 숙소 : 인실정보 적용 2인실, 4인실, 6인실, 8인실, 10인실  없을 경우 PASS 자동차야영장 등등은 없음.
 # 한옥 : 인실정보 적용 2인실, 4인실, 6인실
-DATASET['ROOM_RANGE'] = ['6', '8', '10']
+DATASET['ROOM_RANGE'] = ['4', '6', '8', '10']
 # 선호 방 번호 (선호 대상이 없을 경우 그 외 대상을 선택하도록 함)
 #['ROOM_WANTS'] = ['101', '109', '115']
 DATASET['ROOM_WANTS'] = []
@@ -45,12 +44,6 @@ DATASET['ROOM_WANTS'] = []
 # 제외 대상 설정
 # 고정 빈방 STATIC
 DATASET['ROOM_EXPT'] = ['DG106', 'DC109', 'DD115']
-
-
-if DATASET['SHOW_RESERVATION']:
-    DATASET['ROOM_FACILITY'] = ['01', '02', '03']
-    DATASET['ROOM_RANGE'] = ['2', '4', '6', '8', '10']
-    DATASET['ROOM_EXPT'] = []
 
 
 processor.worker(DATASET)

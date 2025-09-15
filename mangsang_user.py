@@ -34,7 +34,7 @@ def _list():
                'rid': 'parksi',
                'rphone': '01021635418',
                'area_code': '1006',
-               'active': False,
+               'active': True,
                'group': 'A'
                },
         '04': {'user_name': '박현정',
@@ -51,7 +51,7 @@ def _list():
                'rphone': '01024863038',
                'area_code': '1006',
                'active': True,
-               'group': 'A'
+               'group': 'R'
                },
         '06': {'user_name': '윤민주',
                'rpwd': 'cca1174848',
@@ -74,7 +74,7 @@ def _list():
                'rid': 'iborim',
                'rphone': '01094138806',
                'area_code': '1006',
-               'active': False,
+               'active': True,
                'group': 'A'
                },
         '09': {'user_name': '김세익',
@@ -140,6 +140,14 @@ def _list():
                'area_code': '1006',
                'active': True,
                'group': 'C'
+               },
+        '18': {'user_name': '길차관',
+               'rpwd': 'korea0815!',
+               'rid': 'chakuan',
+               'rphone': '01087789334',
+               'area_code': '1011',
+               'active': True,
+               'group': 'X'
                }
     }
     return dict_data

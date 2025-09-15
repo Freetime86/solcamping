@@ -51,6 +51,7 @@ def get_logged_in_session(DATASET):
     login_url = 'https://www.campingkorea.or.kr/login/ND_loginAction.do'
     DATASET['SESSION_LIST'] = []
     DATASET['ACTIVE_USER_LIST'] = []
+    DATASET['ACTIVE_USER_AGROUP'] = []
     # 커넥션 풀 제한 설정
     limits = httpx.Limits(
         max_connections=200,
@@ -62,7 +63,7 @@ def get_logged_in_session(DATASET):
 
     for user_key in user_keys:
         user_data = USER_INFO[user_key]
-        if user_data['active'] and user_data['group'] in DATASET['GROUP']:
+        if user_data['active'] and user_data['group'] in DATASET['GROUP'] or (DATASET['SINGLE_SPOT'] and user_data['group'] == 'R'):
             if DATASET['PROXY']:
                 #proxy = ''
                 #while True:
@@ -98,12 +99,9 @@ def get_logged_in_session(DATASET):
             session.post(login_url, data=data)
             DATASET['SESSION_LIST'].append(session)
             DATASET['ACTIVE_USER_LIST'].append(user_data)
-            if DATASET['SHOW_RESERVATION']:
-                delete_occ(session)
-    if not DATASET['SHOW_RESERVATION']:
-        logger.info('ACTIVE USER NUMBER (' + str(len(DATASET['SESSION_LIST'])) + ')개 활성화')
-    else:
-        logger.info('적용일자 기준 예약 가능한 대상 탐색 중....')
+            if user_data['group'] == 'A':
+                DATASET['ACTIVE_USER_AGROUP'].append(user_data)
+    logger.info('ACTIVE USER NUMBER (' + str(len(DATASET['SESSION_LIST'])) + ')개 활성화')
     return DATASET
 
 
@@ -121,16 +119,15 @@ def get_proxy():
 
 
 # ✅ 예약 요청을 보내는 함수
-def reserve_site(DATASET, session, dict_data, bot_name, user):
+def reserve_site(DATASET, session, dict_data, bot_name, user, groupA_session):
     BOT_DATASET = copy.deepcopy(DATASET)
     shared_data[user['rid']] = False
     shared_data[user['rid']+'BOT'] = ''
     start_time = time.time()
     run_cnt = 0
-    time.sleep(10)
     while True:
         try:
-            if not shared_data[user['rid']]:
+            if not shared_data[user['rid']] or shared_data[user['rid'] + 'BOT'] == bot_name:
                 elapsed_time = time.time() - start_time  # 경과된 시간 계산
                 if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
                     BOT_DATASET = mm.message(BOT_DATASET,
@@ -140,26 +137,14 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                                              f"비밀번호={user['rpwd'].ljust(18)} "
                                              f"이름={user['user_name']}")
                     run_cnt = run_cnt + 1
-            url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
-            #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
-            response = session.post(url, data=dict_data, timeout=100)
-            if response.is_success and 'json' in response.headers.get('Content-Type', ''):
-                result = response.json()
-                if result['preocpcEndDt'] is not None:
-                    shared_data[user['rid']] = True
-                    if DATASET['SHOW_RESERVATION']:
-                        if str(result['fcltyFullNm']) not in shared_data['AVAILABLE_ROOMS']:
-                            shared_data['AVAILABLE_ROOMS'].append(
-                                str(result['fcltyFullNm']) + '/' + bot_name.split()[-1])
-                            logger.info(str(result['fcltyFullNm']) + '/' + bot_name.split()[-1])
-                            return
-                    else:
-                        msg = str(result['fcltyCode']) + ' / ' + str(
-                            result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
-                        #mm.message4(BOT_DATASET,f"{bot_name.ljust(12)} 임시 점유 완료 {msg.ljust(10)} => 유저정보: "
-                        #                f"아이디=({user['rid'].ljust(10)}) "
-                        #                f"비밀번호=({user['rpwd'].ljust(18)}) "
-                        #                f"이름=({user['user_name']})")
+                url = "https://www.campingkorea.or.kr/user/reservation/ND_insertPreocpc.do"
+                response = session.post(url, data=dict_data, timeout=100)
+                if response.is_success and 'json' in response.headers.get('Content-Type', ''):
+                    result = response.json()
+                    if result['preocpcEndDt'] is not None:
+                        shared_data[user['rid']] = True
+                        shared_data[user['rid'] + 'BOT'] = bot_name
+                        msg = str(result['fcltyCode']) + ' / ' + str(result['resveBeginDe']) + ' ~ ' + str(result['resveEndDe'])
                         mm.message7(BOT_DATASET,
                                     f"{bot_name.ljust(12)} 임시 점유 완료 => {result['fcltyFullNm'].ljust(30)} 점유 시간 {msg.ljust(10)} "
                                     f"{str(result['preocpcBeginDt'])} ~ {str(result['preocpcEndDt'])} "
@@ -175,11 +160,18 @@ def reserve_site(DATASET, session, dict_data, bot_name, user):
                             if user['group'] == 'A':
                                 if reserve_final(BOT_DATASET, user, session, bot_name, result):
                                     shared_data[user['rid']] = False
+                                    shared_data[user['rid'] + 'BOT'] = ''
                                     break
+                    else:
+                        if shared_data[user['rid'] + 'BOT'] == bot_name:
+                            shared_data[user['rid']] = False
+                            shared_data[user['rid'] + 'BOT'] = ''
                 else:
-                    shared_data[user['rid']] = False
+                    mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
             else:
-                mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
+                new_session = random.choice(groupA_session)
+                session = new_session['a_session']
+                user = new_session['a_user']
         except Exception as e:
             #print(e)
             continue
@@ -315,24 +307,35 @@ def run_reservation_bot(DATASET, session_list):
     active_user_list = DATASET['ACTIVE_USER_LIST']
     target_data = DATASET['TARGET_DATA']
     session_len = len(session_list)
-    target_len = len(target_data)
     groupA_session = []
     groupR_session = []
     if DATASET['OVERWRITE_RESERVATION']:
-        max_len = len(target_data)
-    else:
-        for i in range(DATASET['MULTIPLE_BOT']-1):
-            target_data.extend(BOT_DATASET['TARGET_DATA'])
-        target_len = len(target_data)
-        max_len = max(session_len, target_len)
         for seq in range(len(session_list)):
             myuser = active_user_list[seq]
             if myuser['group'] == 'A':
                 groupA_session.append({'a_session': session_list[seq], 'a_user': myuser})
             if myuser['group'] != 'A':
                 groupR_session.append({'r_session': session_list[seq], 'r_user': myuser})
+        target_len = len(target_data)
+        max_len = max(len(groupA_session), target_len)
+    else:
+        for i in range(DATASET['MULTIPLE_BOT']-1):
+            target_data.extend(BOT_DATASET['TARGET_DATA'])
+        for seq in range(len(session_list)):
+            myuser = active_user_list[seq]
+            if myuser['group'] == 'R' and DATASET['SINGLE_SPOT']:
+                groupA_session.append({'a_session': session_list[seq], 'a_user': myuser})
+                break
+            if myuser['group'] == 'A':
+                groupA_session.append({'a_session': session_list[seq], 'a_user': myuser})
+
+            if myuser['group'] != 'A':
+                groupR_session.append({'r_session': session_list[seq], 'r_user': myuser})
+        target_len = len(target_data)
+        max_len = max(len(groupA_session), target_len)
     # ThreadPoolExecutor 사용
     target_spread = False
+    random.shuffle(target_data)
     with ThreadPoolExecutor(max_workers=max_len) as executor:
         while True:
             futures = []
@@ -342,17 +345,20 @@ def run_reservation_bot(DATASET, session_list):
                 target_idx = i % target_len
                 session = session_list[session_idx]
                 user = active_user_list[session_idx]
-
-                if len(BOT_DATASET['TARGET_DATA']) <= i:
-                    target_spread = True
-                if not target_spread and user['group'] != 'A':
-                    my_new_session = random.choice(groupA_session)
-                    session = my_new_session['a_session']
-                    user = my_new_session['a_user']
-                if target_spread:
-                    my_new_session = random.choice(groupR_session)
-                    session = my_new_session['r_session']
-                    user = my_new_session['r_user']
+                if DATASET['OVERWRITE_RESERVATION']:
+                    session = groupA_session[i]['a_session']
+                    user = groupA_session[i]['a_user']
+                else:
+                    if len(BOT_DATASET['TARGET_DATA']) <= i:
+                        target_spread = True
+                    if not target_spread and user['group'] != 'A':
+                        my_new_session = random.choice(groupA_session)
+                        session = my_new_session['a_session']
+                        user = my_new_session['a_user']
+                    if target_spread:
+                        my_new_session = random.choice(groupR_session)
+                        session = my_new_session['r_session']
+                        user = my_new_session['r_user']
 
                 target = target_data[target_idx].copy()
                 if (user['group'] == 'A' and DATASET['OVERWRITE_RESERVATION']) or not DATASET['OVERWRITE_RESERVATION']:
@@ -362,8 +368,9 @@ def run_reservation_bot(DATASET, session_list):
                         delete_occ(session)
                         clear_users.append(user['rid'])
                     futures.append(
-                        executor.submit(reserve_site, BOT_DATASET, session, target, bot_name, user)
+                        executor.submit(reserve_site, BOT_DATASET, session, target, bot_name, user, groupA_session)
                     )
+                    time.sleep(0.1)
             try:
                 for future in futures:
                     future.result()  # 예외 발생 시 처리
@@ -411,16 +418,18 @@ def worker(DATASET):
         DATASET['TARGET_DATA'] = reservation_targets
         run_reservation_bot(DATASET, SESSION_LIST)
     elif DATASET['OVERWRITE_RESERVATION']:
+        ACTIVE_USER_LIST = DATASET['ACTIVE_USER_AGROUP']
         while True:
             DATASET['SELECT_DATE'] = []
             DATASET['RESERVATION_NO_LIST'] = []
+            reservation_targets = []
             _dateList = []
             for session in SESSION_LIST:
                 DATASET = searching(DATASET, session)
             for idx in range(len(DATASET['SELECT_DATE'])):
                 _dateList.append(DATASET['SELECT_DATE'][idx])
                 DATASET['RESERVATION_NO_LIST'].append(DATASET['SELECT_DATE'][idx]['RESERVE_NO'])
-                if idx + 1 == len(SESSION_LIST):
+                if idx + 1 == len(ACTIVE_USER_LIST):
                     break
             for date_info in _dateList:
                 facility_info = DATASET['FACILITY_INFO'][date_info['TYPE_CODE']]
@@ -438,10 +447,13 @@ def worker(DATASET):
                 }
                 reservation_targets.append(TARGET_DATA)
             DATASET['TARGET_DATA'] = reservation_targets
-            print(str(len(DATASET['TARGET_DATA'])) + ' 건을 삭제 처리 합니다. CHECKING TIME..........')
-            time.sleep(10)
-            mcp.run_canceler(DATASET, SESSION_LIST)
-            run_reservation_bot(DATASET, SESSION_LIST)
+            if len(DATASET['RESERVATION_NO_LIST']) != 0:
+                mm.message(DATASET, str(len(DATASET['RESERVATION_NO_LIST'])) + ' 건을 삭제 처리 합니다. CHECKING TIME..........')
+                mcp.run_canceler(DATASET, SESSION_LIST)
+                run_reservation_bot(DATASET, SESSION_LIST)
+            else:
+                mm.message(DATASET, '재 갱신 대상이 없습니다.')
+                sys.exit('시스템을 종료합니다.')
     else:
         for target_type_list in DATASET['TARGET_LIST']:
             idx = 0
