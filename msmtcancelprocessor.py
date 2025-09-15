@@ -111,46 +111,43 @@ def get_proxy():
 def cancellation(DATASET, session, bot_name, user):
     try:
         BOT_DATASET = copy.deepcopy(DATASET)
-        start_time = time.time()
-        run_cnt = 0
+        url = "https://www.campingkorea.or.kr/user/myPage/BD_reservationReserveInfo.do?trrsrtCode=&resveSttusCode=&q_currPage=1"
         while True:
-            if user['rid'] != shared_data['POST_ID'] or len(user) == 1:
-                shared_data['POST_ID'] = user['rid']
-                url = "https://www.campingkorea.or.kr/user/myPage/BD_reservationReserveInfo.do?trrsrtCode=&resveSttusCode=&q_currPage=1"
-                #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
-                response = session.get(url, timeout=100)
-                if response.is_success:
-                    html = response.text  # 또는 html 문자열 직접 사용
-                    soup = BeautifulSoup(html, 'html.parser')
-                    tbody = soup.find_all("tbody")[0]  # 첫 번째 tbody
-                    rows = tbody.find_all("tr")  # tbody 안의 모든 tr
+            response = session.get(url, timeout=100)
+            if response.is_success:
+                html = response.text  # 또는 html 문자열 직접 사용
+                soup = BeautifulSoup(html, 'html.parser')
+                tbody = soup.find_all("tbody")[0]  # 첫 번째 tbody
+                rows = tbody.find_all("tr")  # tbody 안의 모든 tr
 
-                    # 예약번호들을 담을 리스트
-                    reservation_numbers = []
+                # 예약번호들을 담을 리스트
+                reservation_numbers = []
 
-                    for row in rows:
-                        cells = row.find_all("td")
-                        values = [cell.get_text(strip=True) for cell in cells]
-                        if '데이터가' not in values[0] and values[2] in DATASET['RESERVATION_NO_LIST']:
-                            reservation_numbers.append(str(values[2]))
-                    if cancellation_final(user, session, bot_name, reservation_numbers):
-                        break
-                else:
-                    mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
+                for row in rows:
+                    cells = row.find_all("td")
+                    values = [cell.get_text(strip=True) for cell in cells]
+                    if '데이터가' not in values[0] and values[2] in DATASET['RESERVATION_NO_LIST']:
+                        reservation_numbers.append(str(values[2]))
+                if len(reservation_numbers) > 0:
+                    mm.message(BOT_DATASET, 'reservation_numbers = > ' + str(reservation_numbers))
+                if cancellation_final(user, session, bot_name, reservation_numbers):
+                    time.sleep(1)
+                    break
+            else:
+                mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 실패 - 임시 점유 이상")
     except Exception as e:
+        print(f"[{bot_name}] 예외 발생: {e}")
         pass
-        #print(f"[{bot_name}] 예외 발생: {e}")
 
 
 def cancellation_final(user, session, bot_name, reservation_numbers):
     try:
-        print('delete start!!!! do not stop!!')
         for num in reservation_numbers:
             dict_data = {
                 'resveNo': num
             }
             url = "https://www.campingkorea.or.kr/user/myPage/ND_updateCancleResve.do"
-            response = session.post(url, data=dict_data, timeout=5, headers={
+            response = session.post(url, data=dict_data, timeout=30, headers={
                 'Accept': 'application/json, text/javascript, */*; q=0.01',
                 'Accept-Encoding': 'gzip, deflate, br, zstd',
                 'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -182,6 +179,7 @@ def cancellation_final(user, session, bot_name, reservation_numbers):
                             'rpwd'] + ') 이름=(' + user['user_name'] + ')')
             else:
                 print(user['rid'] + '/' + user['user_name'] + f"[{bot_name}] 예약 취소 실패, response error")
+            time.sleep(1)
         return True
     except Exception as e:
         pass
