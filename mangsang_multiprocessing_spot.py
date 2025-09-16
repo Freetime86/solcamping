@@ -39,7 +39,8 @@ lock = threading.Lock()
 shared_data = {'LIMIT': 0,
                'POST_ID': '',
                'RESERVATION_LOG': True,
-               'AVAILABLE_ROOMS': []}
+               'AVAILABLE_ROOMS': [],
+               'OVERWRITE': False}
 
 global limit
 
@@ -127,6 +128,13 @@ def reserve_site(DATASET, session, dict_data, bot_name, user, groupA_session):
     run_cnt = 0
     while True:
         try:
+            #if DATASET['OVERWRITE_ACTION']:
+            #    CURRENT_TIME = datetime.strptime(datetime.now().strftime("%H:%M:%S"), '%H:%M:%S')
+            #    if '00:00:00' < str(CURRENT_TIME) < '01:30:00' and not shared_data['OVERWRITE']:
+            #        DATASET['OVERWRITE_RESERVATION'] = True
+            #        mm.message(DATASET, '예약 리스트를 갱신합니다.')
+            #        shared_data['OVERWRITE'] = True
+            #        break
             if not shared_data[user['rid']] or shared_data[user['rid'] + 'BOT'] == bot_name:
                 elapsed_time = time.time() - start_time  # 경과된 시간 계산
                 if elapsed_time >= 3600 * run_cnt:  # 3600초 == 1시간
@@ -282,8 +290,8 @@ def searching(DATASET, session):
                                        'TYPE_NO': mu.extract_number(str(values[5])),
                                        'TYPE_CODE': mu.extract_site_name_code(str(values[5])),
                                        'RESERVE_NO': values[2]}
-                        DATASET['SELECT_DATE'].append(target_info)
-                return DATASET
+                        DATASET['RESERVATION_STATUS'].append(target_info)
+                break
             #else:
             #mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + "예약 조회 에러 발생")
     except Exception as e:
@@ -391,91 +399,98 @@ def worker(DATASET):
     SESSION_LIST = DATASET['SESSION_LIST']
     DATASET['SESSION_LIST'] = []
     reservation_targets = []
-    if DATASET['ALL_HOLIDAY_SEARCH']:
-        DATASET['SELECT_DATE'] = mu.get_all_day_holidays(DATASET['SUNDAY_MINUS_DAY_CNT'])
-        for target_type_list in DATASET['TARGET_LIST']:
-            idx = 0
-            for type_no in target_type_list['TARGET_NO']:
-                _max_cnt = target_type_list['TARGET_MAX_CNT'][idx]
-                if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET[
-                    'ROOM_EXPT']:
-                    for begin_date in DATASET['SELECT_DATE']:
-                        for PERIOD in DATASET['PERIOD']:
-                            end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(
-                                days=int(PERIOD))).strftime(
-                                "%Y-%m-%d")
+    while True:
+        if DATASET['ALL_HOLIDAY_SEARCH']:
+            DATASET['SELECT_DATE'] = mu.get_all_day_holidays(DATASET['SUNDAY_MINUS_DAY_CNT'])
+            for target_type_list in DATASET['TARGET_LIST']:
+                idx = 0
+                for type_no in target_type_list['TARGET_NO']:
+                    _max_cnt = target_type_list['TARGET_MAX_CNT'][idx]
+                    if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET[
+                        'ROOM_EXPT']:
+                        for begin_date in DATASET['SELECT_DATE']:
+                            for PERIOD in DATASET['PERIOD']:
+                                end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(
+                                    days=int(PERIOD))).strftime(
+                                    "%Y-%m-%d")
 
-                            TARGET_DATA = {
-                                'trrsrtCode': str(target_type_list['trrsrtCode']),
-                                'fcltyCode': str(type_no),
-                                'resveNoCode': str(target_type_list['resveNoCode']),
-                                'resveBeginDe': str(begin_date),
-                                'resveEndDe': str(end_date),
-                                'max_cnt': str(_max_cnt)
-                            }
-                            reservation_targets.append(TARGET_DATA)
-                idx = idx + 1
-        DATASET['TARGET_DATA'] = reservation_targets
-        run_reservation_bot(DATASET, SESSION_LIST)
-    elif DATASET['OVERWRITE_RESERVATION']:
-        ACTIVE_USER_LIST = DATASET['ACTIVE_USER_AGROUP']
-        while True:
-            DATASET['SELECT_DATE'] = []
-            DATASET['RESERVATION_NO_LIST'] = []
-            reservation_targets = []
-            _dateList = []
-            for session in SESSION_LIST:
-                DATASET = searching(DATASET, session)
-            for idx in range(len(DATASET['SELECT_DATE'])):
-                _dateList.append(DATASET['SELECT_DATE'][idx])
-                DATASET['RESERVATION_NO_LIST'].append(DATASET['SELECT_DATE'][idx]['RESERVE_NO'])
-                if idx + 1 == len(ACTIVE_USER_LIST):
-                    break
-            for date_info in _dateList:
-                facility_info = DATASET['FACILITY_INFO'][date_info['TYPE_CODE']]
-                facility_target_code = md.get_facility_code(date_info['TYPE_CODE'], date_info['TYPE_NO'])
-                max_cnt = facility_target_code.split('|')[0]
-                facility_code = facility_target_code.split('|')[1]
-                TARGET_DATA = {
-                    'trrsrtCode': str(facility_info['trrsrtCode']),
-                    'fcltyCode': str(facility_code),
-                    'resveNoCode': str(facility_info['resveNoCode']),
-                    'resveBeginDe': str(date_info['FROM_DATE']),
-                    'resveEndDe': str(date_info['TO_DATE']),
-                    'max_cnt': str(max_cnt),
-                    'reserveNo': str(date_info['RESERVE_NO'])
-                }
-                reservation_targets.append(TARGET_DATA)
+                                TARGET_DATA = {
+                                    'trrsrtCode': str(target_type_list['trrsrtCode']),
+                                    'fcltyCode': str(type_no),
+                                    'resveNoCode': str(target_type_list['resveNoCode']),
+                                    'resveBeginDe': str(begin_date),
+                                    'resveEndDe': str(end_date),
+                                    'max_cnt': str(_max_cnt)
+                                }
+                                reservation_targets.append(TARGET_DATA)
+                    idx = idx + 1
             DATASET['TARGET_DATA'] = reservation_targets
-            if len(DATASET['RESERVATION_NO_LIST']) != 0:
-                mm.message(DATASET, str(len(DATASET['RESERVATION_NO_LIST'])) + ' 건을 삭제 처리 합니다. CHECKING TIME..........')
-                mcp.run_canceler(DATASET, SESSION_LIST)
-                run_reservation_bot(DATASET, SESSION_LIST)
-            else:
-                mm.message(DATASET, '재 갱신 대상이 없습니다.')
-                sys.exit('시스템을 종료합니다.')
-    else:
-        for target_type_list in DATASET['TARGET_LIST']:
-            idx = 0
-            for type_no in target_type_list['TARGET_NO']:
-                _max_cnt = target_type_list['TARGET_MAX_CNT'][idx]
-                if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET[
-                    'ROOM_EXPT']:
-                    for begin_date in DATASET['SELECT_DATE']:
-                        for PERIOD in DATASET['PERIOD']:
-                            end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(
-                                days=int(PERIOD))).strftime(
-                                "%Y-%m-%d")
+            run_reservation_bot(DATASET, SESSION_LIST)
+        elif DATASET['OVERWRITE_RESERVATION']:
+            ACTIVE_USER_LIST = DATASET['ACTIVE_USER_AGROUP']
+            while True:
+                try:
+                    DATASET['RESERVATION_STATUS'] = []
+                    DATASET['RESERVATION_NO_LIST'] = []
+                    reservation_targets = []
+                    _dateList = []
+                    for session in SESSION_LIST:
+                        searching(DATASET, session)
+                    for idx in range(len(DATASET['RESERVATION_STATUS'])):
+                        _dateList.append(DATASET['RESERVATION_STATUS'][idx])
+                        DATASET['RESERVATION_NO_LIST'].append(DATASET['RESERVATION_STATUS'][idx]['RESERVE_NO'])
+                        if idx + 1 == len(ACTIVE_USER_LIST):
+                            break
+                    for date_info in _dateList:
+                        facility_info = DATASET['FACILITY_INFO'][date_info['TYPE_CODE']]
+                        facility_target_code = md.get_facility_code(date_info['TYPE_CODE'], date_info['TYPE_NO'])
+                        max_cnt = facility_target_code.split('|')[0]
+                        facility_code = facility_target_code.split('|')[1]
+                        TARGET_DATA = {
+                            'trrsrtCode': str(facility_info['trrsrtCode']),
+                            'fcltyCode': str(facility_code),
+                            'resveNoCode': str(facility_info['resveNoCode']),
+                            'resveBeginDe': str(date_info['FROM_DATE']),
+                            'resveEndDe': str(date_info['TO_DATE']),
+                            'max_cnt': str(max_cnt),
+                            'reserveNo': str(date_info['RESERVE_NO'])
+                        }
+                        reservation_targets.append(TARGET_DATA)
+                    DATASET['TARGET_DATA'] = reservation_targets
+                    if len(DATASET['RESERVATION_NO_LIST']) != 0:
+                        mm.message(DATASET, str(len(DATASET['RESERVATION_NO_LIST'])) + ' 건을 삭제 처리 합니다. CHECKING TIME..........')
+                        mcp.run_canceler(DATASET, SESSION_LIST)
+                        run_reservation_bot(DATASET, SESSION_LIST)
+                    else:
+                        mm.message(DATASET, '재 갱신 대상이 없습니다. 점유 프로세스를 실행합니다.')
+                        DATASET['OVERWRITE_RESERVATION'] = False
+                        break
+                        #sys.exit('시스템을 종료합니다.')
+                except Exception as e:
+                    print(e)
+                    continue
+        else:
+            for target_type_list in DATASET['TARGET_LIST']:
+                idx = 0
+                for type_no in target_type_list['TARGET_NO']:
+                    _max_cnt = target_type_list['TARGET_MAX_CNT'][idx]
+                    if (type_no in DATASET['ROOM_WANTS'] or DATASET['ROOM_WANTS'][0] == 'ALL') and type_no not in DATASET[
+                        'ROOM_EXPT']:
+                        for begin_date in DATASET['SELECT_DATE']:
+                            for PERIOD in DATASET['PERIOD']:
+                                end_date = (datetime.strptime(begin_date, '%Y-%m-%d') + timedelta(
+                                    days=int(PERIOD))).strftime(
+                                    "%Y-%m-%d")
 
-                            TARGET_DATA = {
-                                'trrsrtCode': str(target_type_list['trrsrtCode']),
-                                'fcltyCode': str(type_no),
-                                'resveNoCode': str(target_type_list['resveNoCode']),
-                                'resveBeginDe': str(begin_date),
-                                'resveEndDe': str(end_date),
-                                'max_cnt': str(_max_cnt)
-                            }
-                            reservation_targets.append(TARGET_DATA)
-                idx = idx + 1
-        DATASET['TARGET_DATA'] = reservation_targets
-        run_reservation_bot(DATASET, SESSION_LIST)
+                                TARGET_DATA = {
+                                    'trrsrtCode': str(target_type_list['trrsrtCode']),
+                                    'fcltyCode': str(type_no),
+                                    'resveNoCode': str(target_type_list['resveNoCode']),
+                                    'resveBeginDe': str(begin_date),
+                                    'resveEndDe': str(end_date),
+                                    'max_cnt': str(_max_cnt)
+                                }
+                                reservation_targets.append(TARGET_DATA)
+                    idx = idx + 1
+            DATASET['TARGET_DATA'] = reservation_targets
+            run_reservation_bot(DATASET, SESSION_LIST)
