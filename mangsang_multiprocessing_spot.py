@@ -53,6 +53,7 @@ def get_logged_in_session(DATASET):
     DATASET['SESSION_LIST'] = []
     DATASET['ACTIVE_USER_LIST'] = []
     DATASET['ACTIVE_USER_AGROUP'] = []
+    DATASET['ACTIVE_SESSION_AGROUP'] = []
     # 커넥션 풀 제한 설정
     limits = httpx.Limits(
         max_connections=200,
@@ -66,19 +67,6 @@ def get_logged_in_session(DATASET):
         user_data = USER_INFO[user_key]
         if user_data['active'] and user_data['group'] in DATASET['GROUP'] or (DATASET['SINGLE_SPOT'] and user_data['group'] == 'R'):
             if DATASET['PROXY']:
-                #proxy = ''
-                #while True:
-                #    try:
-                #        proxy = random.choice(proxies)
-                #        transport = HTTPTransport(proxy=proxy, verify=False)
-                #        with httpx.Client(transport=transport, timeout=3) as client:
-                #            r = client.get("https://httpbin.org/ip")
-                #            if r.status_code == 200:
-                #                break
-                #    except Exception as e:
-                #        print(f"[프록시 실패] {proxy} → {e}")
-                #        continue
-                #transport = HTTPTransport(proxy=proxy, verify=False)
                 proxy = random.choice(proxies)
                 transport = HTTPTransport(proxy=proxy, verify=False)
                 session = httpx.Client(
@@ -101,6 +89,7 @@ def get_logged_in_session(DATASET):
             DATASET['SESSION_LIST'].append(session)
             DATASET['ACTIVE_USER_LIST'].append(user_data)
             if user_data['group'] == 'A':
+                DATASET['ACTIVE_SESSION_AGROUP'].append(session)
                 DATASET['ACTIVE_USER_AGROUP'].append(user_data)
     logger.info('ACTIVE USER NUMBER (' + str(len(DATASET['SESSION_LIST'])) + ')개 활성화')
     return DATASET
@@ -266,10 +255,8 @@ def reserve_final(BOT_DATASET, user, session, bot_name, result):
 
 def searching(DATASET, session):
     try:
-        #BOT_DATASET = copy.deepcopy(DATASET)
         while True:
             url = "https://www.campingkorea.or.kr/user/myPage/BD_reservationReserveInfo.do?trrsrtCode=&resveSttusCode=&q_currPage=1"
-            #BOT_DATASET = mm.message(BOT_DATASET, bot_name + ' 예약 요청 중 ' + dict_data['resveBeginDe'] + ' ~ ' + dict_data['resveEndDe'])
             response = session.get(url, timeout=100)
             if response.is_success:
                 html = response.text  # 또는 html 문자열 직접 사용
@@ -292,11 +279,8 @@ def searching(DATASET, session):
                                        'RESERVE_NO': values[2]}
                         DATASET['RESERVATION_STATUS'].append(target_info)
                 break
-            #else:
-            #mm.message9(BOT_DATASET, user['rid'] + '/' + user['user_name'] + "예약 조회 에러 발생")
     except Exception as e:
         pass
-        #print(f"[{bot_name}] 예외 발생: {e}")
 
 
 def delete_occ(session):
@@ -397,7 +381,9 @@ def worker(DATASET):
     DATASET = md.convert(DATASET)
     DATASET = get_logged_in_session(DATASET)
     SESSION_LIST = DATASET['SESSION_LIST']
+    ACTIVE_SESSION_LIST = DATASET['ACTIVE_SESSION_AGROUP']
     DATASET['SESSION_LIST'] = []
+    DATASET['ACTIVE_SESSION_AGROUP'] = []
     reservation_targets = []
     while True:
         if DATASET['ALL_HOLIDAY_SEARCH']:
@@ -434,7 +420,7 @@ def worker(DATASET):
                     DATASET['RESERVATION_NO_LIST'] = []
                     reservation_targets = []
                     _dateList = []
-                    for session in SESSION_LIST:
+                    for session in ACTIVE_SESSION_LIST:
                         searching(DATASET, session)
                     for idx in range(len(DATASET['RESERVATION_STATUS'])):
                         _dateList.append(DATASET['RESERVATION_STATUS'][idx])
@@ -459,7 +445,7 @@ def worker(DATASET):
                     DATASET['TARGET_DATA'] = reservation_targets
                     if len(DATASET['RESERVATION_NO_LIST']) != 0:
                         mm.message(DATASET, str(len(DATASET['RESERVATION_NO_LIST'])) + ' 건을 삭제 처리 합니다. CHECKING TIME..........')
-                        mcp.run_canceler(DATASET, SESSION_LIST)
+                        mcp.run_canceler(DATASET, ACTIVE_SESSION_LIST)
                         run_reservation_bot(DATASET, SESSION_LIST)
                     else:
                         mm.message(DATASET, '재 갱신 대상이 없습니다. 점유 프로세스를 실행합니다.')
